@@ -25,44 +25,7 @@ __version__ = '$Version: 0.1'
 import time
 
 class OraSchemaDataDictionary:
-    """
-     structure all_table_names is list od table names
-    
-     structure of all_tables:
-     [table] = (partitioned, secondary, index_organized, clustered, cluster_name, nested, temporary
-    
-     structure of all_table_comments:
-     [table] = comments
-    
-     structure of all_col_comments
-     [(table,column)] = comments
 
-     structure of all_columns
-     [table] = (column, _data_type, nullable, column_id, data_default)
-
-     structure of all_constraints
-     [constraint_name] (table_name, type, check_cond, r_owner, r_constraint_name, delete_rule)
-
-     structure of all_constrainted_columns
-     [constraint_name] ( table_name, column_name, position)
-
-     structure of all_views
-     [name] text
-
-     structure of all_indexes
-     indexes[index_name](table_name, type, uniqueness, include_column, generated, secondary)
-
-     structure of all_index_columns
-     indexes[index_name]( table_name, column_name, column_position)
-
-     structure of all_index_expressions
-     indexes[index_name](table_name, expression, position)
-     
-     structure of all_table_names
-     list 
-
-     TODO: describe all structures
-    """
     def __init__(self, conn, name):
         self.name                      = name
         self.all_tables               = _get_all_tables(conn)        
@@ -77,10 +40,10 @@ class OraSchemaDataDictionary:
         self.all_index_columns        = _get_all_index_columns(conn)
         self.all_index_expressions    = _get_all_index_expressions(conn)
         
-        self.all_table_names      = self.all_tables.keys()
+        self.all_table_names = self.all_tables.keys()
         self.all_table_names.sort()
 
-        self.all_view_names      = self.all_views.keys()
+        self.all_view_names  = self.all_views.keys()
         self.all_view_names.sort()
         
         self.all_constraint_names = self.all_constraints.keys()
@@ -98,62 +61,29 @@ class OraSchemaDataDictionary:
             if type == 'P':
                self.table_primary_key_map[table_name] = constraint_name
             elif type == 'U':
-                 t = self.table_unique_key_map.get(table_name)
-                 if not t:
-                     t = []
-                     self.table_unique_key_map[table_name] = t
-                 t.append(constraint_name)
+                 self.table_unique_key_map.setdefault(table_name,[]).append(constraint_name)
             elif type == 'C':
-                 t = self.table_check_constraint_map.get(table_name)
-                 if not t:
-                     t = []
-                     self.table_check_constraint_map[table_name] = t
-                 t.append(constraint_name)
+                 self.table_check_constraint_map.setdefault(table_name,[]).append(constraint_name)
             elif type == 'R':
-                 t = self.table_foreign_key_map.get(table_name)
-                 if not t:
-                     t = []
-                     self.table_foreign_key_map[table_name] = t
-                 t.append(constraint_name)
+                 self.table_foreign_key_map.setdefault(table_name,[]).append(constraint_name)
                  # put row in table_referenced_by
-                 _table_name, _type, _check_cond, _r_owner, _r_constraint_name, _delete_rule\
-                              = self.all_constraints[r_constraint_name]
-                 t = self.table_referenced_by.get(_table_name)
-                 if not t:
-                     t= []
-                     self.table_referenced_by[_table_name] = t
-                 t.append((table_name, constraint_name))
+                 _table_name = self.all_constraints[r_constraint_name][0]
+                 self.table_referenced_by.setdefault(_table_name,[]).append((table_name, constraint_name))
             elif type in ('V','O'):
-                 t = self.view_constraint_map.get(table_name)
-                 if not t:
-                     t = []
-                     self.view_constraint_map[table_name] = t
-                 t.append(constraint_name)
-                
+                 self.view_constraint_map.setdefault(table_name,[]).append(constraint_name)
 
         self.table_constraint_map= {}
-        
         for constraint_name in self.all_constraint_names:
-            constraint = self.all_constraints[constraint_name]
-            table_name = constraint[0]
-            t = self.table_constraint_map.get(table_name, None)
-            if not t:
-                t = []
-                self.table_constraint_map[table_name] = t
-            t.append(constraint_name)  
+            table_name = self.all_constraints[constraint_name][0]
+            self.table_constraint_map.setdefault(table_name, []).append(constraint_name)  
 
         self.all_index_names = self.all_indexes.keys()
         self.all_index_names.sort()
 
-
         self.table_index_map = {}
         for index_name in self.all_index_names:
-            table_name, type, uniqueness, include_column, generated, secondary = self.all_indexes[index_name]
-            t = self.table_index_map.get(table_name)
-            if not t:
-                t = []
-                self.table_index_map[table_name] = t
-            t.append(index_name)
+            table_name = self.all_indexes[index_name][0]
+            self.table_index_map.setdefault(table_name,[]).append(index_name)
             
         self.all_triggers = _get_all_triggers(conn)
         self.all_trigger_names = self.all_triggers.keys()
@@ -169,18 +99,11 @@ class OraSchemaDataDictionary:
                           = self.all_triggers[trigger_name]
             if base_object_type in ('TABLE', 'VIEW'):
                 self.table_triggers.append(trigger_name)
-                t = self.table_trigger_map.get(table_name)
-                if not t:
-                    t = []
-                    self.table_trigger_map[table_name] = t
-                t.append(name)
+                self.table_trigger_map.setdefault(table_name,[]).append(name)
             elif base_object_type  == 'SCHEMA':
                 self.schema_triggers.append(trigger_name)
         self.table_triggers.sort()
         
-        #self._all_cons_columns     = _get_all_cons_columns(conn)
-        #self._all_col_comments     = _get_all_col_comments(conn)
-
         #process user_source
         self.all_functions = {}
         self.all_procedures = {}
@@ -188,25 +111,13 @@ class OraSchemaDataDictionary:
         self.all_package_bodies = {}
         for name, type, line, text in _get_user_source(conn):
             if type == 'PROCEDURE':
-                t = self.all_procedures.get(name, None)
-                if not t:
-                    t = {}
-                    self.all_procedures[name] = t
+                t = self.all_procedures.setdefault(name, {})
             elif type == 'FUNCTION':
-                t = self.all_functions.get(name, None)
-                if not t:
-                    t = {}
-                    self.all_functions[name] = t
+                t = self.all_functions.setdefault(name, {})
             elif type == 'PACKAGE':
-                t = self.all_packages.get(name, None)
-                if not t:
-                    t = {}
-                    self.all_packages[name] = t
+                t = self.all_packages.setdefault(name, {})
             elif type == 'PACKAGE BODY':
-                t = self.all_package_bodies.get(name, None)
-                if not t:
-                    t = {}
-                    self.all_package_bodies[name] = t
+                t = self.all_package_bodies.setdefault(name, {})
             t[int(float(line))] = text
 
         self.all_procedure_names = self.all_procedures.keys()
@@ -216,7 +127,6 @@ class OraSchemaDataDictionary:
         self.all_package_names = self.all_packages.keys()
         self.all_package_names.sort()
         
-
         # convert all_arguments
         all_arguments = _get_all_arguments(conn)
         self.proc_arguments = {}
@@ -226,35 +136,17 @@ class OraSchemaDataDictionary:
         for name, package_name, argument_name, position, data_type, default_value, in_out in all_arguments:
             if not package_name:
                 if position:
-                    t = self.proc_arguments.get(name, None)
-                    if not t:
-                        t = {}
-                        self.proc_arguments[name] = t
+                    t = self.proc_arguments.setdefault(name, {})
                     t[int(float(position))]= [argument_name, data_type, default_value, in_out]
                 else:
                     self.func_return_arguments[name] = data_type
             else:
-                if position:
-                    p = self.package_arguments.get(package_name, None)
-                    if not p:
-                        p = {}
-                        self.package_arguments[package_name]= p
-                    t = p.get(name)
-                    if not t:
-                        t = {}
-                        p[name]= t
+                if float(position) > 0:
+                    t = self.package_arguments.setdefault(package_name, {}).setdefault(name, {})
                     t[int(float(position))] =  argument_name, data_type, default_value, in_out 
                 else:
-                    p = self.package_return_values.get(package_name, None)
-                    if not p:
-                        p = {}
-                        self.package_return_values[package_name] = p
-                    p[name] = data_type
+                    self.package_return_values.setdefault(package_name, {})[name]= data_type
 
-        
-        
-                    
-                    
         
 
 
@@ -473,7 +365,8 @@ def _get_all_arguments(conn):
                 _data_type = _data_type + ',%s' %data_scale
             _data_type = _data_type + ')'
         elif data_type in ('CHAR','VARCHAR2','NCHAR','NVARCHAR2','RAW','UROWID'):
-            _data_type = _data_type + '(%s)' %data_length
+            if data_length:
+                _data_type = _data_type + '(%s)' %data_length
         all_arguments.append\
                 ((name, package_name, argument_name, position, _data_type, default_value, in_out))
     return all_arguments
