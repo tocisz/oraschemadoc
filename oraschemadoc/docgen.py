@@ -20,20 +20,24 @@
 
 __author__ = 'Aram Kananov <arcanan@flashmail.com>'
 
-__version__ = '$Version: 0.1'
+__version__ = '$Version: 0.21'
 
 import os, string, docwidgets, analyze
 
+from oraverbose import *
+
 class OraSchemaDoclet:
 
-    def __init__(self, schema, doc_dir, name, description):
+    def __init__(self, schema, doc_dir, name, description, debug_mode):
+        
+        set_verbose_mode(debug_mode)
+        
         self.schema = schema
         self.doc_dir = doc_dir
         self.name = name
         self.description = description
         self.html = docwidgets.HtmlWidgets(self.name)
         self.index = {}
- 
 
         self._print_table_list_page()
         self._print_tables()
@@ -76,6 +80,7 @@ class OraSchemaDoclet:
 
 
     def _print_table_list_page(self):
+        print "print table list page"
         text = self.html.page_header("Tables")
         text = text + self.html.context_bar( None)
         text = text + self.html.hr()
@@ -98,6 +103,7 @@ class OraSchemaDoclet:
 
 
     def _print_table_index_frame(self):
+        print "print table list frame"
         text = self.html.frame_header("Tables")
         #text = text + self.html.heading("Tables",3)
         text = text + self.html.hr()
@@ -114,6 +120,7 @@ class OraSchemaDoclet:
 
 
     def _print_index_index_frame(self):
+        print "print indexes list frame"
         text = self.html.frame_header("Indexes")
         #text = text + self.html.heading("Indexes",3)
         text = text + self.html.hr()
@@ -128,6 +135,7 @@ class OraSchemaDoclet:
 
 
     def _print_constraint_index_frame(self):
+        print "print constraint list frame"
         text = self.html.frame_header("Constraints")
         #text = text + self.html.heading("Constraints",3)
         text = text + self.html.hr()
@@ -142,6 +150,7 @@ class OraSchemaDoclet:
 
 
     def _print_view_index_frame(self):
+        print "print view list frame"
         text = self.html.frame_header("Views")
         #text = text + self.html.heading("Views",3)
         text = text + self.html.hr()
@@ -156,6 +165,7 @@ class OraSchemaDoclet:
 
 
     def _print_procedure_index_frame(self):
+        print "print procedure list frame"
         text = self.html.frame_header("Procedures")
         text = text + self.html.hr()
         rows = []
@@ -169,6 +179,7 @@ class OraSchemaDoclet:
 
 
     def _print_function_index_frame(self):
+        print "print functions list frame"
         text = self.html.frame_header("Functions")
         text = text + self.html.hr()
         rows = []
@@ -181,6 +192,7 @@ class OraSchemaDoclet:
 
 
     def _print_package_index_frame(self):
+        print "print packages list frame"
         text = self.html.frame_header("Packages")
         text = text + self.html.hr()
         rows = []
@@ -194,6 +206,7 @@ class OraSchemaDoclet:
         
 
     def _print_trigger_index_frame(self):
+        print "print triggers list frame"
         text = self.html.frame_header("Triggers")
         text = text + self.html.hr()
         rows = []
@@ -207,28 +220,33 @@ class OraSchemaDoclet:
 
 
     def _print_tables(self):
+        print "print tables"
         for table in self.schema.tables:
             self._print_table(table)
             
 
 
     def _print_views(self):
+        print "print views"
         for view in self.schema.views:
             self._print_view(view)
 
 
     def _print_functions(self):
+        print "print functions"
         for function in self.schema.functions:
             self._print_function(function)
 
 
     def _print_procedures(self):
+        print "print procedures"
         for procedure in self.schema.procedures:
             self._print_procedure(procedure)
 
 
 
     def _print_packages(self):
+        print "print packages"
         for package in self.schema.packages:
             self._print_package(package)
             
@@ -260,7 +278,6 @@ class OraSchemaDoclet:
         rows = []
         # fixme iot table overflow segment column problem
         if len(table.columns) > 0:
-            print table.name
             for i in range(len(table.columns)):
                 column = table.columns[i+1]
                 self._add_index_entry(column.name, self.html.href_to_column(column.name, table.name, column.name),\
@@ -390,6 +407,7 @@ class OraSchemaDoclet:
 
 
     def _print_index_list_page(self):
+        print "print indexes list page"
         text = self.html.page_header("Indexes")
         text = text + self.html.context_bar( None)
         text = text + self.html.hr()
@@ -411,6 +429,7 @@ class OraSchemaDoclet:
 
 
     def _print_trigger_list_page(self):
+        print "print triggers list page"
         text = self.html.page_header("Triggers")
         text = text + self.html.context_bar( None)
         text = text + self.html.hr()
@@ -432,6 +451,7 @@ class OraSchemaDoclet:
 
 
     def _print_constraint_list_page(self):
+        print "print constraints list page"
         text = self.html.page_header("Constraints")
         text = text + self.html.context_bar( None)
         text = text + self.html.hr()
@@ -453,6 +473,7 @@ class OraSchemaDoclet:
 
 
     def _print_view_list_page(self):
+        print "print views list page"
         text = self.html.page_header("Views")
         text = text + self.html.context_bar( None)
         text = text + self.html.hr()
@@ -579,6 +600,7 @@ class OraSchemaDoclet:
 
         
     def _print_procedure_list_page(self):
+        print "print procedures list page"
         text = self.html.page_header("Procedures")
         text = text + self.html.context_bar( None)
         text = text + self.html.hr()
@@ -636,6 +658,7 @@ class OraSchemaDoclet:
         self._write(text, file_name)
 
     def _print_function_list_page(self):
+        print "print functions list page"
         text = self.html.page_header("Functions")
         text = text + self.html.context_bar( None)
         text = text + self.html.hr()
@@ -656,6 +679,7 @@ class OraSchemaDoclet:
 
 
     def _print_symbol_index_page(self):
+        print "print symbols index page"
         text = self.html.page_header("Schema Objects Index")
         local_nav_bar = []
 
@@ -716,6 +740,7 @@ class OraSchemaDoclet:
         self._write(text, file_name)        
 
     def _print_package_list_page(self):
+        print "print packages list page"
         text = self.html.page_header("Packages")
         text = text + self.html.context_bar( None)
         text = text + self.html.hr()
@@ -734,6 +759,7 @@ class OraSchemaDoclet:
         self._write(text, file_name)
 
     def _sanity_check(self):
+        print "print sanity check page"
         text = self.html.page_header("Sanity Check")
         text += self.html.context_bar(None)
         text += self.html.hr()
@@ -757,7 +783,6 @@ class OraSchemaDoclet:
                 row.append( self.html.href_to_constraint(constraint.name, constraint.table_name, constraint.name))
                 columns = ''
                 columns_count = len(constraint.columns)
-                print 'name of constraint', constraint.name
                 i=0
                 for j in constraint.columns.keys():
                     columns += constraint.columns[j]
@@ -775,6 +800,7 @@ class OraSchemaDoclet:
         self._write(text, file_name)
             
     def _write(self, text, file_name):
+        debug_message("debug: writing file " + file_name)
         f = open(file_name, 'w')
         f.write(text)
         f.close()
