@@ -32,7 +32,6 @@ class SchemaAnalyzer:
             if table.referential_constraints:
                 for constraint in table.referential_constraints:
                     if self._find_index(constraint.columns, table.indexes) == 0:
-                        print 'blah'
                         self.fk_no_indexes.append(constraint)
                         self.fk_no_indexes_sql += "--missed index on %s table for %s constraint \n" \
                                                   % (table.name, constraint.name)
