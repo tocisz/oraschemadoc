@@ -29,6 +29,7 @@ class OracleSchema:
         self.indexes = self._get_all_indexes(data_dict)
         self.constraints = self._get_all_constraints(data_dict)
         self.views = self._get_all_views(data_dict)
+        self.triggers = self._get_all_table_triggers(data_dict)
         self.name = "Foobarizm" 
 
     def _get_all_tables(self, data_dict):
@@ -60,6 +61,12 @@ class OracleSchema:
         for view_name in data_dict.all_view_names:
             views.append(OracleView(view_name, data_dict))
         return views
+
+    def _get_all_table_triggers(self, data_dict):
+        triggers = []
+        for trigger_name in data_dict.table_triggers:
+            triggers.append(OracleTrigger(trigger_name, data_dict))
+        return triggers
 
 class OracleTable:
 

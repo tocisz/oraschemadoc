@@ -160,7 +160,7 @@ class OraSchemaDataDictionary:
         self.all_trigger_names.sort()
         self.all_trigger_columns = _get_all_trigger_columns(conn)
         # attention that holds mapping for views as well
-        
+        self.table_triggers = []
         self.table_trigger_map = {}
         self.schema_triggers = []
         for trigger_name in self.all_trigger_names:
@@ -168,6 +168,7 @@ class OraSchemaDataDictionary:
                           when_clause, status, description, action_type, body \
                           = self.all_triggers[trigger_name]
             if base_object_type in ('TABLE', 'VIEW'):
+                self.table_triggers.append(trigger_name)
                 t = self.table_trigger_map.get(table_name)
                 if not t:
                     t = []
@@ -175,7 +176,8 @@ class OraSchemaDataDictionary:
                 t.append(name)
             elif base_object_type  == 'SCHEMA':
                 self.schema_triggers.append(trigger_name)
-
+        self.table_triggers.sort()
+        
         #self._all_cons_columns     = _get_all_cons_columns(conn)
         #self._all_col_comments     = _get_all_col_comments(conn)
 
