@@ -19,7 +19,9 @@
 # OraSchemaDataDictionary class queries data from Oracle Data Dictionary 
 
 __author__ = 'Aram Kananov <arcanan@flashmail.com>'
+
 __version__ = '$Revision$'
+# $Source$
 
 
 import fpformat
