@@ -70,7 +70,7 @@ class OraSchemaDoclet:
                 name = self.html.i(name)
             comments = table.comments 
             if comments:
-                comments = comments[:100]+'...'
+                comments = self.html._quotehtml(comments[:50]+'...')
             rows.append(( name, comments ))
         headers = "Table", "Description"
         name = "Tables"
@@ -159,7 +159,7 @@ class OraSchemaDoclet:
         # print comments
         if table.comments:
             text = text + self.html.heading("Description:",3) + self.html.anchor("t-descr")
-            text = text + self.html.pre(table.comments)
+            text = text + self.html.pre(self.html._quotehtml(table.comments))
         #print columns
         rows = []
         # fixme iot table overflow segment column problem
@@ -189,7 +189,8 @@ class OraSchemaDoclet:
             title = "Check Constraints:" + self.html.anchor("t-cc")
             rows = []
             for constraint in table.check_constraints:
-                rows.append((constraint.name + self.html.anchor("cs-%s" % constraint.name),constraint.check_cond))
+                rows.append((constraint.name + self.html.anchor("cs-%s" % constraint.name), \
+                             self.html._quotehtml(constraint.check_cond)))
             text = text + self.html.table(title, ("Constraint Name","Check Condition"), rows)
         # print referential constraints
         if table.referential_constraints:
@@ -314,7 +315,7 @@ class OraSchemaDoclet:
             self._add_index_entry(view.name, name, "view")
             comments = view.comments 
             if comments:
-                comments = comments[:100]+'...'
+                comments = self.html._quotehtml(comments[:50]+'...')
             rows.append(( name, comments ))
         headers = "View", "Description"
         name = "Views"
@@ -338,7 +339,7 @@ class OraSchemaDoclet:
         # print comments
         if view.comments:
             text = text + self.html.heading("Description:",3) + self.html.anchor("v-descr")
-            text = text + self.html.pre(view.comments)
+            text = text + self.html.pre(self.html._quotehtml(view.comments))
         #print columns
         rows = []
         for i in range(len(view.columns)):
