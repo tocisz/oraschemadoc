@@ -21,7 +21,7 @@
 # Generates "JavaDoc" style information about Oracle schema objects
 
 
-import getopt, sys
+import getopt, sys, os
 
 def usage():
     print 'Oracle Schema Documentation Generator v0.10'
@@ -45,6 +45,20 @@ def main():
         usage()
         sys.exit()
 
+    # see if output_dir is exsits, if not try to create one.
+    if os.access(output_dir, os.F_OK) != 1:
+        # dir not exists
+        try: 
+            os.makedirs(output_dir)
+        except os.error, e:
+            print 'ERROR: Cannot create directory ', output_dir
+            sys.exit(2)
+    else:
+        # if directory exists see if its writable
+        if os.access(output_dir, os.W_OK) != 1:
+            print 'ERROR: Cannot write into directory ', output_dir
+            sys.exit(2)
+            
     import cx_Oracle
     connection = cx_Oracle.connect(connect_string)
     import oraschemadoc.orasdict
