@@ -126,6 +126,8 @@ class OraSchemaDataDictionary:
                 t = self.all_package_bodies.setdefault(name, {})
             elif type == 'JAVA SOURCE':
                 t = self.all_java_sources.setdefault(name, {})
+            else:
+                continue
             t[int(float(line))] = text
 
         self.all_procedure_names = self.all_procedures.keys()
