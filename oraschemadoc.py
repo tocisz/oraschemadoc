@@ -98,6 +98,12 @@ def main():
     import oraschemadoc.diagen
     s = oraschemadoc.orasdict.OraSchemaDataDictionary(connection, name, verbose_mode)
     schema = oraschemadoc.oraschema.OracleSchema(s, verbose_mode)
+
+    file_name = os.path.join(output_dir, "schema.xml")
+    f = open(file_name, 'w')
+    f.write(schema.getXML())
+    f.close()
+
     doclet = oraschemadoc.docgen.OraSchemaDoclet(schema, output_dir, name, "", verbose_mode)
     if dia_uml_output:
         dia_diagram = oraschemadoc.diagen.DiaUmlDiagramGenerator(schema, "/tmp/oraschemadoc/", "vtr Data Model", "Really cool project", 0, dia_conf_file)
