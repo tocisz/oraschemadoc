@@ -30,6 +30,9 @@ class OracleSchema:
         self.constraints = self._get_all_constraints(data_dict)
         self.views = self._get_all_views(data_dict)
         self.triggers = self._get_all_table_triggers(data_dict)
+        self.procedures = self._get_all_procedures(data_dict)
+        self.functions = self._get_all_functions(data_dict)
+        self.packages = self._get_all_packages(data_dict)
         self.name = "Foobarizm" 
 
     def _get_all_tables(self, data_dict):
@@ -68,6 +71,35 @@ class OracleSchema:
             triggers.append(OracleTrigger(trigger_name, data_dict))
         return triggers
 
+    def _get_all_procedures(self, data_dict):
+        procedures = []
+        for name in data_dict.all_procedure_names:
+            procedure = OracleProcedure(name, data_dict.proc_arguments.get(name, None), \
+                                        data_dict.all_procedures.get(name, None))
+            procedures.append(procedure)
+        return procedures
+    
+    def _get_all_functions(self, data_dict):
+        functions = []
+        for name in data_dict.all_function_names:
+            function = OracleFunction(name, data_dict.proc_arguments.get(name, None), \
+                                      data_dict.func_return_arguments.get(name, None),\
+                                      data_dict.all_functions.get(name, None))
+            functions.append(function)
+        return functions
+    
+    def _get_all_packages(self, data_dict):
+        packages = []
+        for name in data_dict.all_package_names:
+            all_arguments = data_dict.package_arguments.get(name, None)
+            all_return_values = data_dict.package_return_values.get(name, None)
+            def_source = data_dict.all_packages[name]
+            body_source = data_dict.all_package_bodies.get(name, None)
+            package = OraclePackage(name, all_arguments, all_return_values, def_source, body_source)
+            packages.append(package)
+        return packages
+
+        
 class OracleTable:
 
     def __init__(self, name, data_dict):
@@ -302,9 +334,76 @@ class OracleTriggerColumn:
         self.column_name = column_name
         self.column_list = column_list
         self.column_usage = column_usage
-        
-        
 
+class OracleProcedure:
+
+    def __init__(self, name, arguments, source = None):
+        self.name = name
+        self.arguments = []
+        self.source = None
+
+        if arguments:
+            arg_keys = arguments.keys()
+            arg_keys.sort()
+            for key in arg_keys:
+                name, data_type, default_value, in_out = arguments[key]
+                argument = OracleProcedureArgument(name, data_type, default_value, in_out)
+                self.arguments.append(argument)
+        if source:
+            self.source = OraclePLSQLSource(source)
+            
+
+class OracleFunction(OracleProcedure):
+    
+    def __init__(self, name, arguments, return_data_type, source = None):
+        OracleProcedure(name, arguments, source)
+        self.return_data_type = return_data_type
+    
+            
+
+class OracleProcedureArgument:
+    def __init__(self, name, data_type, default_value, in_out ):
+        self.name = name
+        self.data_type = data_type
+        self.default_value = default_value
+        self.in_out = in_out
+
+class OraclePLSQLSource:
+    def __init__(self, source):
+        self.source = []
+        lines = source.keys()
+        lines.sort()
+        for line_no in lines:
+            self.source.append(OraclePLSQLSourceLine(line_no, source[line_no]))
+        
+            
+
+class OraclePLSQLSourceLine:
+    
+    def __init__(self, line_no, text):
+        self.line_no = line_no
+        self.text = text
+    
+class OraclePackage:
+
+    def __init__(self, name, all_arguments, all_return_values, definition_source, body_source):
+        self.name = name
+        self.procedures = []
+        self.functions = []
+
+        _names =  all_arguments.keys()
+        _names.sort()
+        for _name in _names:
+            if all_return_values and all_return_values.has_key(_name):
+                function = OracleFunction(_name, all_arguments[_name], all_return_values[_name])
+                self.functions.append(function)
+            else:
+                procedure = OracleProcedure(_name, all_arguments[_name])
+                self.procedures.append(procedure)
+        
+        self.definition_source = OraclePLSQLSource(definition_source)
+        self.body_source = OraclePLSQLSource(body_source)
+        
 if __name__ == '__main__':
     import cx_Oracle
     import orasdict

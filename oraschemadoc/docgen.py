@@ -479,6 +479,7 @@ class OraSchemaDoclet:
         t.append((link, description))
 
     
+    
 if __name__ == '__main__':
     import cx_Oracle
     import orasdict

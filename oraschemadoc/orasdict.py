@@ -181,7 +181,80 @@ class OraSchemaDataDictionary:
         #self._all_cons_columns     = _get_all_cons_columns(conn)
         #self._all_col_comments     = _get_all_col_comments(conn)
 
+        #process user_source
+        self.all_functions = {}
+        self.all_procedures = {}
+        self.all_packages = {}
+        self.all_package_bodies = {}
+        for name, type, line, text in _get_user_source(conn):
+            if type == 'PROCEDURE':
+                t = self.all_procedures.get(name, None)
+                if not t:
+                    t = {}
+                    self.all_procedures[name] = t
+            elif type == 'FUNCTION':
+                t = self.all_functions.get(name, None)
+                if not t:
+                    t = {}
+                    self.all_functions[name] = t
+            elif type == 'PACKAGE':
+                t = self.all_packages.get(name, None)
+                if not t:
+                    t = {}
+                    self.all_packages[name] = t
+            elif type == 'PACKAGE BODY':
+                t = self.all_package_bodies.get(name, None)
+                if not t:
+                    t = {}
+                    self.all_package_bodies[name] = t
+            t[int(float(line))] = text
 
+        self.all_procedure_names = self.all_procedures.keys()
+        self.all_procedure_names.sort()
+        self.all_function_names = self.all_functions.keys()
+        self.all_function_names.sort()
+        self.all_package_names = self.all_packages.keys()
+        self.all_package_names.sort()
+        
+
+        # convert all_arguments
+        all_arguments = _get_all_arguments(conn)
+        self.proc_arguments = {}
+        self.func_return_arguments = {}
+        self.package_arguments = {}
+        self.package_return_values = {}
+        for name, package_name, argument_name, position, data_type, default_value, in_out in all_arguments:
+            if not package_name:
+                if position:
+                    t = self.proc_arguments.get(name, None)
+                    if not t:
+                        t = {}
+                        self.proc_arguments = t
+                    t[int(float(position))]= [argument_name, data_type, default_value, in_out]
+                else:
+                    self.func_return_arguments[name] = [data_type]
+            else:
+                if position:
+                    p = self.package_arguments.get(package_name, None)
+                    if not p:
+                        p = {}
+                        self.package_arguments[package_name]= p
+                    t = p.get(name)
+                    if not t:
+                        t = {}
+                        p[name]= t
+                    t[int(float(position))] =  argument_name, data_type, default_value, in_out 
+                else:
+                    p = self.package_return_values.get(package_name, None)
+                    if not p:
+                        p = {}
+                    p[name] = data_type
+
+        
+        
+                    
+                    
+        
 
 
 ################################################
@@ -376,6 +449,44 @@ def _get_all_trigger_columns(conn):
             trigger_columns[name] = t
         t.append((name, table_name, column_name, column_list, column_usage))
     return trigger_columns
+
+def _get_all_arguments(conn):
+    "get all function/procedure argumets"
+    stmt = """select object_name, package_name, argument_name, position, data_type, default_value, in_out, pls_type,
+                   data_scale, data_precision, data_length
+                from user_arguments"""
+    all_arguments = []
+    print "get all pl/sql arguments"
+    for name, package_name, argument_name, position, data_type, default_value, in_out, pls_type, data_scale, \
+        data_precision, data_length in _query(conn, stmt):
+        _data_type = ''
+        if pls_type:
+            _data_type = pls_type
+        else:
+            _data_type = data_type
+        if data_type == 'NUMBER':
+            if not data_precision:
+                data_precision = "38"
+            _data_type = _data_type + '(%s' %data_precision
+            if data_scale and data_scale <> 0:
+                _data_type = _data_type + ',%s' %data_scale
+            _data_type = _data_type + ')'
+        elif data_type in ('CHAR','VARCHAR2','NCHAR','NVARCHAR2','RAW','UROWID'):
+            _data_type = _data_type + '(%s)' %data_length
+        all_arguments.append\
+                ((name, package_name, argument_name, position, _data_type, default_value, in_out))
+    return all_arguments
+
+def _get_user_source(conn):
+    "get pl/sql source for procedures, functions and packages"
+    stmt = "select name, type, line, text from user_source order by name, line"
+    user_source = []
+    print "get pl/sql source for procedures, functions and packages"
+    for name, type, line, text in _query(conn, stmt):
+        user_source.append((name, type, line, text))
+    return user_source
+
+
         
 def _query(conn, querystr):
     "execute query end return results in array"    
