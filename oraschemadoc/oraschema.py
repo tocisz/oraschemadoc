@@ -22,9 +22,14 @@ __author__ = 'Aram Kananov <arcanan@flashmail.com>'
 
 __version__ = '$Version: 0.1'
 
+from oraverbose import *
+
 class OracleSchema:
 
-    def __init__(self, data_dict):
+    def __init__(self, data_dict , debug_mode):
+
+        set_verbose_mode(debug_mode)
+        
         self.tables = self._get_all_tables(data_dict)
         self.indexes = self._get_all_indexes(data_dict)
         self.constraints = self._get_all_constraints(data_dict)
@@ -37,17 +42,20 @@ class OracleSchema:
 
     def _get_all_tables(self, data_dict):
         tables = []
+        print 'generating tables'
         for table_name in data_dict.all_table_names:
             tables.append(OracleTable(table_name, data_dict))
         return tables
     
     def _get_all_indexes(self, data_dict):
+        print 'generating indexes'
         indexes = []
         for index_name in data_dict.all_index_names:
             indexes.append(OracleIndex(index_name, data_dict))
         return indexes
     
     def _get_all_constraints(self, data_dict):
+        print 'generating constraints'
         constraints = []
         for name in data_dict.all_constraint_names:
              table_name, type, check_cond, r_owner, r_constraint_name, delete_rule = data_dict.all_constraints[name]
@@ -60,18 +68,21 @@ class OracleSchema:
         return constraints
 
     def _get_all_views(self, data_dict):
+        print 'generating views'
         views = []
         for view_name in data_dict.all_view_names:
             views.append(OracleView(view_name, data_dict))
         return views
 
     def _get_all_table_triggers(self, data_dict):
+        print 'generating triggers'
         triggers = []
         for trigger_name in data_dict.table_triggers:
             triggers.append(OracleTrigger(trigger_name, data_dict))
         return triggers
 
     def _get_all_procedures(self, data_dict):
+        print 'generating procedures'
         procedures = []
         for name in data_dict.all_procedure_names:
             procedure = OracleProcedure(name, data_dict.proc_arguments.get(name, None), \
@@ -80,9 +91,9 @@ class OracleSchema:
         return procedures
     
     def _get_all_functions(self, data_dict):
+        print 'generating functions'
         functions = []
         for name in data_dict.all_function_names:
-            print "Function name", name
             function = OracleFunction(name, data_dict.proc_arguments.get(name, None), \
                                       data_dict.func_return_arguments.get(name, None),\
                                       data_dict.all_functions.get(name, None))
@@ -90,6 +101,7 @@ class OracleSchema:
         return functions
     
     def _get_all_packages(self, data_dict):
+        print 'generating packages'
         packages = []
         for name in data_dict.all_package_names:
             all_arguments = data_dict.package_arguments.get(name, None)
@@ -104,6 +116,7 @@ class OracleSchema:
 class OracleTable:
 
     def __init__(self, name, data_dict):
+        debug_message('debug: creating table object '+ name)
         self.name = name
         self.partitioned, self.secondary, self.index_organized, self.clustered, self.cluster_name, self.nested, self.temporary = data_dict.all_tables[name]
         self.comments = data_dict.all_table_comments.get(name)
@@ -121,48 +134,58 @@ class OracleTable:
 
 
     def _get_primary_key(self, table_name, data_dict):
+        
         _primary_key_name = data_dict.table_primary_key_map.get(table_name)
         primary_key = None
         if _primary_key_name:
+            debug_message('debug: generating primary key ' + _primary_key_name)
             primary_key = OracleUniqueConstraint(_primary_key_name, data_dict)
         return primary_key
 
     def _get_unique_keys(self, table_name, data_dict):
+        debug_message('debug: generating unique keys')
         unique_keys = []
         t = data_dict.table_unique_key_map.get(table_name)
         if not t:
             return None
         for key_name in t:
+            debug_message('debug: generating unique key ' + key_name )
             unique_key = OracleUniqueConstraint(key_name, data_dict)
             unique_keys.append(unique_key)
         return unique_keys
 
     def _get_check_constraints(self, table_name, data_dict):
+        debug_message('debug: generating check constraints')
         check_constraints = []
         t = data_dict.table_check_constraint_map.get(table_name)
         if not t:
             return None
         for constraint_name in t:
+            debug_message('debug: generating check constraint ' + constraint_name)  
             constraint = OracleCheckConstraint(constraint_name, data_dict)
             check_constraints.append(constraint)
         return check_constraints
 
     def _get_ref_constraints(self, table_name, data_dict):
+        debug_message('debug: generating foreign key constraints')
         referential_constraints = []
         t = data_dict.table_foreign_key_map.get(table_name)
         if not t:
             return None
         for constraint_name in t:
+            debug_message('debug: generating foreign key ' + constraint_name)
             constraint = OracleReferentialConstraint(constraint_name, data_dict)
             referential_constraints.append(constraint)
         return referential_constraints
     
 
     def _get_columns(self, data_dict):
+        debug_message('debug: generating columns')
         columns = {}
         # Fixme: need proper hadling iot overflow segment columns
         if data_dict.all_columns.has_key(self.name):
             for column, data_type, nullable, column_id, data_default in data_dict.all_columns[self.name]:
+                debug_message('debug: generating column ' + column)
                 if data_dict.all_col_comments.has_key((self.name, column)):
                     comments = data_dict.all_col_comments[self.name, column]
                 else:
@@ -172,17 +195,21 @@ class OracleTable:
 
 
     def _get_indexes(self, table_name, data_dict):
+        debug_message('debug: generating indexes')
         indexes = []
         if  data_dict.table_index_map.has_key(table_name):
             for index_name in data_dict.table_index_map[table_name]:
+                debug_message('debug: generating index ' + index_name)
                 index = OracleIndex(index_name, data_dict)
                 indexes.append(index)
         return indexes
             
     def _get_triggers(self, data_dict):
+        debug_message('debug: generating triggers')
         triggers = []
         if  data_dict.table_trigger_map.has_key(self.name):
             for trigger_name in data_dict.table_trigger_map[self.name]:
+                debug_message('debug: generating trigger ' + trigger_name)
                 triggers.append(OracleTrigger(trigger_name, data_dict))
         return triggers
 
@@ -260,13 +287,15 @@ class OracleIndex:
 class OracleView:
 
     def __init__(self, name, data_dict):
+        debug_message("debug: generating view" + name)
         self.name = name
         self.text = data_dict.all_views[name]
         self.columns = self._get_columns(data_dict)
         self.constraints = self._get_constraints(data_dict)
         self.comments = data_dict.all_table_comments.get(name)
         self.triggers                = self._get_triggers(data_dict)
-          
+    
+    
     def _get_columns(self, data_dict):
         columns = {}
         for column, data_type, nullable, column_id, data_default in data_dict.all_columns[self.name]:
@@ -287,7 +316,6 @@ class OracleView:
             constraints.append(constraint)
         return constraints
 
-    #here
     def _get_triggers(self, data_dict):
         triggers = []
         if  data_dict.table_trigger_map.has_key(self.name):
@@ -298,6 +326,7 @@ class OracleView:
 class OracleViewColumn(OracleColumn):
 
     def __init__(self, name, column_id, data_type, nullable, data_default, comments, table_name, data_dict):
+        debug_message("debug: generating view column" + name)
         OracleColumn.__init__(self, name, column_id, data_type, nullable, data_default, comments)
         self.insertable, self.updatable, self.deletable = data_dict.all_updatable_columns[table_name, name]
     
@@ -305,6 +334,7 @@ class OracleViewColumn(OracleColumn):
 class OracleViewConstraint:
 
     def __init__(self, name, data_dict):
+        debug_message("debug: generating view constraint " + name)
         self.name = name
         self.table_name, type, check_cond, r_owner, r_constraint_name, delete_rule = data_dict.all_constraints[name]
         if type == 'O':
@@ -320,18 +350,20 @@ class OracleViewConstraint:
 class OracleTrigger:
 
     def __init__(self, name, data_dict):
+        debug_message("debug: generating trigger " + name)
         self.name, self.type, self.event, self.base_object_type, self.table_name, self.nested_column_name, \
                    self.referencing_names, self.when_clause, self.status, self.description, self.action_type,\
                    self.body = data_dict.all_triggers[name]
         # initalize trigger columns
-        columns = []
+        self.columns = []
         if data_dict.all_trigger_columns.has_key(self.name):
             for name, table_name, column_name, column_list, column_usage in data_dict.all_trigger_columns[self.name]:
-                columns.append(OracleTriggerColumn(column_name, column_list, column_usage))
+                self.columns.append(OracleTriggerColumn(column_name, column_list, column_usage))
 
 class OracleTriggerColumn:
 
     def __init__(self, column_name, column_list, column_usage):
+        debug_message("debug: generating trigger column " + column_name)
         self.column_name = column_name
         self.column_list = column_list
         self.column_usage = column_usage
@@ -339,6 +371,7 @@ class OracleTriggerColumn:
 class OracleProcedure:
 
     def __init__(self, name, arguments, source = None):
+        debug_message("debug: generating plsql procedure " + name)
         self.name = name
         self.arguments = []
         self.source = None
@@ -357,6 +390,7 @@ class OracleProcedure:
 class OracleFunction(OracleProcedure):
     
     def __init__(self, name, arguments, return_data_type, source = None):
+        debug_message("debug: generating plsql function " + name)
         OracleProcedure.__init__(self, name, arguments, source)
         self.return_data_type = ''
         if return_data_type:
@@ -366,6 +400,7 @@ class OracleFunction(OracleProcedure):
 
 class OracleProcedureArgument:
     def __init__(self, name, data_type, default_value, in_out ):
+        debug_message("debug: generating plsql argument "+ name)
         self.name = name
         self.data_type = data_type
         self.default_value = default_value
@@ -373,6 +408,7 @@ class OracleProcedureArgument:
 
 class OraclePLSQLSource:
     def __init__(self, source):
+        debug_message("debug: generating plsql source ")
         self.source = []
         lines = source.keys()
         lines.sort()
@@ -390,12 +426,13 @@ class OraclePLSQLSourceLine:
 class OraclePackage:
 
     def __init__(self, name, all_arguments, all_return_values, definition_source, body_source):
+        debug_message("debug: generating plsql package " + name)
         self.name = name
         self.source = OraclePLSQLSource(definition_source)
         self.body_source = None
         if body_source:
             self.body_source = OraclePLSQLSource(body_source)
-        
+
 if __name__ == '__main__':
     import cx_Oracle
     import orasdict
