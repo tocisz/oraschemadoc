@@ -82,8 +82,9 @@ class OracleSchema:
     def _get_all_functions(self, data_dict):
         functions = []
         for name in data_dict.all_function_names:
+            print "Function name", name
             function = OracleFunction(name, data_dict.proc_arguments.get(name, None), \
-                                      data_dict.func_return_arguments[name],\
+                                      data_dict.func_return_arguments.get(name, None),\
                                       data_dict.all_functions.get(name, None))
             functions.append(function)
         return functions
@@ -357,7 +358,9 @@ class OracleFunction(OracleProcedure):
     
     def __init__(self, name, arguments, return_data_type, source = None):
         OracleProcedure.__init__(self, name, arguments, source)
-        self.return_data_type = return_data_type
+        self.return_data_type = ''
+        if return_data_type:
+            self.return_data_type = return_data_type
     
             
 
@@ -389,7 +392,9 @@ class OraclePackage:
     def __init__(self, name, all_arguments, all_return_values, definition_source, body_source):
         self.name = name
         self.source = OraclePLSQLSource(definition_source)
-        self.body_source = OraclePLSQLSource(body_source)
+        self.body_source = None
+        if body_source:
+            self.body_source = OraclePLSQLSource(body_source)
         
 if __name__ == '__main__':
     import cx_Oracle
