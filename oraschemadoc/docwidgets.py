@@ -61,6 +61,7 @@ class HtmlWidgets:
                   <td><a href="views-list.html"><b>Views</b></a></td>
                   <td><a href="indexes-list.html"><b>Indexes</b></a></td>
                   <td><a href="constraints-list.html"><b>Constraints</b></a></td>
+                  <td><a href="triggers-list.html"><b>Triggers</b></a></td>
                   <td><a href="symbol-index.html"><b>Index</b></a></td>
                 </tr>
              </table>
@@ -98,6 +99,11 @@ class HtmlWidgets:
         else:
             return '<a href="table-%s.html#cs-%s" target="%s">%s </a>\n' % (table_name, constraint_name, target_frame, label) 
 
+    def href_to_trigger(self, label, table_name, trigger_name, target_frame = None):
+        if not target_frame:
+            return '<a href="table-%s.html#trg-%s">%s </a>\n' % (table_name, trigger_name, label)
+        else:
+            return '<a href="table-%s.html#trg-%s" target="%s">%s </a>\n' % (table_name, trigger_name, target_frame, label)
 
     def href_to_index(self, label, table_name, index_name, target_frame = None):
         if not target_frame:
@@ -126,13 +132,16 @@ class HtmlWidgets:
     def pre(self, text):
         return "<pre>\n"+text+"</pre>\n"
 
-    def table(self, name, headers, rows):
+    def table(self, name, headers, rows, width = None):
         text = ""
         if name:
             text = self.heading(name,3)
         if not rows:
             return text + "<p>None"
-        text = text + '<table border=1>\n'
+        if width:
+            text = text + '<table border=1 width='+width+'%>'
+        else:
+            text = text + '<table border=1>\n'
         text = text + '<tr bgcolor="' +self.table_bgcolor + '">'
         for header in headers:
             text = text + '<th>' + header + '</th>'
@@ -171,6 +180,7 @@ class HtmlWidgets:
                   <a href="views-index.html" target="List"><b>Views</b></a><br>
                   <a href="indexes-index.html" target="List"><b>Indexes</b></a><br>
                   <a href="constraints-index.html" target="List"><b>Constraints</b></a><br>
+                  <a href="triggers-index.html" target="List"><b>Triggers</b></a><br>
                   </body><html>''' % name 
 
     def _quotehtml (self, text):
