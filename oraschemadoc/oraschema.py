@@ -1,4 +1,4 @@
-# OraSchemaDoc v0.24
+# OraSchemaDoc v0.25
 # Copyright (C) Aram Kananov <arcanan@flashmail.com> , 2002
 #
 # This program is free software; you can redistribute it and/or
@@ -20,7 +20,7 @@
 
 __author__ = 'Aram Kananov <arcanan@flashmail.com>'
 
-__version__ = '$Version: 0.24'
+__version__ = '$Version: 0.25'
 
 from oraverbose import *
 

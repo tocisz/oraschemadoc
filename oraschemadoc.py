@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# OraSchemaDoc v0.24
+# OraSchemaDoc v0.25
 # Copyright (C) Aram Kananov <arcanan@flashmail.com>, 2002
 #
 # This program is free software; you can redistribute it and/or
@@ -24,28 +24,53 @@
 import getopt, sys, os
 
 def usage():
-    print 'Oracle Schema Documentation Generator v0.24'
-    print 'usage: oraschemadoc [--verbose] oracleuser/password[@dbalias] output_dir  "application name" '
+    print 'Oracle Schema Documentation Generator v0.25'
+    print 'usage: oraschemadoc [--verbose] [-d|--dia [--dia-table-list file]] oracleuser/password[@dbalias] output_dir  "application name"'
+    print ''
+    print 'Arguments:'
+    print 'oracleuser/password[@dbalias] -  db connect string'
+    print 'output_dir                    -  directory where files will be generated'
+    print 'application_name              -  short name for application/datamodel'
+    print ''
+    print 'Optional arguments:'
+    print '-v --verbose         turns on debuging messages'
+    print '-d --dia             export datamodel to dia uml diagram'
+    print '   --dia-table-list  path to file which contains table names for export to dia diagram'
+    print '-h --help            print this help screen'
+    print ''
+    print 'For more information see README'
 
+    
 def main():
 
+    # variable used for turning on debug messages
     verbose_mode = None
+    # if specified dia_uml_output turns on export to dia uml diagram
+    dia_uml_output = None
+    # if specified, restrict export to dia only for table names included in file 
+    dia_conf_file = None
+    
+    
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'h', ['help','verbose'])
+        opts, args = getopt.getopt(sys.argv[1:], 'hdv', ['help','verbose','dia','dia-table-list'])
     except getopt.error, e:
         # print help information and exit:
         usage()
         sys.exit(2)
     for opt, value in opts:
-        if opt in ('-h' , '--help'):
+        if opt in ('-h', '--help'):
             # print help information and exit:
             usage()
             sys.exit()
-        if opt == '--verbose':
+        if opt in ('v', '--verbose'):
             #print verbose messages
             verbose_mode = 1
+        if opt in ('-d', '--dia'):
+            dia_uml_output = 1;
+        if opt == '--dia-table-list':
+            dia_conf_file = value
 
-    if len(args) == 3:
+    if len(args) == 3: 
         connect_string, output_dir, name = args
     else:
         usage()
@@ -70,10 +95,13 @@ def main():
     import oraschemadoc.orasdict
     import oraschemadoc.oraschema
     import oraschemadoc.docgen
+    import oraschemadoc.diagen
     s = oraschemadoc.orasdict.OraSchemaDataDictionary(connection, name, verbose_mode)
     schema = oraschemadoc.oraschema.OracleSchema(s, verbose_mode)
     doclet = oraschemadoc.docgen.OraSchemaDoclet(schema, output_dir, name, "", verbose_mode)
-       
+    if dia_uml_output:
+        dia_diagram = oraschemadoc.diagen.DiaUmlDiagramGenerator(schema, "/tmp/oraschemadoc/", "vtr Data Model", "Really cool project", 0, dia_conf_file)
+        
     
 if __name__ == '__main__':
     main()

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# OraSchemaDoc v0.23
+# OraSchemaDoc v0.25
 # Copyright (C) Aram Kananov <arcanan@flashmail.com>, 2002
 #
 # This program is free software; you can redistribute it and/or

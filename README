@@ -1,4 +1,4 @@
-OraSchemaDoc v0.24
+OraSchemaDoc v0.25
 Copyright (C) Aram Kananov <arcanan@flashmail.com>, 2002
 
 This program is free software; you can redistribute it and/or
@@ -16,7 +16,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 
-oraschemadoc: Oracle Schema Documentation Generator v0.24
+oraschemadoc: Oracle Schema Documentation Generator v0.25
 
 --------
 CONTENTS
@@ -63,12 +63,21 @@ or
 
 where:
 
-    --verbose - prints data helpfull for debugging. Use that option if you 
-	        encounter problems with oraschemadoc and include output if 
-		you post a bug. Sending me messages is ok, but i would prefer 
-		if u post a bug or support request on oraschemadoc.sourceforge.net
+    --verbose        - prints data helpfull for debugging. Use that option if you 
+	               encounter problems with oraschemadoc and include output if 
+		       you post a bug. Sending me emails is ok, but i would prefer 
+		       if u post a bug or support request on oraschemadoc.sourceforge.net
 		
-    connect_string - username/password@dbalias
+    -d --dia         - export datamodel to dia uml diagram, dm-diagram.dia file will be created under output_dir
+    
+    --dia-table-list - path to file which contains table names for export to dia diagram. Useful if you 
+                       want to create diagram for some subset of tables. Separate table names with line breaks.
+                       example of file content:
+CLIENTS
+ORDERS
+....
+                       
+    connect_string   - username/password@dbalias
 
     output_directory - directory where html files will be placed
 
