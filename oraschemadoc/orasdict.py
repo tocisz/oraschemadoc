@@ -134,6 +134,8 @@ class OraSchemaDataDictionary:
         self.all_function_names.sort()
         self.all_package_names = self.all_packages.keys()
         self.all_package_names.sort()
+        self.all_java_source_names = self.all_java_sources.keys()
+        self.all_java_source_names.sort()
         
         # convert all_arguments
         all_arguments = self.get_arguments(conn)
