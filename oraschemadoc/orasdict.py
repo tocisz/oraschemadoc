@@ -432,7 +432,7 @@ class OraSchemaDataDictionary:
     def get_user_source(self, conn):
         "get pl/sql source for procedures, functions and packages"
 
-        stmt = "select name, type, line, text from user_source order by name, line"
+        stmt = "select name, type, line, text from user_source where type not like 'TYPE%' order by name, line"
         user_source = []
         print "get pl/sql source for procedures, functions and packages"
         for name, type, line, text in self.query(conn, stmt):
