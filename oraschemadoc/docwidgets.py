@@ -22,6 +22,8 @@ __author__ = 'Aram Kananov <arcanan@flashmail.com>'
 
 __version__ = '$Version: 0.1'
 
+import string
+
 class HtmlWidgets:
     
     def __init__(self, name):
@@ -169,6 +171,13 @@ class HtmlWidgets:
                   <a href="constraints-index.html" target="List"><b>Constraints</b></a><br>
                   </body><html>''' % name 
 
+    def _quotehtml (self, text):
+        text = string.replace(text, "&", "&amp;")
+        text = string.replace(text, "\\", "&quot;")
+        text = string.replace(text, "<", "&lt;")
+        text = string.replace(text, ">", "&gt;")
+        return text
+    
     def _main_frame(self, name):
         text = text = self.page_header("name")
         text = text + self.context_bar( None)
