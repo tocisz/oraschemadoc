@@ -20,7 +20,11 @@ class SchemaAnalyzer:
 
     def __init__(self, schema):
         self.schema = schema
-        self.name_prefix = 'os_autogen_ind$'
+        self.name_prefix = 'fk_no_index_'
+        self.fk_no_indexes = []
+        self.fk_no_indexes_sql = ''
+
+        self._analyze_fk_indexes()
 
     def _analyze_fk_indexes(self):
         j = 0
@@ -28,13 +32,17 @@ class SchemaAnalyzer:
             if table.referential_constraints:
                 for constraint in table.referential_constraints:
                     if self._find_index(constraint.columns, table.indexes) == 0:
-                        print "--missed index on %s table for %s constraint " % (table.name, constraint.name)
+                        print 'blah'
+                        self.fk_no_indexes.append(constraint)
+                        self.fk_no_indexes_sql += "--missed index on %s table for %s constraint \n" \
+                                                  % (table.name, constraint.name)
                         _columns = ''
                         for i in range(len(constraint.columns)):
                             _columns = _columns + constraint.columns[i+1]
                         if i+1 != len(constraint.columns):
                             _columns = _columns + ', '
-                        print "create index %s%s on %s (%s);" % (self.name_prefix, j , table.name , _columns )
+                        self.fk_no_indexes_sql += "create index %s%s on %s (%s);\n\n" \
+                                                  % (self.name_prefix, j , table.name , _columns )
                         j = j + 1
 
     def _find_index(self, columns, indexes):
