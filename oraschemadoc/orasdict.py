@@ -1,4 +1,4 @@
-# OraSchemaDoc v0.25
+# OraSchemaDoc
 # Copyright (C) Aram Kananov <arcanan@flashmail.com> , 2002
 #
 # This program is free software; you can redistribute it and/or
@@ -19,30 +19,34 @@
 # OraSchemaDataDictionary class queries data from Oracle Data Dictionary 
 
 __author__ = 'Aram Kananov <arcanan@flashmail.com>'
+__version__ = '$Revision$'
 
-__version__ = '$Version: 0.25'
 
-from oraverbose import *
 import fpformat
+
+from oraschmeadoc.oraverbose import *
+
 
 class OraSchemaDataDictionary:
 
     def __init__(self, conn, name, debug_mode):
         
+        self.__conn = conn
+
         set_verbose_mode(debug_mode)
         
         self.name                      = name
-        self.all_tables               = self.get_tables(conn)        
-        self.all_table_comments       = self.get_table_comments(conn)
-        self.all_columns              = self.get_columns(conn)        
-        self.all_col_comments         = self.get_column_comments(conn)
-        self.all_constraints          = self.get_constraints(conn)
-        self.all_constraited_columns  = self.get_constraited_columns(conn)
-        self.all_views                = self.get_views(conn)
-        self.all_updatable_columns    = self.get_updatable_columns(conn)
-        self.all_indexes              = self.get_indexes(conn)
-        self.all_index_columns        = self.get_index_columns(conn)
-        self.all_index_expressions    = self.get_index_expressions(conn)
+        self.all_tables               = self.__get_tables()        
+        self.all_table_comments       = self.__get_table_comments()
+        self.all_columns              = self.__get_columns()        
+        self.all_col_comments         = self.__get_column_comments()
+        self.all_constraints          = self.__get_constraints()
+        self.all_constraited_columns  = self.__get_constraited_columns()
+        self.all_views                = self.__get_views()
+        self.all_updatable_columns    = self.__get_updatable_columns()
+        self.all_indexes              = self.__get_indexes()
+        self.all_index_columns        = self.__get_index_columns()
+        self.all_index_expressions    = self.__get_index_expressions()
         
         self.all_table_names = self.all_tables.keys()
         self.all_table_names.sort()
@@ -90,10 +94,10 @@ class OraSchemaDataDictionary:
             table_name = self.all_indexes[index_name][0]
             self.table_index_map.setdefault(table_name,[]).append(index_name)
             
-        self.all_triggers = self.get_triggers(conn)
+        self.all_triggers = self.__get_triggers()
         self.all_trigger_names = self.all_triggers.keys()
         self.all_trigger_names.sort()
-        self.all_trigger_columns = self.get_trigger_columns(conn)
+        self.all_trigger_columns = self.__get_trigger_columns()
         # attention that holds mapping for views as well
         self.table_triggers = []
         self.table_trigger_map = {}
@@ -115,7 +119,7 @@ class OraSchemaDataDictionary:
         self.all_packages = {}
         self.all_package_bodies = {}
         self.all_java_sources = {}
-        for name, type, line, text in self.get_user_source(conn):
+        for name, type, line, text in self.__get_user_source():
             if type == 'PROCEDURE':
                 t = self.all_procedures.setdefault(name, {})
             elif type == 'FUNCTION':
@@ -140,7 +144,7 @@ class OraSchemaDataDictionary:
         self.all_java_source_names.sort()
         
         # convert all_arguments
-        all_arguments = self.get_arguments(conn)
+        all_arguments = self.__get_arguments()
         self.proc_arguments = {}
         self.func_return_arguments = {}
         self.package_arguments = {}
@@ -160,22 +164,22 @@ class OraSchemaDataDictionary:
                     self.package_return_values.setdefault(package_name, {})[name]= data_type
 
         
-        self.sequences = self.get_sequences(conn)
+        self.sequences = self.__get_sequences()
         self.sequence_names = self.sequences.keys()
         self.sequence_names.sort()
 
     ################################################
     # INTERNAL FUNCTIONS FOR QUERY DATA DICTIONARY #
     ################################################
-
-    def get_tables(self, conn):
+    
+    def __get_tables(self):
         "get tables"
         # fix me with iot_table overflow segments
         stmt = """select table_name, partitioned, secondary, cluster_name, iot_type, temporary,  nested
             from user_tables"""        
         tables = {}
         print "get tables"
-        for table, partitioned, secondary, cluster, iot_type, temporary, nested in self.query(conn, stmt):
+        for table, partitioned, secondary, cluster, iot_type, temporary, nested in self.__query(stmt):
             debug_message('debug: table - ' + table)
             _partitioned = 'No'
             _secondary = 'No'
@@ -202,33 +206,33 @@ class OraSchemaDataDictionary:
         return tables
 
 
-    def get_table_comments(self, conn):
+    def __get_table_comments(self):
         "get comments on tables and views"
         stmt = """SELECT table_name, comments
             FROM user_tab_comments
             WHERE comments is not null"""
         comments = {}
         print "get comments on tables and views"
-        for table, comment in self.query(conn, stmt):
+        for table, comment in self.__query(stmt):
             debug_message('debug: comments on table - ' + table)
             comments[table] = comment
         return comments 
 
 
-    def get_column_comments(self, conn):
+    def __get_column_comments(self):
         "get all tables/views column comments"
         stmt = """ SELECT table_name, column_name, comments
             FROM user_col_comments
             where comments is not null"""
         col_comments = {}
         print "get all tables/views column comments"
-        for table, column, comment in self.query(conn, stmt):
+        for table, column, comment in self.__query(stmt):
             debug_message('debug: comments on table.column - ' + table + '.' + column)
             col_comments[table,column] = comment
         return col_comments;
 
 
-    def get_columns(self, conn):
+    def __get_columns(self):
         "get all columns for tables, views and clusters"
         stmt = """select table_name, column_name, data_type , data_length, data_precision,
                          data_scale, nullable, column_id, data_default
@@ -237,7 +241,7 @@ class OraSchemaDataDictionary:
         all_columns = {}
         print "get all columns for tables, views and clusters"
         for table, column, data_type, data_length, data_precision, data_scale, nullable, column_id, \
-                data_default in self.query(conn, stmt):
+                data_default in self.__query(stmt):
             debug_message('debug:  table.column - ' + table + '.' + column)
             _data_type = data_type
             t = all_columns.get(table, None)
@@ -258,7 +262,7 @@ class OraSchemaDataDictionary:
         return all_columns
 
 
-    def get_constraints(self, conn):
+    def __get_constraints(self):
         "get all_table/view constraints"
         
         stmt = """select  table_name, constraint_name, constraint_type, search_condition, r_owner,
@@ -266,21 +270,21 @@ class OraSchemaDataDictionary:
             from user_constraints where r_owner is null or r_owner = user"""
         cons ={}
         print  "get all_table/view constraints"
-        for   table_name,name, type, check_cond, r_owner, r_constraint_name, delete_rule in self.query(conn, stmt):
+        for   table_name,name, type, check_cond, r_owner, r_constraint_name, delete_rule in self.__query(stmt):
             debug_message('debug: table.constraint - ' + table_name + '.' + name)
             cons[name]=(table_name, type, check_cond, r_owner, r_constraint_name, delete_rule)
 
         return cons        
 
 
-    def get_constraited_columns(self, conn):
+    def __get_constraited_columns(self):
         "get all constrainted columns"
 
         stmt  = """select constraint_name, table_name, column_name, position from
             user_cons_columns"""
         cs_cols = {}
         print  "get all constrainted columns"
-        for name , table_name, column_name, position in self.query(conn, stmt):
+        for name , table_name, column_name, position in self.__query(stmt):
             debug_message('debug: constrainted  table.column - ' + table_name + '.' + column_name)
             t = cs_cols.get(name, None)
             if not t:
@@ -291,39 +295,39 @@ class OraSchemaDataDictionary:
         return cs_cols;
 
 
-    def get_views(self, conn):
+    def __get_views(self):
         "get all views"
 
         stmt = """ select view_name , text from user_views"""
         views = {}
         print "get all views"
-        for name, text in self.query(conn,stmt):
+        for name, text in self.__query(stmt):
             debug_message('debug: view - ' + name)
             views[name]= text
         return views
 
 
-    def get_indexes(self, conn):
+    def __get_indexes(self):
         "get all indexes"
 
         stmt = """select index_name, table_name, index_type, uniqueness, include_column, generated, secondary
                     from user_indexes"""
         indexes = {}
         print "get all indexes"
-        for name, table_name, type, uniqueness, include_column, generated, secondary in self.query(conn,stmt):
+        for name, table_name, type, uniqueness, include_column, generated, secondary in self.__query(stmt):
             debug_message('debug: index ' + name + ' on table - ' + table_name  )
             indexes[name] = (table_name, type, uniqueness, include_column, generated, secondary)
             
         return indexes
 
 
-    def get_index_columns(self, conn):
+    def __get_index_columns(self):
         "get all index columns"
         
         stmt = """select index_name, table_name, column_name, column_position from user_ind_columns"""
         ind_columns = {}
         print "get all index columns"
-        for name, table_name, column_name, column_position in self.query(conn,stmt):
+        for name, table_name, column_name, column_position in self.__query(stmt):
             debug_message('debug: column '+ column_name + ' on index ' + name)
             t = ind_columns.get(name)
             if not t:
@@ -333,13 +337,13 @@ class OraSchemaDataDictionary:
             
         return ind_columns
 
-    def get_index_expressions(self, conn):
+    def __get_index_expressions(self):
         "get all index expressions"
 
         stmt = """select index_name, table_name, column_expression, column_position from user_ind_expressions"""
         ind_expressions = {}
         print "get all index_expressions"
-        for name, table_name, expression, position in self.query(conn, stmt):
+        for name, table_name, expression, position in self.__query(stmt):
             debug_message('debug: index expession on index ' + name )
             t = ind_expressions.get(name)
             if not t:
@@ -350,7 +354,7 @@ class OraSchemaDataDictionary:
         return ind_expressions
 
 
-    def get_updatable_columns(self, conn):
+    def __get_updatable_columns(self):
         "get updatable columns on views"
 
         stmt = """select table_name, column_name, insertable, updatable, deletable
@@ -358,14 +362,14 @@ class OraSchemaDataDictionary:
             where table_name in (select view_name from user_views)"""
         view_updatable_columns = {}
         print "get updatable columns"
-        for table_name, column_name, insertable, updatable, deletable in self.query(conn, stmt):
+        for table_name, column_name, insertable, updatable, deletable in self.__query(stmt):
             debug_message('debug: updatable column ' + column_name + ' on view ' + table_name)
             view_updatable_columns[table_name, column_name] = (insertable, updatable, deletable)
 
         return view_updatable_columns
 
 
-    def get_triggers(self, conn):
+    def __get_triggers(self):
         "get all triggers"
 
         stmt = """select trigger_name, trigger_type, triggering_event, base_object_type, table_name,
@@ -374,7 +378,7 @@ class OraSchemaDataDictionary:
         triggers = {}
         print "get all triggers"
         for name, type, event, base_object_type, table_name, column_name, referencing_names, when_clause, status,\
-            description, action_type, body in self.query(conn, stmt):
+            description, action_type, body in self.__query(stmt):
             debug_message('debug: trigger - ' + name)
             triggers[name] = (name, type, event, base_object_type, table_name, column_name, referencing_names, \
                               when_clause, status, description, action_type, body)
@@ -382,13 +386,13 @@ class OraSchemaDataDictionary:
         return triggers
 
 
-    def get_trigger_columns(self, conn):
+    def __get_trigger_columns(self):
         "get all trigger columns"
 
         stmt = "select trigger_name, table_name, column_name, column_list, column_usage from user_trigger_cols"
         trigger_columns = {}
         print "get all trigger columns"
-        for name, table_name, column_name, column_list, column_usage in self.query(conn, stmt):
+        for name, table_name, column_name, column_list, column_usage in self.__query(stmt):
             debug_message('debug: trigger ' + name + ' column ' + column_name)
             t = trigger_columns.get(name)
             if not t:
@@ -399,7 +403,7 @@ class OraSchemaDataDictionary:
         return trigger_columns
 
 
-    def get_arguments(self, conn):
+    def __get_arguments(self):
         "get all function/procedure argumets"
 
         stmt = """select object_name, package_name, argument_name, position, data_type, default_value, in_out, pls_type,
@@ -408,7 +412,7 @@ class OraSchemaDataDictionary:
         all_arguments = []
         print "get all pl/sql arguments"
         for name, package_name, argument_name, position, data_type, default_value, in_out, pls_type, data_scale, \
-            data_precision, data_length in self.query(conn, stmt):
+            data_precision, data_length in self.__query(stmt):
             debug_message('debug: pl/sql arguments - ' + name )
             _data_type = ''
             if pls_type:
@@ -431,33 +435,36 @@ class OraSchemaDataDictionary:
         return all_arguments
 
 
-    def get_user_source(self, conn):
+    def __get_user_source(self):
         "get pl/sql source for procedures, functions and packages"
 
         stmt = "select name, type, line, text from user_source where type not like 'TYPE%' order by name, line"
         user_source = []
         print "get pl/sql source for procedures, functions and packages"
-        for name, type, line, text in self.query(conn, stmt):
+        for name, type, line, text in self.__query(stmt):
             debug_message('debug: pl/sql source - ' + name)
             user_source.append((name, type, line, text))
 
         return user_source
 
 
-    def get_sequences (self,conn):
+    def __get_sequences (self):
         "get user sequences"
         stmt = """select sequence_name, min_value, max_value, increment_by, cycle_flag, order_flag, cache_size
                       from user_sequences"""
         sequences = {}
         print "get sequences"
-        for name, min_value, max_value, step, cycled, ordered, cache_size in self.query(conn, stmt):
+        for name, min_value, max_value, step, cycled, ordered, cache_size in self.__query(stmt):
             sequences[name] = fpformat.fix(min_value,0), str(max_value), fpformat.fix(step,0), cycled, ordered, fpformat.fix(cache_size,0)
         return sequences
     
 
-    def query(self, conn, querystr):
+    def __get_types(self):
+        return 1
+    
+    def __query(self, querystr):
         "execute query end return results in array"    
-        cur = conn.cursor()
+        cur = self.__conn.cursor()
         cur.execute(querystr)
         results = cur.fetchall()
         cur.close()
@@ -468,5 +475,5 @@ class OraSchemaDataDictionary:
 if __name__ == '__main__':
     import cx_Oracle
     connection = cx_Oracle.connect('aram_v1/aram_v1')
-    s = OraSchemaDataDictionary(connection, 'Oracle')
+    s = OraSchemaDataDictionary(connection, 'Oracle', None)
 
