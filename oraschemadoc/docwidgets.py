@@ -149,7 +149,7 @@ class HtmlWidgets:
                   <frameset cols="20%,80%">
                     <frameset rows="10%,90%">
                        <frame src="nav.html" name="GlobalNav">
-                       <frame name="List">
+                       <frame src="tables-index.html" name="List">
                     </frameset>
                     <frame src="main.html" name="Main">
                   </frameset>
