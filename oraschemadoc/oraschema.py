@@ -75,8 +75,6 @@ class OracleTable:
         self.referential_constraints = self._get_ref_constraints(name, data_dict)
         self.indexes                 = self._get_indexes(name, data_dict)
         self.triggers                = self._get_triggers(data_dict)
-        print "table -", self.name , "triggers", self.triggers
-
         self.referenced_by = None
         if data_dict.table_referenced_by.has_key(name):
             self.referenced_by       = data_dict.table_referenced_by[name]
@@ -227,7 +225,8 @@ class OracleView:
         self.columns = self._get_columns(data_dict)
         self.constraints = self._get_constraints(data_dict)
         self.comments = data_dict.all_table_comments.get(name)
-        
+        self.triggers                = self._get_triggers(data_dict)
+          
     def _get_columns(self, data_dict):
         columns = {}
         for column, data_type, nullable, column_id, data_default in data_dict.all_columns[self.name]:
@@ -247,6 +246,14 @@ class OracleView:
             constraint = OracleViewConstraint(constraint_name, data_dict)
             constraints.append(constraint)
         return constraints
+
+    #here
+    def _get_triggers(self, data_dict):
+        triggers = []
+        if  data_dict.table_trigger_map.has_key(self.name):
+            for trigger_name in data_dict.table_trigger_map[self.name]:
+                triggers.append(OracleTrigger(trigger_name, data_dict))
+        return triggers    
 
 class OracleViewColumn(OracleColumn):
 
