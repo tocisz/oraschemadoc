@@ -64,5 +64,6 @@ or
 where: 
     connect_string - username/password@dbalias
     output_directory - directory where html files will be placed
-    name - name of project, application or whatever
+    name - short name which will be shown as title in html files.
+	   for example "My Project Data Model"
 
