@@ -20,7 +20,7 @@
 
 __author__ = 'Aram Kananov <arcanan@flashmail.com>'
 
-__version__ = '$Version: 0.23'
+__version__ = '$Version: 0.24'
 
 from oraverbose import *
 import fpformat
