@@ -43,6 +43,31 @@ class OracleSchema:
         # TODO: why i need that name? 
         #self.name = "Foobarizm" 
 
+
+    def getXML(self):
+        """get xml representaion of given schema"""
+        xml_text = '<schema>'
+        for table in self.tables:
+            xml_text += table.getXML()
+            print "generating xml for " + table.getName() 
+        for view in self.views:
+            xml_text += view.getXML()
+        
+        for sequence in self.sequences:
+            xml_text += sequence.getXML()
+   
+        for procedure in self.procedures:
+            xml_text += procedure.getXML()
+            
+        for function in self.functions:
+            xml_text += function.getXML()
+            
+        for package in self.packages:
+            xml_text += package.getXML()
+ 
+        xml_text += '</schema>'            
+        return xml_text 
+         
     def _get_all_tables(self, data_dict):
         tables = []
         print 'generating tables'
@@ -136,6 +161,8 @@ class OracleTable:
 
     def __init__(self, name, data_dict):
         debug_message('debug: creating table object '+ name)
+        
+        # TODO delete old crap below
         self.name = name
         self.partitioned, self.secondary, self.index_organized, self.clustered, self.cluster_name, self.nested, self.temporary = data_dict.all_tables[name]
         self.comments = data_dict.all_table_comments.get(name)
@@ -151,6 +178,54 @@ class OracleTable:
         if data_dict.table_referenced_by.has_key(name):
             self.referenced_by       = data_dict.table_referenced_by[name]
 
+        # all above should be replaced by this 
+        self.__name = name 
+        self.__partitioned, self.__secondary, self.__index_organized, self.__clustered, self.__cluster_name, \
+            self.__nested, self.__temporary = data_dict.all_tables[name]
+        self.__columns = self._get_columns(data_dict)
+        self.__comments = self.comments
+        self.__primary_key = self.primary_key
+        self.__unique_keys = self.unique_keys
+        self.__check_constraints = self.check_constraints
+        self.__referential_constraints = self.referential_constraints
+        self.__indexes = self.indexes
+        self.__triggers = self.triggers
+        self.__referenced_by = self.referenced_by
+        
+        
+    def getName(self):
+        """get name of table"""
+        return self.__name
+    
+    def isPartitioned(self):
+        """determines if table is partitioned"""
+        return self.__partitioned
+    
+    def isIndexOrganized(self):
+        """is OIT table"""
+        return self.__index_organized
+    
+    def isSecondary(self):
+        """is table is secondary, i.e. system generated"""
+        return self.__secondary
+    
+    def isClustered(self):
+        """is table clustered"""
+        return self.__clustered
+    
+    def getClusterName(self):
+        """returns cluster name if table is clustered"""
+        return self.__cluster_name
+    
+    def isNested(self):
+        """is table is nested table"""
+        return self.__nested
+    
+    def isTemporary(self):
+        """is table is temporary table"""
+        return self.__temporary
+    
+    
 
     def _get_primary_key(self, table_name, data_dict):
         
@@ -231,16 +306,129 @@ class OracleTable:
                 debug_message('debug: generating trigger ' + trigger_name)
                 triggers.append(OracleTrigger(trigger_name, data_dict))
         return triggers
+    
+    def getXML(self):
+        """get xml represention of table"""
+        xml_text = '''<table id="table-%s">
+                         <name>%s</name>
+                         <index_orginized>%s</index_orginized>
+                         <partitioned>%s</partitioned>
+                         <temporary>%s</temporary>
+                         <nested>%s</nested>
+                         <clustered>%s</clustered>
+                         <cluster_name>%s</cluster_name>
+                         <secondary>%s</secondary>
+                         <comments><![CDATA[%s]]></comments>
+                         ''' % (self.__name, 
+                                self.__name,
+                                self.__index_organized,
+                                self.__partitioned,
+                                self.__temporary,
+                                self.__nested,
+                                self.__clustered,
+                                self.__cluster_name,
+                                self.__secondary,
+                                self.__comments)
+        xml_text += '<columns>'
+        #xml for table columns
+        for position in self.__columns.keys():
+            xml_text += self.__columns[position].getXML(self.__name)
+        xml_text += '</columns>\n'
+        xml_text += '<constraints>\n'        
+        if self.__primary_key:
+            xml_text +=  self.__primary_key.getXML()
+        if self.__unique_keys:
+            for unique_key in self.__unique_keys:
+                xml_text += unique_key.getXML()
+        if self.__check_constraints:
+            for constraint in self.__check_constraints:
+                xml_text += constraint.getXML()
+        if self.__referential_constraints:
+            for constraint in self.__referential_constraints:
+                xml_text += constraint.getXML()
+        xml_text += '</constraints>\n'
+        if self.__indexes:
+            xml_text += '<indexes>\n'	            
+            for index in self.__indexes:
+                xml_text += index.getXML()
+            xml_text += '</indexes>'
+        if self.__triggers:
+            xml_text += '<triggers>'
+            for trigger in self.triggers:
+                xml_text += trigger.getXML()
+            xml_text += '</triggers>'
+        if self.__referenced_by:
+            xml_text += '<references>'
+            for name in self.__referenced_by:
+                xml_text += '<reference><table>table-%s</table><constraint>constraint-%s</constraint></reference>' % name
+            xml_text += '</references>'
+        xml_text += '</table>\n'
+        return xml_text 
+        
+    
 
 class OracleColumn:
-
+    """Oracle column represents table column object"""
+    
     def __init__(self, name, column_id, data_type, nullable, data_default, comments):
+        self.__position = column_id
+        self.__name = name
+        self.__data_type = data_type
+        self.__nullable = nullable
+        self.__default_value = data_default
+        self.__comments = comments
+        #TODO start using table name!
+        self.__table_name = ''
+        
+        ### crap below should be deleted!
         self.column_id = column_id
         self.name = name
         self.data_type =data_type
         self.nullable = nullable
         self.data_default = data_default
         self.comments = comments
+        
+    def getName(self):
+        """get column name"""
+        return self.__name
+    
+    def getPosition(self):
+        """get column position"""
+        return self.__position
+    
+    def getDataType(self):
+        """get column data Type"""
+        return self.__data_type
+    
+    def getDefaultValue(self):
+        """get default value for column"""
+        return self.__default_value
+    
+    def getComments(self):
+        """get Comments on the column"""
+        return self.__comments
+    
+    def isNullable(self):
+        """check if column is nullable"""
+        return self.__nullable
+    
+    def getXML(self, table_name):
+        """get xml representation of column"""
+        #TODO: and it sucks to pass table_name via getXML, fix it
+        return '''<column id="column-%s.%s">
+                    <name>%s</name>
+                    <position>%s</position>
+                    <datatype>%s</datatype>
+                    <default_value>%s</default_value>
+                    <nullable>%s</nullable>
+                    <comments><![CDATA[%s]]></comments>
+                  </column>\n''' % (table_name, self.__name,
+                    self.__name, self.__position, self.__data_type,
+                    self.__default_value, self.__nullable, 
+                    self.__comments)
+      
+    
+        
 
 class OracleUniqueConstraint:
 
@@ -254,6 +442,36 @@ class OracleUniqueConstraint:
         self.columns ={}
         for table_name, column_name, position in data_dict.all_constraited_columns[name]:
             self.columns[position]=column_name
+        
+        self.__name = name
+        self.__table_name = table_name
+        self.__type = type
+        self.__columns = self.columns
+            
+    def getName(self):
+        """ get constraint name"""
+        return self.__name
+    
+    def getType(self):
+        ''' returns type, where type is one of "Primary Key" or "Unique Key"'''
+        return self.__type
+    
+    def getColumns(self):
+        '''get columns as dictionary indexed by position in index'''
+        return self.__columns
+    
+    def getXML(self):
+        '''get xml for unique/primary key'''
+        xml_text = '''<constraint id="constraint-%s" type="unique">
+                      <name>%s</name>
+                      <type>%s</type>
+                      <ind_columns>''' % (self.__name, self.__name, self.__type)
+        for position in self.__columns.keys():
+            xml_text += '<column>column-%s.%s</column>' % (
+                                                       self.__table_name, self.__columns[position])
+        xml_text += '</ind_columns>\n</constraint>\n'
+        return xml_text
+        
 
 class OracleCheckConstraint:
 
@@ -265,6 +483,27 @@ class OracleCheckConstraint:
         self.columns = {}
         for table_name, column_name, position in data_dict.all_constraited_columns[name]:
             self.columns[position]=column_name        
+        # TODO all above should be deleted
+        self.__name = name
+        self.__table_name = table_name
+        self.__type = "Check"
+        self.__check_cond = check_cond
+        self.__columns = self.columns
+        
+    def getName(self):
+        return self.__name
+    
+    def getCheckCondition(self):
+        return self.__check_cond
+    
+    def getXML(self):
+        '''get xml for check constraint'''
+        xml_text = '''<constraint id="constraint-%s" type="check">
+                      <name>%s</name>
+                      <check_condition><![CDATA[%s]]></check_condition>''' % (
+                                                          self.__name, self.__name, self.__check_cond)
+        xml_text += '</constraint>\n'
+        return xml_text        
 
 class OracleReferentialConstraint:
 
@@ -280,6 +519,36 @@ class OracleReferentialConstraint:
         self.columns = {}
         for table_name, column_name, position in data_dict.all_constraited_columns[name]:
             self.columns[position]=column_name
+            
+        self.__name = name
+        self.__table_name = self.table_name
+        self.__type = type
+        self.__r_owner = r_owner
+        self.__r_table = self.r_table
+        self.__r_constraint_name = r_constraint_name
+        self.__delete_rule = delete_rule
+        self.__columns = self.columns
+        
+    def getName(self): 
+        """get constraint name"""
+        return self.__columns
+    
+    def getXML(self):
+        """get data about constraint in xml"""
+        xml_text = '''<constraint id="constraint-%s" type="referential">
+                      <name>%s</name>
+                      <type>%s</type>
+                      <ind_columns>''' % (self.__name, self.__name, self.__type)
+        for position in self.__columns.keys():
+            xml_text += '<column>column-%s.%s</column>' % (
+                                                       self.__table_name, self.__columns[position])
+        xml_text += '</ind_columns>\n'
+        xml_text += '''<delete_rule>%s</delete_rule>
+                       <master_table>table-%s</master_table>'''  % (self.__delete_rule, self.__delete_rule)
+
+        xml_text += '</constraint>\n'
+        return xml_text
+       
 
 
 class OracleIndex:
@@ -302,6 +571,25 @@ class OracleIndex:
             for table_name, expression , position in data_dict.all_index_expressions[name]:
                 self.columns[position] = expression
 
+                
+    def getXML(self):
+        """get data about index in xml"""
+        xml_text = '''<index id="index-%s">
+                        <name>%s</name>
+                        <type>%s</type>
+                        <table>table-%s</table>
+                        <uniqueness>%s</uniqueness>
+                        <generated>%s</generated>
+                        <secondary>%s</secondary>''' % ( self.name, self.name, self.type, self.table_name,
+                                                        self.uniqueness, self.generated, self.secondary)
+                                                  
+        xml_text += '<ind_columns>'
+        for position in self.columns.keys():
+            xml_text += '<column>column-%s</column>' % self.columns[position]
+        xml_text += '</ind_columns></index>'
+        return xml_text
+    
+    
 class OracleView:
 
     def __init__(self, name, data_dict):
@@ -312,6 +600,35 @@ class OracleView:
         self.constraints = self._get_constraints(data_dict)
         self.comments = data_dict.all_table_comments.get(name)
         self.triggers                = self._get_triggers(data_dict)
+        
+    def getXML(self):
+        """get data about view in xml"""
+        xml_text = '''<view id="view-%s">
+                        <name>%s</name>
+                        <comments><![CDATA[%s]]></comments>
+                        <query_text><![CDATA[%s]]></query_text>''' % (
+                    self.name, self.name, self.comments, self.text)
+        if self.columns: 
+            xml_text += '<columns>\n'
+            for position in self.columns.keys():
+                xml_text += self.columns[position].getXML(self.name)
+            xml_text += '</columns>\n'
+            
+        if self.constraints:
+            xml_text += '<constraints>'
+            for constraint in self.constraints:
+                xml_text += constraint.getXML
+            xml_text += '</constraints>'
+
+        if self.triggers:
+            xml_text += '<triggers>'            
+            for trigger in self.triggers:
+                xml_text += trigger.getXML()
+            xml_text += '</triggers>'
+        
+        xml_text += '</view>'
+
+        return xml_text
     
     
     def _get_columns(self, data_dict):
@@ -347,8 +664,27 @@ class OracleViewColumn(OracleColumn):
         debug_message("debug: generating view column" + name)
         OracleColumn.__init__(self, name, column_id, data_type, nullable, data_default, comments)
         self.insertable, self.updatable, self.deletable = data_dict.all_updatable_columns[table_name, name]
-    
 
+        
+    def getXML(self, table_name):
+        """get xml representation of column"""
+        #TODO: and it sucks to pass table_name via getXML, fix it
+        return '''<column id="column-%s.%s">
+                    <name>%s</name>
+                    <position>%s</position>
+                    <datatype>%s</datatype>
+                    <default_value>%s</default_value>
+                    <nullable>%s</nullable>
+                    <comments><![CDATA[%s]]></comments>
+                    <insertable>%s</insertable>
+                    <updatable>%s</updatable>
+                    <deletable>%s</deletable>
+                  </column>\n''' % (table_name, self.name,
+                    self.name, self.column_id , self.data_type,
+                    self.data_default , self.nullable, 
+                    self.comments, self.insertable, self.updatable, self.deletable)
+        
+    
 class OracleViewConstraint:
 
     def __init__(self, name, data_dict):
@@ -365,7 +701,19 @@ class OracleViewConstraint:
                 self.columns[position]=column_name
         self.check_cond = check_cond
 
-
+    def getXML(self):
+        """get constraint metadata in xml"""
+        xml_text = '''<constraint id="constraint-%s">
+                    <name>%s</name>
+                    <type>%s</type>'''
+        if self.columns:
+            xml_text += '<columns>'
+            for position in self.columns.keys():
+                xml_text += '<column>name</column>'
+            xml_text += '</columns>'
+            
+        xml_text += '</constraint>'
+        return xml_text
 
 class OracleTrigger:
 
@@ -379,6 +727,20 @@ class OracleTrigger:
         if data_dict.all_trigger_columns.has_key(self.name):
             for name, table_name, column_name, column_list, column_usage in data_dict.all_trigger_columns[self.name]:
                 self.columns.append(OracleTriggerColumn(column_name, column_list, column_usage))
+                
+    def getXML(self):
+        code_text = 'CREATE TRIGGER %s\n' % self.description
+        code_text += self.referencing_names + '\n'
+        if self.when_clause:
+            code_text += 'WHEN %s \n' % self.when_clause
+        code_text += self.body
+        
+        xml_text = '''<trigger id="trigger-%s"> 
+                        <name>%s</name>
+                        <code><![CDATA[%s]]></code></trigger>''' % (self.name, self.name, code_text )
+        return xml_text
+        
+        
 
 class OracleTriggerColumn:
 
@@ -406,7 +768,23 @@ class OracleProcedure:
         if source:
             self.source = OraclePLSQLSource(source)
             
-
+    def getXML(self):
+        """get procedure metadata"""
+        xml_text = '''<procedure id="procedure-%s">
+                        <name>%s</name>
+                        <source>%s</source>''' % (self.name, self.name, self.source.getXML())
+        if self.arguments:
+            xml_text += '<arguments>'
+            for argument in self.arguments:
+                xml_text += argument.getXML()
+            xml_text += '</arguments>'
+            
+        xml_text += '</procedure>'
+        return xml_text
+        
+           
+        
+              
 class OracleFunction(OracleProcedure):
     
     def __init__(self, name, arguments, return_data_type, source = None):
@@ -416,7 +794,21 @@ class OracleFunction(OracleProcedure):
         if return_data_type:
             self.return_data_type = return_data_type
     
+    def getXML(self):
+        """get function metadata"""
+        xml_text = '''<function id="procedure-%s">
+                        <name>%s</name>
+                        <returns>%s</returns>
+                        <source>%s</source>''' % (self.name, self.name, self.return_data_type, 
+                                                              self.source.getXML())
+        if self.arguments:
+            xml_text += '<arguments>'
+            for argument in self.arguments:
+                xml_text += argument.getXML()
+            xml_text += '</arguments>'
             
+        xml_text += '</function>'
+        return xml_text            
 
 class OracleProcedureArgument:
     def __init__(self, name, data_type, default_value, in_out ):
@@ -425,6 +817,16 @@ class OracleProcedureArgument:
         self.data_type = data_type
         self.default_value = default_value
         self.in_out = in_out
+        
+    def getXML(self):
+        """get argument metadata in xml"""
+        return '''<argument>
+                    <name>%s</name>
+                    <data_type>%s</data_type>
+                    <default_value>%s</default_value>
+                    <in_out>%s</in_out>
+                  </argument>''' % (self.name, self.data_type, self.default_value, self.in_out)
+                  
 
 class OraclePLSQLSource:
     def __init__(self, source):
@@ -434,6 +836,15 @@ class OraclePLSQLSource:
         lines.sort()
         for line_no in lines:
             self.source.append(OraclePLSQLSourceLine(line_no, source[line_no]))
+            
+    def getXML(self):
+        """get source in xml"""
+        xml_text = '<pl_sql_source>'
+        for line in self.source:
+            xml_text += '<line><line_no>%s</line_no><text><![CDATA[%s]]></text></line>' % (line.line_no, line.text)
+        xml_text += '</pl_sql_source>'
+        return xml_text
+            
 
 class OracleJavaSource(OraclePLSQLSource):
     def __init__(self, name, source):
@@ -457,6 +868,15 @@ class OraclePackage:
         self.body_source = None
         if body_source:
             self.body_source = OraclePLSQLSource(body_source)
+    
+    def getXML(self):
+        """get package metadata"""
+        xml_text = '''<package id="package-%s">
+                        <name>%s</name>
+                        <declaration>%s</declaration>
+                        <body>%s</body>
+                      </package>''' % ( self.name, self.name, self.source.getXML(), self.body_source.getXML())
+        return xml_text
 
 
 class OracleSequence:
@@ -500,6 +920,19 @@ class OracleSequence:
         """Determines if values of the sequence ordered"""
         return self.__ordered
     
+    def getXML(self):
+        """get sequence metadata in xml"""
+        xml_text = '''<sequence id="sequence-%s">
+                        <name>%s</name>
+                        <min_value>%s</min_value>
+                        <max_value>%s</max_value>
+                        <step>%s</step>
+                        <cycled>%s</cycled>
+                        <cache_size>%s</cache_size>
+                        <ordered>%s</ordered>
+                      </sequence>''' % (self.__name, self.__name, self.__min_value, self.__max_value,
+                                        self.__step, self.__cycle_flag, self.__cache_size, self.__ordered)
+        return xml_text
 
 class OracleTypeSource(OraclePLSQLSource):
     """Source code of type"""
