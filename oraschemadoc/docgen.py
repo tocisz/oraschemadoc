@@ -81,7 +81,7 @@ class OraSchemaDoclet:
 
     def _print_table_index_frame(self):
         text = self.html.frame_header("Tables")
-        text = text + self.html.heading("Tables",3)
+        #text = text + self.html.heading("Tables",3)
         text = text + self.html.hr()
         rows = []
         for table in self.schema.tables:
@@ -95,7 +95,7 @@ class OraSchemaDoclet:
 
     def _print_index_index_frame(self):
         text = self.html.frame_header("Indexes")
-        text = text + self.html.heading("Indexes",3)
+        #text = text + self.html.heading("Indexes",3)
         text = text + self.html.hr()
         rows = []
         for index in self.schema.indexes:
@@ -107,7 +107,7 @@ class OraSchemaDoclet:
 
     def _print_constraint_index_frame(self):
         text = self.html.frame_header("Constraints")
-        text = text + self.html.heading("Constraints",3)
+        #text = text + self.html.heading("Constraints",3)
         text = text + self.html.hr()
         rows = []
         for constraint in self.schema.constraints:
@@ -119,7 +119,7 @@ class OraSchemaDoclet:
 
     def _print_view_index_frame(self):
         text = self.html.frame_header("Views")
-        text = text + self.html.heading("Views",3)
+        #text = text + self.html.heading("Views",3)
         text = text + self.html.hr()
         rows = []
         for view in self.schema.views:
@@ -260,7 +260,28 @@ class OraSchemaDoclet:
                rows.append((table_name, constraint_name))
            headers = "Table", "Constraint"
            text = text + self.html.table(title, headers, rows)
-               
+
+        # print triggers
+        if table.triggers:
+            text = text +"<br>" + self.html.heading("Triggers",3) + self.html.anchor("t-trgs")
+            for trigger in table.triggers:
+                headers = []
+                rows = []
+                headers.append( "<b> Name: </b>"+trigger.name+"<br>")
+                row = "<pre>"
+                if trigger.nested_column_name:
+                    row = row + "on " + trigger.nested_column_name+"\n"
+                row = row +  trigger.type+ " "+ trigger.event +"\n"
+                if trigger.when_clause:
+                    row = row + "When " + self.html._quotehtml(trigger.when_clause)+"\n"
+                row = row +   trigger.referencing_names+"\n"
+                row = row +   self.html._quotehtml(trigger.body)+"\n</pre>"
+                t = []
+                t.append(row)
+                rows.append(t)
+                text = text + self.html.table(None, headers, rows)+"<p>"
+                
+                
         
         text = text + self.html.page_footer()
         file_name = os.path.join(self.doc_dir, "table-%s.html" % table.name)
