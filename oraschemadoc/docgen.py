@@ -30,6 +30,7 @@ class OraSchemaDoclet:
 
     def __init__(self, schema, doc_dir, name, description, debug_mode):
         
+        #
         set_verbose_mode(debug_mode)
         
         self.schema = schema
@@ -39,53 +40,124 @@ class OraSchemaDoclet:
         self.html = docwidgets.HtmlWidgets(self.name)
         self.index = {}
 
-        self._print_table_list_page()
-        self._print_tables()
-        self._print_table_index_frame()
-        self._print_index_list_page()
-        self._print_trigger_list_page()
-        self._print_trigger_index_frame()
-        self._print_index_index_frame()
-        self._print_constraint_list_page()
-        self._print_constraint_index_frame()
-        self._print_view_list_page()
-        self._print_view_index_frame()
-        self._print_views()
-        self._print_procedures()
-        self._print_procedure_list_page()
-        self._print_procedure_index_frame()
-        self._print_functions()
-        self._print_function_list_page()
-        self._print_function_index_frame()        
-        self._print_packages()
-        self._print_package_list_page()
-        self._print_package_index_frame()
-        self._print_sequences()
-        self._print_sequence_index_frame()
-        self._print_symbol_index_page()
+        # print html files
+        self._print_index_frames()
+        self._print_list_pages()
         self._sanity_check()
         self._print_common_pages()
 
+        #print pages for objects
+        
+        print "print tables"
+        for table in self.schema.tables:
+            self._print_table(table)
+            
+        print "print views"
+        for view in self.schema.views:
+            self._print_view(view)
 
+        print "print functions"
+        for function in self.schema.functions:
+            self._print_function(function)
 
-    def _print_common_pages(self):
-        text = self.html._index_page(self.name)
-        file_name = os.path.join(self.doc_dir, "index.html")
-        self._write(text, file_name)
-        text = self.html._global_nav_frame(self.name)
-        file_name = os.path.join(self.doc_dir, "nav.html")
-        self._write(text, file_name)
-        text = self.html._main_frame(self.name)
-        file_name = os.path.join(self.doc_dir, "main.html")
-        self._write(text, file_name)
-    
+        print "print procedures"
+        for procedure in self.schema.procedures:
+            self._print_procedure(procedure)
 
+        print "print packages"
+        for package in self.schema.packages:
+            self._print_package(package)
+            
+        print "print java sources"
+        for jsource in self.schema.java_sources:
+            self._print_java_source(jsource)
+        
+        self._print_symbol_index_page()
 
-    def _print_table_list_page(self):
-        print "print table list page"
-        text = self.html.page_header("Tables")
-        text = text + self.html.context_bar( None)
-        text = text + self.html.hr()
+    def _print_index_frames(self):
+        #
+        # print index frames 
+        #
+        
+        # tables
+        rows = []
+        for table in self.schema.tables:
+            link = self.html.href_to_table(table.name, "Main")
+            if table.secondary == 'Yes':
+                link = self.html.i(link)
+            rows.append(link)
+        self._print_index_frame("Tables", rows, "tables-index.html") 
+        
+        # indexes
+        rows = []
+        for index in self.schema.indexes:
+            link = self.html.href_to_index(index.name, index.table_name, index.name, "Main")
+            rows.append(link)
+        self._print_index_frame("Indexes", rows, "indexes-index.html")
+
+        # constraints
+        rows = []
+        for constraint in self.schema.constraints:
+            link = self.html.href_to_constraint(constraint.name, constraint.table_name, constraint.name, "Main")
+            rows.append(link)
+        self._print_index_frame("Constraints", rows, "constraints-index.html")
+        
+        # views
+        rows = []
+        for view in self.schema.views:
+            link = self.html.href_to_view(view.name, "Main")
+            rows.append(link)
+        self._print_index_frame("Views", rows, "views-index.html")
+
+        #procedures
+        rows = []
+        for procedure in self.schema.procedures:
+            link = self.html.href_to_procedure(procedure.name, "Main")
+            rows.append(link)
+        self._print_index_frame("Procedures", rows, "procedures-index.html")
+        
+        #functions
+        rows = []
+        for function in self.schema.functions:
+            link = self.html.href_to_function(function.name, "Main")
+            rows.append(link)
+        self._print_index_frame("Functions", rows, "functions-index.html")
+        
+        #packages
+        rows = []
+        for package in self.schema.packages:
+            link = self.html.href_to_package(package.name, "Main")
+            rows.append(link)
+        self._print_index_frame("Packages", rows, "packages-index.html")
+        
+        #triggers
+        rows = []
+        for trigger in self.schema.triggers:
+            link = self.html.href_to_trigger(trigger.name, trigger.table_name, trigger.name, "Main")
+            rows.append(link)
+        self._print_index_frame("Triggers", rows, "triggers-index.html")
+        
+        #sequences
+        rows = []
+        for sequence in self.schema.sequences:
+            link = self.html.href_to_sequence(sequence.name, "Main")
+            rows.append(link)
+        self._print_index_frame("Sequences", rows, "sequences-index.html")
+        
+        #java sources
+        rows = []
+        for jsoursce in self.schema.java_sources:
+            link = self.html.href_to_java_source(jsoursce.name, "Main")
+            rows.append(link)
+        self._print_index_frame("Java Sources", rows, "java-sources-index.html")
+        
+        
+    def _print_list_pages(self):
+        #
+        # print list pages
+        #
+
+        #tables
         rows = []
         for table in self.schema.tables:
             name = self.html.href_to_table(table.name)
@@ -96,180 +168,120 @@ class OraSchemaDoclet:
                 comments = self.html._quotehtml(comments[:50]+'...')
             rows.append(( name, comments ))
         headers = "Table", "Description"
-        name = "Tables"
-        text = text + self.html.table(name, headers, rows)
-        text = text + self.html.page_footer()
-        file_name = os.path.join(self.doc_dir, "tables-list.html")
-        self._write(text, file_name)
-
-
-    def _print_index_frame(self, header, index_rows, file_name):
-        print "index frame"
-        text = self.html.frame_header(header)
-        text = text + self.html.hr()
-        for row in index_rows:
-            text = text + row + '<br>'
-        text = text + self.html.frame_footer()
-        f_name = os.path.join(self.doc_dir, file_name)
-        self.write(text, file_name)
-
-    def _print_table_index_frame(self):
-        print "print table list frame"
-        text = self.html.frame_header("Tables")
-        #text = text + self.html.heading("Tables",3)
-        text = text + self.html.hr()
-        rows = []
-        for table in self.schema.tables:
-            link = self.html.href_to_table(table.name, "Main")
-            if table.secondary == 'Yes':
-                link = self.html.i(link)
-            text = text + link + '<br>'
-        text = text + self.html.frame_footer()
-        file_name = os.path.join(self.doc_dir, "tables-index.html")
-        self._write(text, file_name)
-
-
-
-    def _print_index_index_frame(self):
-        print "print indexes list frame"
-        text = self.html.frame_header("Indexes")
-        #text = text + self.html.heading("Indexes",3)
-        text = text + self.html.hr()
+        ht_table = self.html.table("Tables", headers, rows)
+        self._print_list_page("Tables", ht_table, "tables-list.html")
+        
+        #indexes 
         rows = []
         for index in self.schema.indexes:
-            link = self.html.href_to_index(index.name, index.table_name, index.name, "Main")
-            text = text + link + '<br>'
-        text = text + self.html.frame_footer()
-        file_name = os.path.join(self.doc_dir, "indexes-index.html")
-        self._write(text, file_name)
-
-
-
-    def _print_constraint_index_frame(self):
-        print "print constraint list frame"
-        text = self.html.frame_header("Constraints")
-        #text = text + self.html.heading("Constraints",3)
-        text = text + self.html.hr()
-        rows = []
-        for constraint in self.schema.constraints:
-            link = self.html.href_to_constraint(constraint.name, constraint.table_name, constraint.name, "Main")
-            text = text + link + '<br>'
-        text = text + self.html.frame_footer()
-        file_name = os.path.join(self.doc_dir, "constraints-index.html")
-        self._write(text, file_name)
-
-
-
-    def _print_view_index_frame(self):
-        print "print view list frame"
-        text = self.html.frame_header("Views")
-        #text = text + self.html.heading("Views",3)
-        text = text + self.html.hr()
-        rows = []
-        for view in self.schema.views:
-            link = self.html.href_to_view(view.name, "Main")
-            text = text + link + '<br>'
-        text = text + self.html.frame_footer()
-        file_name = os.path.join(self.doc_dir, "views-index.html")
-        self._write(text, file_name)
-
-
-
-    def _print_procedure_index_frame(self):
-        print "print procedure list frame"
-        text = self.html.frame_header("Procedures")
-        text = text + self.html.hr()
-        rows = []
-        for procedure in self.schema.procedures:
-            link = self.html.href_to_procedure(procedure.name, "Main")
-            text = text + link + '<br>'
-        text = text + self.html.frame_footer()
-        file_name = os.path.join(self.doc_dir, "procedures-index.html")
-        self._write(text, file_name)
-
-
-
-    def _print_function_index_frame(self):
-        print "print functions list frame"
-        text = self.html.frame_header("Functions")
-        text = text + self.html.hr()
-        rows = []
-        for function in self.schema.functions:
-            link = self.html.href_to_function(function.name, "Main")
-            text = text + link + '<br>'
-        text = text + self.html.frame_footer()
-        file_name = os.path.join(self.doc_dir, "functions-index.html")
-        self._write(text, file_name)
-
-
-    def _print_package_index_frame(self):
-        print "print packages list frame"
-        text = self.html.frame_header("Packages")
-        text = text + self.html.hr()
-        rows = []
-        for package in self.schema.packages:
-            link = self.html.href_to_package(package.name, "Main")
-            text = text + link + '<br>'
-        text = text + self.html.frame_footer()
-        file_name = os.path.join(self.doc_dir, "packages-index.html")
-        self._write(text, file_name)
-
+            name = self.html.href_to_index(index.name, index.table_name, index.name)
+            #add entry to do index
+            self._add_index_entry(index.name, name, "index on table %s" % index.table_name)
+            type = index.type
+            table_name = self.html.href_to_table(index.table_name)
+            rows.append(( name, type, table_name ))
+        headers = "Index", "Type", "Table"
+        ht_table = self.html.table("Indexes", headers, rows)
+        self._print_list_page("Indexes", ht_table, "indexes-list.html")
         
-
-    def _print_trigger_index_frame(self):
-        print "print triggers list frame"
-        text = self.html.frame_header("Triggers")
-        text = text + self.html.hr()
+        #triggers
         rows = []
         for trigger in self.schema.triggers:
-            link = self.html.href_to_trigger(trigger.name, trigger.table_name, trigger.name, "Main")
-            text = text + link + '<br>'
-        text = text + self.html.frame_footer()
-        file_name = os.path.join(self.doc_dir, "triggers-index.html")
-        self._write(text, file_name)         
-
-    def _print_sequence_index_frame(self):
-        print "print sequences list frame"
-        text = self.html.frame_header("Sequences")
-        text = text + self.html.hr()
+            name = self.html.href_to_trigger(trigger.name, trigger.table_name, trigger.name)
+            #add entry to do index
+            self._add_index_entry(trigger.name, name, "Trigger on table %s" % trigger.table_name)
+            type = trigger.type
+            table_name = self.html.href_to_table(trigger.table_name)
+            rows.append(( name, type, table_name ))
+        headers = "Trigger", "Type", "Table"
+        ht_table = self.html.table("Triggers", headers, rows)
+        self._print_list_page("Triggers", ht_table, "triggers-list.html")
+        
+        #constraints
         rows = []
-        for sequence in self.schema.sequences:
-            link = self.html.href_to_sequence(sequence.name, "Main")
-            text = text + link + "<br>"
-        text = text + self.html.frame_footer()
-        file_name = os.path.join(self.doc_dir, "sequences-index.html")
-        self._write(text, file_name)
-
-    def _print_tables(self):
-        print "print tables"
-        for table in self.schema.tables:
-            self._print_table(table)
-            
-
-
-    def _print_views(self):
-        print "print views"
+        for constraint in self.schema.constraints:
+            name = self.html.href_to_constraint(constraint.name, constraint.table_name, constraint.name)
+            # add entry to doc index
+            self._add_index_entry(constraint.name, name, "constraint on table %s" % constraint.table_name)
+            type = constraint.type
+            table_name = self.html.href_to_table(constraint.table_name)
+            rows.append(( name, type, table_name ))
+        headers = "Name", "Type", "Table"
+        ht_table = self.html.table("Constraints", headers, rows)
+        self._print_list_page("Constraints", ht_table, "constraints-list.html")
+        
+        #views
+        rows = []
         for view in self.schema.views:
-            self._print_view(view)
-
-
-    def _print_functions(self):
-        print "print functions"
-        for function in self.schema.functions:
-            self._print_function(function)
-
-
-    def _print_procedures(self):
-        print "print procedures"
+            name = self.html.href_to_view(view.name)
+            # add entry to doc index
+            self._add_index_entry(view.name, name, "view")
+            comments = view.comments 
+            if comments:
+                comments = self.html._quotehtml(comments[:50]+'...')
+            rows.append(( name, comments ))
+        headers = "View", "Description"
+        ht_table = self.html.table("Views", headers, rows)
+        self._print_list_page("Views", ht_table, "views-list.html")
+        
+        #procedures
+        rows = []
         for procedure in self.schema.procedures:
-            self._print_procedure(procedure)
+            name = self.html.href_to_procedure(procedure.name)
+            # add entry to doc index
+            self._add_index_entry(procedure.name, name, "procedure")
+            rows.append([name])
+        headers = ["Name"]
+        ht_table = self.html.table("Procedures", headers, rows)
+        self._print_list_page("Procedures", ht_table, "procedures-list.html")
 
-
-
-    def _print_packages(self):
-        print "print packages"
+        #functions
+        rows = []
+        for function in self.schema.functions:
+            name = self.html.href_to_function(function.name)
+            # add entry to doc index
+            self._add_index_entry(function.name, name, "function")
+            row = ([name])
+            rows.append(row)
+        headers = (["Name"])
+        ht_table = self.html.table("Functions", headers, rows)
+        self._print_list_page("Functions", ht_table, "functions-list.html")
+        
+        #packages
+        rows = []
         for package in self.schema.packages:
-            self._print_package(package)
+            name = self.html.href_to_package(package.name)
+            # add entry to doc index
+            self._add_index_entry(package.name, name, "package")
+            row = ([name])
+            rows.append(row)
+        headers = (["Name"])
+        ht_table = self.html.table("Packages", headers, rows)
+        self._print_list_page("Packages", ht_table, "packages-list.html")
+
+        #sequences
+        rows = []
+        for s in self.schema.sequences:
+            rows.append((s.name + self.html.anchor(s.name), s.min_value, s.max_value, s.step, s.cycle_flag, s.ordered, s.cache_size))
+            self._add_index_entry(s.name, self.html.href_to_sequence(s.name), "index")
+        headers = "Name", "Min Value", "Max Value", "Step", "Cycled", "Ordered", "Cache Size"
+        ht_table = self.html.table("Sequences", headers, rows)
+        self._print_list_page("Sequences", ht_table, "sequences.html")
+
+        #java sources 
+        rows = []
+        for jsource in self.schema.java_sources:
+            name = self.html.href_to_java_source(jsource.name)
+            self._add_index_entry(jsource.name, name, "java source")
+            row = ([name])
+            rows.append(row)
+        headers = (["Name"])
+        ht_table = self.html.table("Java Sources", headers, rows)
+        self._print_list_page("Java Sources", ht_table, "java-sources-list.html")
+        
+
+            
+                    
             
     def _print_table(self, table):
         "print table page"
@@ -426,112 +438,6 @@ class OraSchemaDoclet:
         self._write(text, file_name)
 
 
-
-    def _print_index_list_page(self):
-        print "print indexes list page"
-        text = self.html.page_header("Indexes")
-        text = text + self.html.context_bar( None)
-        text = text + self.html.hr()
-        rows = []
-        for index in self.schema.indexes:
-            name = self.html.href_to_index(index.name, index.table_name, index.name)
-            #add entry to do index
-            self._add_index_entry(index.name, name, "index on table %s" % index.table_name)
-            type = index.type
-            table_name = self.html.href_to_table(index.table_name)
-            rows.append(( name, type, table_name ))
-        headers = "Index", "Type", "Table"
-        name = "Indexes"
-        text = text + self.html.table(name, headers, rows)
-        text = text + self.html.page_footer()
-        file_name = os.path.join(self.doc_dir, "indexes-list.html")
-        self._write(text, file_name)
-
-
-
-    def _print_trigger_list_page(self):
-        print "print triggers list page"
-        text = self.html.page_header("Triggers")
-        text = text + self.html.context_bar( None)
-        text = text + self.html.hr()
-        rows = []
-        for trigger in self.schema.triggers:
-            name = self.html.href_to_trigger(trigger.name, trigger.table_name, trigger.name)
-            #add entry to do index
-            self._add_index_entry(trigger.name, name, "Trigger on table %s" % trigger.table_name)
-            type = trigger.type
-            table_name = self.html.href_to_table(trigger.table_name)
-            rows.append(( name, type, table_name ))
-        headers = "Trigger", "Type", "Table"
-        name = "Triggers"
-        text = text + self.html.table(name, headers, rows)
-        text = text + self.html.page_footer()
-        file_name = os.path.join(self.doc_dir, "triggers-list.html")
-        self._write(text, file_name)
-
-
-
-    def _print_constraint_list_page(self):
-        print "print constraints list page"
-        text = self.html.page_header("Constraints")
-        text = text + self.html.context_bar( None)
-        text = text + self.html.hr()
-        rows = []
-        for constraint in self.schema.constraints:
-            name = self.html.href_to_constraint(constraint.name, constraint.table_name, constraint.name)
-            # add entry to doc index
-            self._add_index_entry(constraint.name, name, "constraint on table %s" % constraint.table_name)
-            type = constraint.type
-            table_name = self.html.href_to_table(constraint.table_name)
-            rows.append(( name, type, table_name ))
-        headers = "Name", "Type", "Table"
-        name = "Constraints"
-        text = text + self.html.table(name, headers, rows)
-        text = text + self.html.page_footer()
-        file_name = os.path.join(self.doc_dir, "constraints-list.html")
-        self._write(text, file_name)        
-
-
-
-    def _print_view_list_page(self):
-        print "print views list page"
-        text = self.html.page_header("Views")
-        text = text + self.html.context_bar( None)
-        text = text + self.html.hr()
-        rows = []
-        for view in self.schema.views:
-            name = self.html.href_to_view(view.name)
-            # add entry to doc index
-            self._add_index_entry(view.name, name, "view")
-            comments = view.comments 
-            if comments:
-                comments = self.html._quotehtml(comments[:50]+'...')
-            rows.append(( name, comments ))
-        headers = "View", "Description"
-        name = "Views"
-        text = text + self.html.table(name, headers, rows)
-        text = text + self.html.page_footer()
-        file_name = os.path.join(self.doc_dir, "views-list.html")
-        self._write(text, file_name)
-
-
-    def _print_sequences(self):
-        print "print sequences list page"
-        text = self.html.page_header("Sequnces")
-        text = text + self.html.context_bar(None)
-        text = text + self.html.hr()
-        rows = []
-        for s in self.schema.sequences:
-            rows.append((s.name + self.html.anchor(s.name), s.min_value, s.max_value, s.step, s.cycle_flag, s.ordered, s.cache_size))
-            self._add_index_entry(s.name, self.html.href_to_sequence(s.name), "index")
-        headers = "Name", "Min Value", "Max Value", "Step", "Cycled", "Ordered", "Cache Size"
-        name = "Sequences"
-        text = text + self.html.table(name, headers, rows)
-        text = text + self.html.page_footer()
-        file_name = os.path.join(self.doc_dir, "sequences.html")
-        self._write(text, file_name)
-
-
     def _print_view(self, view):
         "print view page"
         # create header and context bar
@@ -619,8 +525,8 @@ class OraSchemaDoclet:
             rows.append(row)
         text = text + self.html.table(title, headers, rows)
         
- #       text = text + self.html.heading("Source:",3) + self.html.anchor("p-src")
- #       text = text + self.html.pre(self.html._quotehtml(procedure.source))
+        #       text = text + self.html.heading("Source:",3) + self.html.anchor("p-src")
+        #       text = text + self.html.pre(self.html._quotehtml(procedure.source))
         
         title = "Source" + self.html.anchor("p-src")
         headers = (["Source"])
@@ -636,26 +542,6 @@ class OraSchemaDoclet:
 
 
         
-    def _print_procedure_list_page(self):
-        print "print procedures list page"
-        text = self.html.page_header("Procedures")
-        text = text + self.html.context_bar( None)
-        text = text + self.html.hr()
-        rows = []
-        for procedure in self.schema.procedures:
-            name = self.html.href_to_procedure(procedure.name)
-            # add entry to doc index
-            self._add_index_entry(procedure.name, name, "procedure")
-            rows.append([name])
-        headers = ["Name"]
-        name = "Procedures"
-        text = text + self.html.table(name, headers, rows)
-        text = text + self.html.page_footer()
-        file_name = os.path.join(self.doc_dir, "procedures-list.html")
-        self._write(text, file_name)
-
-
-
     def _print_function(self, function):
         "print function page"
         # create header and context bar
@@ -694,27 +580,34 @@ class OraSchemaDoclet:
         file_name = os.path.join(self.doc_dir, "function-%s.html" % function.name)
         self._write(text, file_name)
 
-    def _print_function_list_page(self):
-        print "print functions list page"
-        text = self.html.page_header("Functions")
-        text = text + self.html.context_bar( None)
+    def _print_java_source(self, java_source):
+        "print function page"
+        # create header and context bar
+        text = self.html.page_header("Source of " + java_source.name + " class")
+        local_nav_bar = []
+        text = text + self.html.context_bar(local_nav_bar)
         text = text + self.html.hr()
-        rows = []
-        for function in self.schema.functions:
-            name = self.html.href_to_function(function.name)
-            # add entry to doc index
-            self._add_index_entry(function.name, name, "function")
-            row = ([name])
-            rows.append(row)
-        headers = (["Name"])
-        name = "Functions"
-        text = text + self.html.table(name, headers, rows)
+        text = text + self.html.heading(java_source.name, 2)
+        
+        title = "Source" 
+        headers = (["Source"])
+        rows=[]
+        _src=""
+        for line in java_source.source:
+            _src = _src + string.rjust(str(line.line_no),6) + ": " 
+            # in java source empty string is None, so need to check before adding text
+            if line.text:
+                _src = _src +  line.text
+            _src = _src + "\n"
+        rows.append([self.html.pre(self.html._quotehtml(_src))])
+        text = text + self.html.table(title, headers, rows)
+       
         text = text + self.html.page_footer()
-        file_name = os.path.join(self.doc_dir, "functions-list.html")
+        file_name = os.path.join(self.doc_dir, "java-source-%s.html" % java_source.name.replace("/", "-"))
         self._write(text, file_name)
-
-
-
+        
+        
+        
     def _print_symbol_index_page(self):
         print "print symbols index page"
         text = self.html.page_header("Schema Objects Index")
@@ -776,24 +669,6 @@ class OraSchemaDoclet:
         file_name = os.path.join(self.doc_dir, "package-%s.html" % package.name)
         self._write(text, file_name)        
 
-    def _print_package_list_page(self):
-        print "print packages list page"
-        text = self.html.page_header("Packages")
-        text = text + self.html.context_bar( None)
-        text = text + self.html.hr()
-        rows = []
-        for package in self.schema.packages:
-            name = self.html.href_to_package(package.name)
-            # add entry to doc index
-            self._add_index_entry(package.name, name, "package")
-            row = ([name])
-            rows.append(row)
-        headers = (["Name"])
-        name = "Packages"
-        text = text + self.html.table(name, headers, rows)
-        text = text + self.html.page_footer()
-        file_name = os.path.join(self.doc_dir, "packages-list.html")
-        self._write(text, file_name)
 
     def _sanity_check(self):
         print "print sanity check page"
@@ -835,19 +710,62 @@ class OraSchemaDoclet:
         text = text + self.html.page_footer()
         file_name = os.path.join(self.doc_dir, "sanity-check.html")
         self._write(text, file_name)
+        
+        
             
     def _write(self, text, file_name):
+        # write file to fs
         debug_message("debug: writing file " + file_name)
         f = open(file_name, 'w')
         f.write(text)
         f.close()
 
     def _add_index_entry(self, key , link, description):
+        # add new entry to symbol index
         t = self.index.get(key)
         if not t:
             self.index[key] = t = []
         t.append((link, description))
 
+    def _print_common_pages(self):
+        # print index.html, nav.html and main.html
+        text = self.html._index_page(self.name)
+        file_name = os.path.join(self.doc_dir, "index.html")
+        self._write(text, file_name)
+        text = self.html._global_nav_frame(self.name)
+        file_name = os.path.join(self.doc_dir, "nav.html")
+        self._write(text, file_name)
+        text = self.html._main_frame(self.name)
+        file_name = os.path.join(self.doc_dir, "main.html")
+        self._write(text, file_name)
+    
+    def _print_index_frame(self, header, item_list, file_name):
+        # generic procedure to print index frame on left side
+        # excpects:
+        #          header    - title string, i.e "Tables"
+        #          item_list - list of names with html links
+        #          file_name - relative file name 
+        print "index frame for " + header
+        text = self.html.frame_header(header)
+        text = text + self.html.hr()
+        for row in item_list:
+            text = text + row + '<br>'
+        text = text + self.html.frame_footer()
+        #java sources contain simbol / inside name, in file_names should be replaced with "-"
+        f_name = os.path.join(self.doc_dir, file_name.replace("/","-"))
+        self._write(text, f_name)
+
+    def _print_list_page(self, title, ht_table, file_name):
+        # print list pages
+        print "print " + " list page"
+        text = self.html.page_header(title)
+        text = text + self.html.context_bar( None)
+        text = text + self.html.hr()
+        text = text + ht_table
+        text = text + self.html.page_footer()
+        
+        file_name = os.path.join(self.doc_dir, file_name.replace("/", "-"))
+        self._write(text, file_name)
     
     
     

@@ -66,7 +66,8 @@ class HtmlWidgets:
                   <td><a href="functions-list.html"><b>Functions</b></a></td>
                   <td><a href="packages-list.html"><b>Packages</b></a></td>
                   <td><a href="sequences.html"><b>Sequences</b></a></td>
-                  <td><a href="sanity-check.html"><b>Sanity check</b></a></td>
+                  <td><a href="java-sources-list.html">Java Sources</b></a></td>
+                  <td><a href="sanity-check.html"><b>Sanity Check</b></a></td>
                   <td><a href="symbol-index.html"><b>Index</b></a></td>
                 </tr>
              </table>
@@ -155,6 +156,13 @@ class HtmlWidgets:
         
     def href_to_view_column(self, label, view_name, column_name):
         return '<a href="view-%s.html#col-%s">%s </a>\n' % (view_name, column_name, label)
+    
+    def href_to_java_source(self, name, target_frame = None):
+        if not target_frame:
+            return '<a href="java-source-%s.html"> %s </a>' % (name.replace("/","-"), name)
+        else:
+            return '<a href="java-source-%s.html" target="%s"> %s </a>' % (name.replace("/","-"), target_frame, name)
+
 
     def hr(self):
         return '<hr>\n'
@@ -216,7 +224,8 @@ class HtmlWidgets:
                   <a href="functions-index.html" target="List"><b>Functions</b></a><br>
                   <a href="packages-index.html" target="List"><b>Packages</b></a><br>
                   <a href="sequences-index.html" target="List"><b>Sequences</b></a><br>
-                  <a href="sanity-check.html" target="Main"><b>Sanity check</b></a><br>
+                  <a href="java-sources-index.html" target="List"><b>Java Sources</b></a><br>
+                  <a href="sanity-check.html" target="Main"><b>Sanity Check</b></a><br>
                   </body><html>''' % name 
 
     def _quotehtml (self, text):
