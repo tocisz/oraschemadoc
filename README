@@ -1,4 +1,4 @@
-OraSchemaDoc v0.20
+OraSchemaDoc v0.21
 Copyright (C) Aram Kananov <arcanan@flashmail.com>, 2002
 
 This program is free software; you can redistribute it and/or
@@ -59,11 +59,19 @@ a) go to directory where oraschemadoc is installed
 b) to generate documentation run:
   % ./oracshemadoc.py connect_string output_directory name
 or 
-  % python oracshemadoc.py connect_string output_directory name
+  % python2 oracshemadoc.py [--verbose] connect_string output_directory name
 
-where: 
+where:
+
+    --verbose - prints data helpfull for debugging. Use that option if you 
+	        encounter problems with oraschemadoc and include output if 
+		you post a bug. Sending me messages is ok, but i would prefer 
+		if u post a bug or support request on oraschemadoc.sourceforge.net
+		
     connect_string - username/password@dbalias
+
     output_directory - directory where html files will be placed
+
     name - short name which will be shown as title in html files.
 	   for example "My Project Data Model"
-
+   
