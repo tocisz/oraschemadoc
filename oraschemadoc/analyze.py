@@ -1,4 +1,4 @@
-# OraSchemaDoc v0.10
+# OraSchemaDoc v0.23
 # Copyright (C) Aram Kananov <arcanan@flashmail.com>, 2002
 #
 # This program is free software; you can redistribute it and/or

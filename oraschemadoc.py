@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# OraSchemaDoc v0.10
+# OraSchemaDoc v0.23
 # Copyright (C) Aram Kananov <arcanan@flashmail.com>, 2002
 #
 # This program is free software; you can redistribute it and/or
@@ -24,7 +24,7 @@
 import getopt, sys, os
 
 def usage():
-    print 'Oracle Schema Documentation Generator v0.22'
+    print 'Oracle Schema Documentation Generator v0.23'
     print 'usage: oraschemadoc [--verbose] oracleuser/password[@dbalias] output_dir  "application name" '
 
 def main():
