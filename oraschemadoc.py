@@ -25,11 +25,13 @@ import getopt, sys, os
 
 def usage():
     print 'Oracle Schema Documentation Generator v0.10'
-    print 'usage: oraschemadoc oracleuser/password[@dbalias] output_dir  "application name"'
+    print 'usage: oraschemadoc [--verbose] oracleuser/password[@dbalias] output_dir  "application name" '
 
 def main():
+
+    verbose_mode = None
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'h:', ['help'])
+        opts, args = getopt.getopt(sys.argv[1:], 'h', ['help','verbose'])
     except getopt.error, e:
         # print help information and exit:
         usage()
@@ -39,6 +41,10 @@ def main():
             # print help information and exit:
             usage()
             sys.exit()
+        if opt == '--verbose':
+            #print verbose messages
+            verbose_mode = 1
+
     if len(args) == 3:
         connect_string, output_dir, name = args
     else:
@@ -64,9 +70,9 @@ def main():
     import oraschemadoc.orasdict
     import oraschemadoc.oraschema
     import oraschemadoc.docgen
-    s = oraschemadoc.orasdict.OraSchemaDataDictionary(connection, name)
-    schema = oraschemadoc.oraschema.OracleSchema(s)
-    doclet = oraschemadoc.docgen.OraSchemaDoclet(schema, output_dir, name, "")
+    s = oraschemadoc.orasdict.OraSchemaDataDictionary(connection, name, verbose_mode)
+    schema = oraschemadoc.oraschema.OracleSchema(s, verbose_mode)
+    doclet = oraschemadoc.docgen.OraSchemaDoclet(schema, output_dir, name, "", verbose_mode)
        
     
 if __name__ == '__main__':
