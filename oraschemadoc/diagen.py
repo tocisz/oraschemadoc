@@ -22,6 +22,8 @@ __author__ = 'Aram Kananov <arcanan@flashmail.com>'
 
 __version__ = '$Version: 0.25'
 
+# TODO: implement debug statements
+
 import os 
 
 class DiaUmlDiagramGenerator:
@@ -161,7 +163,6 @@ class DiaUmlDiagramGenerator:
 
     def get_constraints_text(self, table):
         if table.referential_constraints:
-            cs_names = map(lambda cs: cs.name, table.referential_constraints)
             cs_text = ''
             for cs in table.referential_constraints:
                 if self.export_tables.count(cs.r_table) == 0:

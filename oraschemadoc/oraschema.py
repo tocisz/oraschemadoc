@@ -41,7 +41,7 @@ class OracleSchema:
         self.sequences = self._get_all_sequences(data_dict)
         self.java_sources = self._get_all_java_sources(data_dict)
         # TODO: why i need that name? 
-        self.name = "Foobarizm" 
+        #self.name = "Foobarizm" 
 
     def _get_all_tables(self, data_dict):
         tables = []
@@ -282,7 +282,6 @@ class OracleReferentialConstraint:
             self.columns[position]=column_name
 
 
-
 class OracleIndex:
 
     def __init__(self, name, data_dict):
@@ -461,23 +460,201 @@ class OraclePackage:
 
 
 class OracleSequence:
-
+    """Represents Oracle sequence database object"""
+    
     def __init__(self, name, min_value, max_value, step, cycle_flag, ordered, cache_size):
-        debug_message("debug: genarating sequence " + name)
-        self.name = name
-        self.min_value = min_value
-        self.max_value = max_value
-        self.step = step
-        self.cycle_flag = cycle_flag
-        self.ordered = ordered
-        self.cache_size = cache_size
+        debug_message("debug: generating sequence " + name)
+        self.__name = name
+        self.__min_value = min_value
+        self.__max_value = max_value
+        self.__step = step
+        self.__cycle_flag = cycle_flag
+        self.__ordered = ordered
+        self.__cache_size = cache_size
         
+    def getName(self):
+        """Get sequence name"""
+        return self.__name
+    
+    def getMinValue(self):
+        """Get min value of the sequence"""
+        return self.__min_value
+    
+    def getMaxValue(self):
+        """Get max value of the sequence"""
+        return self.__max_value
+    
+    def getStep(self):
+        """Get step of the sequence"""
+        return self.__step
+    
+    def isCycled(self):
+        """Get cycled flag of the sequence"""
+        return self.__cycle_flag
+    
+    def getCacheSize(self):
+        """Get cache size of the sequence"""
+        return self.__cache_size 
+    
+    def isOrdered(self):
+        """Determines if values of the sequence ordered"""
+        return self.__ordered
+    
+
+class OracleTypeSource(OraclePLSQLSource):
+    """Source code of type"""
+    pass
+        
+        
+class OracleTypeAttribute:
+    """Type attribute object"""
+
+    def __init__(self, name, type_mod, type_owner, type_name, length, precision, \
+                 scale, character_set_name):
+        self.__name = name
+        self.__type = type_name
+        self.__type_mod = type_mod
+        self.__type_owner = type_owner
+        self.__length = length
+        self.__precision = precision
+        self.__scale = scale
+        self.__character_set_name = character_set_name
+        
+    def getName(self):
+        """Get attribute name"""
+        return self.__name
+    
+    def getType(self):
+        """Get type of the attribute"""
+        return self.__type
+    
+    def getTypeModifier(self):
+        """Type modifier of the attribute"""
+        return self.__type_mod
+    
+    def getTypeOwner(self):
+        """Get owner of attribute type"""
+        return self.__type_owner
+
+    def getLength(self):
+        """Get type length of the attribute"""
+        return self.__length
+    
+    def getPrettyType(self):
+        """Get pretty formated type in the form of type(x,y)"""
+        type_len = self.__type
+        if self.__length is not None:
+            type_len = '(%s)' % self.__length
+        elif self.__precision is not None:
+            if self.__scale is not None:
+                type_len = '(%s,%s)' % (self.__precision, self.__scale)
+            else:
+                type_len = '(%s)' % self.__precision
+        return type_len
+                
+    def getPrecision(self):
+        """Get type precision of the attribute"""
+        return self.__precision
+    
+    def getScale(self):
+        """Get type scale of the attribute"""
+        return self.__scale
+    
+    def getCharSetName(self):
+        """Get character set name of the attribute"""
+        return self.__character_set_name
+    
+
+class OracleTypeMethod:
+    """Represents Oracle Type methods"""
+    def __init__(self, name, method_type, param_count, results_count):
+        self.__name = name 
+        self.__type = method_type
+        self.__results_count = results_count 
+        self.__param_count = param_count
+
+    def getName(self):
+        """Get type method name"""
+        return self.__name 
+    
+    def getType(self):
+        """Get method type"""
+        return self.__type
+    
+    def getResultsCount(self):
+        """Get count of results returned by the method"""
+        return self.__results_count
+    
+    def getParametersCount(self):
+        """Get count of method parameters"""
+        return self.__param_count
+        
+class OracleType:
+    """Represents Oracle Object type"""
+
+    def __init__(self, name, typecode, predefined, incomplete, 
+                 type_oid, attributes_count,
+                 methods_count):
+        self.__name = name
+        self.__typecode = typecode
+        self.__predefined = predefined
+        self.__incomplete = incomplete
+        self.__source = None
+        self.__body_source = None
+        self.__type_oid = type_oid
+        self.__attrubutes_count = attributes_count
+        self.__methods_count = methods_count 
+
+    def setDeclarationSource(self, source):
+        """Set type declaration source code text"""
+        self.__source = source
+        
+    def setImplementationSource(self, source):
+        """Set Type implementation source code text"""
+        self.__body_source = source
+
+    def getName(self):
+        """Get type name"""
+        return self.__name
+    
+    def getTypeCode(self):
+        """Get type typecode""" 
+        return self.__typecode
+    
+    def isPredefined(self):
+        """Indicates whether the type is a predefined type"""
+        return self.__predefined == 'YES'
+    
+    def isIncomplete(self):
+        """Indicates whether the type is an incomplete type"""
+        return self.__incomplete == 'YES'
+    
+    def getDeclarationSource(self):
+        """Get type declaration source code"""
+        return self.__source
+    
+    def getImplementationSource(self):
+        """Get implementation source code"""
+        return self.__body_source
+    
+    def getTypeOID(self):
+        """Get object identifier (OID) of type"""
+        return self.__type_oid
+    
+    def getMethodsCount(self):
+        """Get count of methods in the type"""
+        return self.__methods_count
+        
+    def getAttributesCount(self):
+        """Get count of attributes in the type"""
+        return self.__attrubutes_count
+    
         
 if __name__ == '__main__':
     import cx_Oracle
     import orasdict
     connection = cx_Oracle.connect('aram_v1/aram_v1')
-    s = orasdict.OraSchemaDataDictionary(connection, 'Oracle')
-    schema = OracleSchema(s)
+    s = orasdict.OraSchemaDataDictionary(connection, 'Oracle', None)
+    schema = OracleSchema(s,None)
         
     

@@ -19,6 +19,7 @@
 # OraSchemaDataDictionary class queries data from Oracle Data Dictionary 
 
 __author__ = 'Aram Kananov <arcanan@flashmail.com>'
+__doc__ = """TODO: Write me"""
 
 __version__ = '$Revision$'
 # $Source$
@@ -26,39 +27,46 @@ __version__ = '$Revision$'
 
 import fpformat
 
-from oraschmeadoc.oraverbose import *
+from oraverbose import *
 
 
 class OraSchemaDataDictionary:
-
+    __doc__ = """TODO: Write me"""
+    
     def __init__(self, conn, name, debug_mode):
+        """Gets all needed data from oracle data dictionary 
+           and initializes all attributes
+        """
         
-        self.__conn = conn
+        self.__conn = conn  # """db_connection handler"""
+        set_verbose_mode(debug_mode)  # set debuging mode 
+        self.name = name
 
-        set_verbose_mode(debug_mode)
-        
-        self.name                      = name
-        self.all_tables               = self.__get_tables()        
-        self.all_table_comments       = self.__get_table_comments()
-        self.all_columns              = self.__get_columns()        
-        self.all_col_comments         = self.__get_column_comments()
-        self.all_constraints          = self.__get_constraints()
-        self.all_constraited_columns  = self.__get_constraited_columns()
-        self.all_views                = self.__get_views()
-        self.all_updatable_columns    = self.__get_updatable_columns()
-        self.all_indexes              = self.__get_indexes()
-        self.all_index_columns        = self.__get_index_columns()
-        self.all_index_expressions    = self.__get_index_expressions()
-        
+        # tables
+        self.all_tables = self.__get_tables()   
         self.all_table_names = self.all_tables.keys()
         self.all_table_names.sort()
-
-        self.all_view_names  = self.all_views.keys()
-        self.all_view_names.sort()
-        
+        self.all_table_comments = self.__get_table_comments()
+        # columns
+        self.all_columns = self.__get_columns()        
+        self.all_col_comments = self.__get_column_comments()
+        # constraints
+        self.all_constraints = self.__get_constraints()
         self.all_constraint_names = self.all_constraints.keys()
         self.all_constraint_names.sort()
-
+        self.all_constraited_columns = self.__get_constraited_columns()
+        # indexes
+        self.all_indexes = self.__get_indexes()
+        self.all_index_names = self.all_indexes.keys()
+        self.all_index_names.sort()
+        self.all_index_columns = self.__get_index_columns()
+        self.all_index_expressions = self.__get_index_expressions()
+        # views
+        self.all_views = self.__get_views()
+        self.all_view_names = self.all_views.keys()
+        self.all_view_names.sort()
+        self.all_updatable_columns = self.__get_updatable_columns()
+        # table/view related mappings
         self.table_primary_key_map = {}
         self.table_unique_key_map = {}
         self.table_check_constraint_map = {}
@@ -66,61 +74,103 @@ class OraSchemaDataDictionary:
         self.table_check_constraint_map = {}
         self.view_constraint_map = {}
         self.table_referenced_by = {}
-        for constraint_name in self.all_constraint_names:
-            table_name, type, check_cond, r_owner, r_constraint_name, delete_rule = \
-                        self.all_constraints[constraint_name]
-            if type == 'P':
-               self.table_primary_key_map[table_name] = constraint_name
-            elif type == 'U':
-                 self.table_unique_key_map.setdefault(table_name,[]).append(constraint_name)
-            elif type == 'C':
-                 self.table_check_constraint_map.setdefault(table_name,[]).append(constraint_name)
-            elif type == 'R':
-                 self.table_foreign_key_map.setdefault(table_name,[]).append(constraint_name)
-                 # put row in table_referenced_by
-                 _table_name = self.all_constraints[r_constraint_name][0]
-                 self.table_referenced_by.setdefault(_table_name,[]).append((table_name, constraint_name))
-            elif type in ('V','O'):
-                 self.view_constraint_map.setdefault(table_name,[]).append(constraint_name)
-
         self.table_constraint_map= {}
-        for constraint_name in self.all_constraint_names:
-            table_name = self.all_constraints[constraint_name][0]
-            self.table_constraint_map.setdefault(table_name, []).append(constraint_name)  
-
-        self.all_index_names = self.all_indexes.keys()
-        self.all_index_names.sort()
-
         self.table_index_map = {}
-        for index_name in self.all_index_names:
-            table_name = self.all_indexes[index_name][0]
-            self.table_index_map.setdefault(table_name,[]).append(index_name)
-            
+        self.__set_table_maps()
+        # triggers
         self.all_triggers = self.__get_triggers()
         self.all_trigger_names = self.all_triggers.keys()
         self.all_trigger_names.sort()
         self.all_trigger_columns = self.__get_trigger_columns()
-        # attention that holds mapping for views as well
         self.table_triggers = []
         self.table_trigger_map = {}
         self.schema_triggers = []
+        self.__set_trigger_maps()
+        # types 
+        self.types = self.__get_types()
+        self.type_attributes = self.__get_type_attributes()
+        self.type_methods = self.__get_type_methods()
+        self.type_sources = {}
+        self.type_body_sources = {}
+        # pl/sql, java stuff
+        self.all_functions = {}
+        self.all_procedures = {}
+        self.all_packages = {}
+        self.all_package_bodies = {}
+        self.all_java_sources = {}
+        self.__set_user_sources()
+        self.all_procedure_names = self.all_procedures.keys()
+        self.all_procedure_names.sort()
+        self.all_function_names = self.all_functions.keys()
+        self.all_function_names.sort()
+        self.all_package_names = self.all_packages.keys()
+        self.all_package_names.sort()
+        self.all_java_source_names = self.all_java_sources.keys()
+        self.all_java_source_names.sort()
+        # pl/sql arguments
+        self.proc_arguments = {}
+        self.func_return_arguments = {}
+        self.package_arguments = {}
+        self.package_return_values = {}
+        self.__set_plsql_args()
+        # sequences
+        self.sequences = self.__get_sequences()
+        self.sequence_names = self.sequences.keys()
+        self.sequence_names.sort()
+        
+    def __set_table_maps(self):
+        """Fill table_constraint_map, table_primary_key_map, 
+           table_check_constraint, table_foreign_key_map, table_index_map
+        """
+        # table_constraints
+        for constraint_name in self.all_constraint_names:
+            table_name = self.all_constraints[constraint_name][0]
+            self.table_constraint_map.setdefault(table_name, []).\
+                append(constraint_name)  
+
+        # uk, pk, fk, ck... constraint maps
+        for constraint_name in self.all_constraint_names:
+            table_name, type, check_cond, r_owner, r_constraint_name, \
+            delete_rule = self.all_constraints[constraint_name]
+            if type == 'P':
+               self.table_primary_key_map[table_name] = constraint_name
+            elif type == 'U':
+                 self.table_unique_key_map.setdefault(table_name,[]).\
+                     append(constraint_name)
+            elif type == 'C':
+                 self.table_check_constraint_map.setdefault(table_name,[]).\
+                     append(constraint_name)
+            elif type == 'R':
+                 self.table_foreign_key_map.setdefault(table_name,[]).\
+                     append(constraint_name)
+                 # put row in table_referenced_by
+                 _table_name = self.all_constraints[r_constraint_name][0]
+                 self.table_referenced_by.setdefault(_table_name,[]).\
+                     append((table_name, constraint_name))
+            elif type in ('V','O'):
+                 self.view_constraint_map.setdefault(table_name,[]).\
+                     append(constraint_name)
+                 
+        # table index map         
+        for index_name in self.all_index_names:
+            table_name = self.all_indexes[index_name][0]
+            self.table_index_map.setdefault(table_name,[]).append(index_name)
+
+    def __set_trigger_maps(self):
+        """Set table_triggers, table_trigger_map, schema_triggers"""
         for trigger_name in self.all_trigger_names:
-            name, type, event, base_object_type, table_name, column_name, referencing_names, \
-                          when_clause, status, description, action_type, body \
-                          = self.all_triggers[trigger_name]
+            name, type, event, base_object_type, table_name, column_name, \
+                referencing_names, when_clause, status, description, \
+                action_type, body = self.all_triggers[trigger_name]
             if base_object_type in ('TABLE', 'VIEW'):
                 self.table_triggers.append(trigger_name)
                 self.table_trigger_map.setdefault(table_name,[]).append(name)
             elif base_object_type  == 'SCHEMA':
                 self.schema_triggers.append(trigger_name)
         self.table_triggers.sort()
-        
-        #process user_source
-        self.all_functions = {}
-        self.all_procedures = {}
-        self.all_packages = {}
-        self.all_package_bodies = {}
-        self.all_java_sources = {}
+
+    def __set_user_sources(self):
+        """Process users sources and put entries into appropriate structures"""
         for name, type, line, text in self.__get_user_source():
             if type == 'PROCEDURE':
                 t = self.all_procedures.setdefault(name, {})
@@ -132,53 +182,46 @@ class OraSchemaDataDictionary:
                 t = self.all_package_bodies.setdefault(name, {})
             elif type == 'JAVA SOURCE':
                 t = self.all_java_sources.setdefault(name, {})
+            elif type == 'TYPE':
+                t = self.type_sources.setdefault(name, {})
+            elif type == 'TYPE BODY':
+                t = self.type_body_sources.setdefault(name, {})
             else:
                 continue
             t[int(float(line))] = text
 
-        self.all_procedure_names = self.all_procedures.keys()
-        self.all_procedure_names.sort()
-        self.all_function_names = self.all_functions.keys()
-        self.all_function_names.sort()
-        self.all_package_names = self.all_packages.keys()
-        self.all_package_names.sort()
-        self.all_java_source_names = self.all_java_sources.keys()
-        self.all_java_source_names.sort()
-        
-        # convert all_arguments
+    def __set_plsql_args(self):
+        """Process pl/sql arguments"""
         all_arguments = self.__get_arguments()
-        self.proc_arguments = {}
-        self.func_return_arguments = {}
-        self.package_arguments = {}
-        self.package_return_values = {}
-        for name, package_name, argument_name, position, data_type, default_value, in_out in all_arguments:
+        for name, package_name, argument_name, position, data_type, \
+            default_value, in_out in all_arguments:
             if not package_name:
                 if position:
                     t = self.proc_arguments.setdefault(name, {})
-                    t[int(float(position))]= [argument_name, data_type, default_value, in_out]
+                    t[int(float(position))]= [argument_name, data_type, \
+                                              default_value, in_out]
                 else:
                     self.func_return_arguments[name] = data_type
             else:
                 if float(position) > 0:
-                    t = self.package_arguments.setdefault(package_name, {}).setdefault(name, {})
-                    t[int(float(position))] =  argument_name, data_type, default_value, in_out 
+                    t = self.package_arguments.setdefault(package_name, {}).\
+                      setdefault(name, {})
+                    t[int(float(position))] =  argument_name, data_type, \
+                     default_value, in_out 
                 else:
                     self.package_return_values.setdefault(package_name, {})[name]= data_type
-
-        
-        self.sequences = self.__get_sequences()
-        self.sequence_names = self.sequences.keys()
-        self.sequence_names.sort()
-
+            
+            
     ################################################
     # INTERNAL FUNCTIONS FOR QUERY DATA DICTIONARY #
     ################################################
     
     def __get_tables(self):
-        "get tables"
+        """Get tables"""
         # fix me with iot_table overflow segments
-        stmt = """select table_name, partitioned, secondary, cluster_name, iot_type, temporary,  nested
-            from user_tables"""        
+        stmt = """select table_name, partitioned, secondary, cluster_name, 
+                         iot_type, temporary,  nested
+                    from user_tables"""        
         tables = {}
         print "get tables"
         for table, partitioned, secondary, cluster, iot_type, temporary, nested in self.__query(stmt):
@@ -207,9 +250,8 @@ class OraSchemaDataDictionary:
                             _temporary
         return tables
 
-
     def __get_table_comments(self):
-        "get comments on tables and views"
+        """Get comments on tables and views"""
         stmt = """SELECT table_name, comments
             FROM user_tab_comments
             WHERE comments is not null"""
@@ -220,9 +262,8 @@ class OraSchemaDataDictionary:
             comments[table] = comment
         return comments 
 
-
     def __get_column_comments(self):
-        "get all tables/views column comments"
+        """Get all tables/views column comments"""
         stmt = """ SELECT table_name, column_name, comments
             FROM user_col_comments
             where comments is not null"""
@@ -233,9 +274,8 @@ class OraSchemaDataDictionary:
             col_comments[table,column] = comment
         return col_comments;
 
-
     def __get_columns(self):
-        "get all columns for tables, views and clusters"
+        """Get all columns for tables, views and clusters"""
         stmt = """select table_name, column_name, data_type , data_length, data_precision,
                          data_scale, nullable, column_id, data_default
                     from user_tab_columns
@@ -263,10 +303,8 @@ class OraSchemaDataDictionary:
             t.append((column, _data_type, nullable, column_id, data_default))
         return all_columns
 
-
     def __get_constraints(self):
-        "get all_table/view constraints"
-        
+        """get all_table/view constraints"""
         stmt = """select  table_name, constraint_name, constraint_type, search_condition, r_owner,
             r_constraint_name , delete_rule
             from user_constraints where r_owner is null or r_owner = user"""
@@ -278,10 +316,8 @@ class OraSchemaDataDictionary:
 
         return cons        
 
-
     def __get_constraited_columns(self):
-        "get all constrainted columns"
-
+        """Get all constrainted columns"""
         stmt  = """select constraint_name, table_name, column_name, position from
             user_cons_columns"""
         cs_cols = {}
@@ -296,10 +332,8 @@ class OraSchemaDataDictionary:
 
         return cs_cols;
 
-
     def __get_views(self):
-        "get all views"
-
+        """Get all views"""
         stmt = """ select view_name , text from user_views"""
         views = {}
         print "get all views"
@@ -308,10 +342,8 @@ class OraSchemaDataDictionary:
             views[name]= text
         return views
 
-
     def __get_indexes(self):
-        "get all indexes"
-
+        """Get all indexes"""
         stmt = """select index_name, table_name, index_type, uniqueness, include_column, generated, secondary
                     from user_indexes"""
         indexes = {}
@@ -319,13 +351,10 @@ class OraSchemaDataDictionary:
         for name, table_name, type, uniqueness, include_column, generated, secondary in self.__query(stmt):
             debug_message('debug: index ' + name + ' on table - ' + table_name  )
             indexes[name] = (table_name, type, uniqueness, include_column, generated, secondary)
-            
         return indexes
 
-
     def __get_index_columns(self):
-        "get all index columns"
-        
+        """Get all index columns"""
         stmt = """select index_name, table_name, column_name, column_position from user_ind_columns"""
         ind_columns = {}
         print "get all index columns"
@@ -340,8 +369,7 @@ class OraSchemaDataDictionary:
         return ind_columns
 
     def __get_index_expressions(self):
-        "get all index expressions"
-
+        """Get all index expressions"""
         stmt = """select index_name, table_name, column_expression, column_position from user_ind_expressions"""
         ind_expressions = {}
         print "get all index_expressions"
@@ -352,13 +380,10 @@ class OraSchemaDataDictionary:
                 t = []
                 ind_expressions[name] = t
             t.append((table_name, expression, position))
-
         return ind_expressions
 
-
     def __get_updatable_columns(self):
-        "get updatable columns on views"
-
+        """Get updatable columns on views"""
         stmt = """select table_name, column_name, insertable, updatable, deletable
             from all_updatable_columns
             where table_name in (select view_name from user_views)"""
@@ -367,13 +392,10 @@ class OraSchemaDataDictionary:
         for table_name, column_name, insertable, updatable, deletable in self.__query(stmt):
             debug_message('debug: updatable column ' + column_name + ' on view ' + table_name)
             view_updatable_columns[table_name, column_name] = (insertable, updatable, deletable)
-
         return view_updatable_columns
 
-
     def __get_triggers(self):
-        "get all triggers"
-
+        """Get all triggers"""
         stmt = """select trigger_name, trigger_type, triggering_event, base_object_type, table_name,
             column_name, referencing_names, when_clause, status, description, action_type, trigger_body
             from user_triggers"""
@@ -384,13 +406,10 @@ class OraSchemaDataDictionary:
             debug_message('debug: trigger - ' + name)
             triggers[name] = (name, type, event, base_object_type, table_name, column_name, referencing_names, \
                               when_clause, status, description, action_type, body)
-
         return triggers
 
-
     def __get_trigger_columns(self):
-        "get all trigger columns"
-
+        """Get all trigger columns"""
         stmt = "select trigger_name, table_name, column_name, column_list, column_usage from user_trigger_cols"
         trigger_columns = {}
         print "get all trigger columns"
@@ -401,13 +420,10 @@ class OraSchemaDataDictionary:
                 t = []
                 trigger_columns[name] = t
             t.append((name, table_name, column_name, column_list, column_usage))
-
         return trigger_columns
 
-
     def __get_arguments(self):
-        "get all function/procedure argumets"
-
+        """Get all function/procedure argumets"""
         stmt = """select object_name, package_name, argument_name, position, data_type, default_value, in_out, pls_type,
             data_scale, data_precision, data_length
                 from user_arguments"""
@@ -433,25 +449,20 @@ class OraSchemaDataDictionary:
                     _data_type = _data_type + '(%s)' %data_length
             all_arguments.append\
                     ((name, package_name, argument_name, position, _data_type, default_value, in_out))
-
         return all_arguments
 
-
     def __get_user_source(self):
-        "get pl/sql source for procedures, functions and packages"
-
+        """Get pl/sql source for procedures, functions and packages"""
         stmt = "select name, type, line, text from user_source where type not like 'TYPE%' order by name, line"
         user_source = []
         print "get pl/sql source for procedures, functions and packages"
         for name, type, line, text in self.__query(stmt):
             debug_message('debug: pl/sql source - ' + name)
             user_source.append((name, type, line, text))
-
         return user_source
 
-
     def __get_sequences (self):
-        "get user sequences"
+        """Get user sequences"""
         stmt = """select sequence_name, min_value, max_value, increment_by, cycle_flag, order_flag, cache_size
                       from user_sequences"""
         sequences = {}
@@ -459,20 +470,63 @@ class OraSchemaDataDictionary:
         for name, min_value, max_value, step, cycled, ordered, cache_size in self.__query(stmt):
             sequences[name] = fpformat.fix(min_value,0), str(max_value), fpformat.fix(step,0), cycled, ordered, fpformat.fix(cache_size,0)
         return sequences
-    
-
+ 
     def __get_types(self):
-        return 1
+        """Get types"""
+        stmt = """select type_name, type_oid, typecode, attributes, methods, 
+                      predefined, incomplete 
+                    from user_types"""
+        types = {}
+        print "get types"
+        for name, type_oid, typecode, attributes, methods, predefined, incomplete \
+            in self.__query(stmt):
+            debug_message('debug: type - ' + name)
+            types[name] = typecode, predefined, incomplete, type_oid, attributes, \
+                 methods
+        return types
+    
+    def __get_type_attributes(self):
+        """Get type attributes from db"""
+        stmt = """select type_name, attr_name, attr_type_mod, attr_type_owner, 
+                       attr_type_name, length, precision, scale, character_set_name,
+                       attr_no 
+                    from user_type_attrs"""
+        type_attributes = {}
+        print "get type attributes from db"
+        for type_name, attr_name, attr_type_mod, attr_type_owner, attr_type_name, \
+            length, precision, scale, character_set_name, attr_no \
+            in self.__query(stmt):
+            debug_message('debug: type - ' + type_name + ' attribute name ' + \
+                          attr_name)
+            t = type_attributes.get(type_name, None)
+            if not t:
+                t = {}
+
+            t[attr_no] = attr_name, attr_type_mod, attr_type_owner, \
+             attr_type_name, length, precision, scale, character_set_name 
+        return type_attributes
+    
+    def __get_type_methods(self):
+        """get type methods from db"""
+        stmt = """select type_name, method_name, method_type, parameters, results 
+                    from user_type_methods"""
+        type_methods = {}
+        print "get type methods"
+        for type_name, method_name, method_type, parameters, results \
+            in self.__query(stmt):
+            t = type_methods.get(type_name, None)
+            if not t:
+                t = {}
+            t[method_name] = method_type, parameters, results
+        return type_methods
     
     def __query(self, querystr):
-        "execute query end return results in array"    
+        """Execute query end return results in array"""
         cur = self.__conn.cursor()
         cur.execute(querystr)
         results = cur.fetchall()
         cur.close()
-
         return results
-
 
 if __name__ == '__main__':
     import cx_Oracle

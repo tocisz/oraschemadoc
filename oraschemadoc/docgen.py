@@ -140,7 +140,7 @@ class OraSchemaDoclet:
         #sequences
         rows = []
         for sequence in self.schema.sequences:
-            link = self.html.href_to_sequence(sequence.name, "Main")
+            link = self.html.href_to_sequence(sequence.getName(), "Main")
             rows.append(link)
         self._print_index_frame("Sequences", rows, "sequences-index.html")
         
@@ -262,9 +262,13 @@ class OraSchemaDoclet:
         #sequences
         rows = []
         for s in self.schema.sequences:
-            rows.append((s.name + self.html.anchor(s.name), s.min_value, s.max_value, s.step, s.cycle_flag, s.ordered, s.cache_size))
-            self._add_index_entry(s.name, self.html.href_to_sequence(s.name), "index")
-        headers = "Name", "Min Value", "Max Value", "Step", "Cycled", "Ordered", "Cache Size"
+            rows.append((s.getName() + self.html.anchor(s.getName()), 
+                         s.getMinValue(), s.getMaxValue(), s.getStep(), 
+                         s.isCycled(), s.isOrdered(), s.getCacheSize()))
+            self._add_index_entry(s.getName(), 
+                                  self.html.href_to_sequence(s.getName()), "index")
+        headers = "Name", "Min Value", "Max Value", "Step", "Cycled", "Ordered", \
+                "Cache Size"
         ht_table = self.html.table("Sequences", headers, rows)
         self._print_list_page("Sequences", ht_table, "sequences.html")
 
@@ -776,6 +780,6 @@ if __name__ == '__main__':
     connection = cx_Oracle.connect('aram_v1/aram_v1')
     s = orasdict.OraSchemaDataDictionary(connection, 'Oracle')
     schema = oraschema.OracleSchema(s)
-    doclet = OraSchemaDoclet(schema, "/tmp/oraschemadoc/", "vtr Data Model", "Really cool project")
+    doclet = OraSchemaDoclet(schema, "/tmp/oraschemadoc/", "vtr Data Model", "Really cool project", None)
         
     
