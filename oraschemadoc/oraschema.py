@@ -437,7 +437,7 @@ class OraclePLSQLSource:
             self.source.append(OraclePLSQLSourceLine(line_no, source[line_no]))
 
 class OracleJavaSource(OraclePLSQLSource):
-    def__init__(self, name, source):
+    def __init__(self, name, source):
         debug_message("debug: generating java source ")
         OraclePLSQLSource.__init__(self,source)
             
