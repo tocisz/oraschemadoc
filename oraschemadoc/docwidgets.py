@@ -127,7 +127,9 @@ class HtmlWidgets:
         return "<pre>\n"+text+"</pre>\n"
 
     def table(self, name, headers, rows):
-        text = self.heading(name,3)
+        text = ""
+        if name:
+            text = self.heading(name,3)
         if not rows:
             return text + "<p>None"
         text = text + '<table border=1>\n'
