@@ -24,7 +24,7 @@
 import getopt, sys, os
 
 def usage():
-    print 'Oracle Schema Documentation Generator v0.10'
+    print 'Oracle Schema Documentation Generator v0.22'
     print 'usage: oraschemadoc [--verbose] oracleuser/password[@dbalias] output_dir  "application name" '
 
 def main():
