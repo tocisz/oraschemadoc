@@ -47,8 +47,17 @@ class OraSchemaDoclet:
         self._print_view_list_page()
         self._print_view_index_frame()
         self._print_views()
+        self._print_procedures()
+        self._print_procedure_list_page()
+        self._print_procedure_index_frame()
+        self._print_functions()
+        self._print_function_list_page()
+        self._print_function_index_frame()        
+        self._print_packages()
         self._print_symbol_index_page()
         self._print_common_pages()
+
+
 
     def _print_common_pages(self):
         text = self.html._index_page(self.name)
@@ -61,6 +70,8 @@ class OraSchemaDoclet:
         file_name = os.path.join(self.doc_dir, "main.html")
         self._write(text, file_name)
     
+
+
     def _print_table_list_page(self):
         text = self.html.page_header("Tables")
         text = text + self.html.context_bar( None)
@@ -81,6 +92,8 @@ class OraSchemaDoclet:
         file_name = os.path.join(self.doc_dir, "tables-list.html")
         self._write(text, file_name)
 
+
+
     def _print_table_index_frame(self):
         text = self.html.frame_header("Tables")
         #text = text + self.html.heading("Tables",3)
@@ -95,6 +108,8 @@ class OraSchemaDoclet:
         file_name = os.path.join(self.doc_dir, "tables-index.html")
         self._write(text, file_name)
 
+
+
     def _print_index_index_frame(self):
         text = self.html.frame_header("Indexes")
         #text = text + self.html.heading("Indexes",3)
@@ -106,6 +121,8 @@ class OraSchemaDoclet:
         text = text + self.html.frame_footer()
         file_name = os.path.join(self.doc_dir, "indexes-index.html")
         self._write(text, file_name)
+
+
 
     def _print_constraint_index_frame(self):
         text = self.html.frame_header("Constraints")
@@ -119,6 +136,8 @@ class OraSchemaDoclet:
         file_name = os.path.join(self.doc_dir, "constraints-index.html")
         self._write(text, file_name)
 
+
+
     def _print_view_index_frame(self):
         text = self.html.frame_header("Views")
         #text = text + self.html.heading("Views",3)
@@ -131,6 +150,34 @@ class OraSchemaDoclet:
         file_name = os.path.join(self.doc_dir, "views-index.html")
         self._write(text, file_name)
 
+
+
+    def _print_procedure_index_frame(self):
+        text = self.html.frame_header("Procedures")
+        text = text + self.html.hr()
+        rows = []
+        for procedure in self.schema.procedures:
+            link = self.html.href_to_procedure(procedure.name, "Main")
+            text = text + link + '<br>'
+        text = text + self.html.frame_footer()
+        file_name = os.path.join(self.doc_dir, "procedures-index.html")
+        self._write(text, file_name)
+
+
+
+    def _print_function_index_frame(self):
+        text = self.html.frame_header("Functions")
+        text = text + self.html.hr()
+        rows = []
+        for function in self.schema.functions:
+            link = self.html.href_to_function(function.name, "Main")
+            text = text + link + '<br>'
+        text = text + self.html.frame_footer()
+        file_name = os.path.join(self.doc_dir, "functions-index.html")
+        self._write(text, file_name)
+
+        
+
     def _print_trigger_index_frame(self):
         text = self.html.frame_header("Triggers")
         text = text + self.html.hr()
@@ -142,14 +189,34 @@ class OraSchemaDoclet:
         file_name = os.path.join(self.doc_dir, "triggers-index.html")
         self._write(text, file_name)         
 
+
+
     def _print_tables(self):
         for table in self.schema.tables:
             self._print_table(table)
             
+
+
     def _print_views(self):
         for view in self.schema.views:
             self._print_view(view)
 
+
+    def _print_functions(self):
+        for function in self.schema.functions:
+            self._print_function(function)
+
+
+    def _print_procedures(self):
+        for procedure in self.schema.procedures:
+            self._print_procedure(procedure)
+
+
+
+    def _print_packages(self):
+        for package in self.schema.packages:
+            self._print_package(package)
+            
     def _print_table(self, table):
         "print table page"
         # create header and context bar
@@ -181,8 +248,10 @@ class OraSchemaDoclet:
             print table.name
             for i in range(len(table.columns)):
                 column = table.columns[i+1]
-                self._add_index_entry(column.name, self.html.href_to_column(column.name, table.name, column.name), "column of table %s" % table.name)
-                rows.append((column.name+self.html.anchor('col-%s' % column.name), column.data_type, column.nullable, column.data_default, column.comments))
+                self._add_index_entry(column.name, self.html.href_to_column(column.name, table.name, column.name),\
+                                      "column of table %s" % table.name)
+                rows.append((column.name+self.html.anchor('col-%s' % column.name), column.data_type, \
+                             column.nullable, column.data_default, column.comments))
             headers = "Name", "Type", "Nullable", "Default value", "Comment"
             text = text + self.html.table("Columns" + self.html.anchor('t-cols'), headers, rows)
         # print primary key
@@ -191,7 +260,8 @@ class OraSchemaDoclet:
             pk_name = table.primary_key.name + self.html.anchor("cs-%s" % table.primary_key.name)
             pk_columns = ''
             for i in range(len(table.primary_key.columns)):
-                pk_columns = pk_columns + self.html.href_to_column(table.primary_key.columns[i+1],table.name, table.primary_key.columns[i+1])
+                pk_columns = pk_columns + \
+                      self.html.href_to_column(table.primary_key.columns[i+1],table.name, table.primary_key.columns[i+1])
                 if i+1 != len(table.primary_key.columns):
                     pk_columns = pk_columns + ', '
             headers = "Constraint Name" , "Columns"
@@ -219,7 +289,8 @@ class OraSchemaDoclet:
                         columns = columns + ', '
                 name = constraint.name + self.html.anchor("cs-%s" % constraint.name)
                 r_table = self.html.href_to_table(constraint.r_table)
-                r_constraint_name = self.html.href_to_constraint(constraint.r_constraint_name, constraint.r_table, constraint.r_constraint_name)
+                r_constraint_name = self.html.href_to_constraint(constraint.r_constraint_name, \
+                                                  constraint.r_table, constraint.r_constraint_name)
                 rows.append((name, columns, r_table, r_constraint_name, constraint.delete_rule))
             headers = "Constraint Name", "Columns", "Referenced table", "Referenced Constraint", "On Delete Rule"  
             text = text + self.html.table(title,headers, rows)
@@ -230,7 +301,8 @@ class OraSchemaDoclet:
             for constraint in table.unique_keys:
                 columns = ''
                 for i in range(len(constraint.columns)):
-                    columns = columns + self.html.href_to_column(constraint.columns[i+1],table.name, constraint.columns[i+1])
+                    columns = columns + self.html.href_to_column(constraint.columns[i+1],table.name, \
+                                                                 constraint.columns[i+1])
                     if i+1 != len(constraint.columns):
                         columns = columns + ', '
                 name = constraint.name + self.html.anchor("cs-%s" % constraint.name)
@@ -295,12 +367,12 @@ class OraSchemaDoclet:
                 t.append(row)
                 rows.append(t)
                 text = text + self.html.table(None, headers, rows, '100')+"<p>"
-                
-                
-        
+                       
         text = text + self.html.page_footer()
         file_name = os.path.join(self.doc_dir, "table-%s.html" % table.name)
         self._write(text, file_name)
+
+
 
     def _print_index_list_page(self):
         text = self.html.page_header("Indexes")
@@ -321,6 +393,8 @@ class OraSchemaDoclet:
         file_name = os.path.join(self.doc_dir, "indexes-list.html")
         self._write(text, file_name)
 
+
+
     def _print_trigger_list_page(self):
         text = self.html.page_header("Triggers")
         text = text + self.html.context_bar( None)
@@ -339,6 +413,8 @@ class OraSchemaDoclet:
         text = text + self.html.page_footer()
         file_name = os.path.join(self.doc_dir, "triggers-list.html")
         self._write(text, file_name)
+
+
 
     def _print_constraint_list_page(self):
         text = self.html.page_header("Constraints")
@@ -359,6 +435,8 @@ class OraSchemaDoclet:
         file_name = os.path.join(self.doc_dir, "constraints-list.html")
         self._write(text, file_name)        
 
+
+
     def _print_view_list_page(self):
         text = self.html.page_header("Views")
         text = text + self.html.context_bar( None)
@@ -378,6 +456,8 @@ class OraSchemaDoclet:
         text = text + self.html.page_footer()
         file_name = os.path.join(self.doc_dir, "views-list.html")
         self._write(text, file_name)
+
+
 
     def _print_view(self, view):
         "print view page"
@@ -401,7 +481,8 @@ class OraSchemaDoclet:
         for i in range(len(view.columns)):
             column = view.columns[i+1]
             # add entry to doc index
-            self._add_index_entry(column.name, self.html.href_to_view_column(column.name, view.name, column.name), "column of of view %s" % view.name)
+            self._add_index_entry(column.name, self.html.href_to_view_column(column.name, view.name, column.name), \
+                                  "column of of view %s" % view.name)
             rows.append((column.name+self.html.anchor('col-%s' % column.name), column.data_type, column.nullable,\
                          column.insertable, column.updatable, column.deletable, column.comments))
         headers = "Name", "Type", "Nullable","Insertable","Updatable", "Deletable", "Comment"
@@ -442,6 +523,124 @@ class OraSchemaDoclet:
         file_name = os.path.join(self.doc_dir, "view-%s.html" % view.name)
         self._write(text, file_name)
 
+    def _print_procedure(self, procedure):
+        "print procedure page"
+        # create header and context bar
+        text = self.html.page_header("Procedure-" + procedure.name)
+        local_nav_bar = []
+        local_nav_bar.append(("Arguments", "p-args"))
+        local_nav_bar.append(("Source", "p-src"))
+        text = text + self.html.context_bar(local_nav_bar)
+        text = text + self.html.hr()
+        text = text + self.html.heading(procedure.name, 2)
+        
+        title = "Arguments:" + self.html.anchor("p-args")
+        headers = "Name", "Data Type", "Default Value", "In/Out"
+        rows = []
+        for argument in procedure.arguments:
+            if argument.default_value:
+                _default_value = argument.default_value
+            else:
+                _default_value = ""
+            row = argument.name, argument.data_type, self.html._quotehtml(_default_value), argument.in_out
+            rows.append(row)
+        text = text + self.html.table(title, headers, rows)
+        
+ #       text = text + self.html.heading("Source:",3) + self.html.anchor("p-src")
+ #       text = text + self.html.pre(self.html._quotehtml(procedure.source))
+        
+        title = "Source" + self.html.anchor("p-src")
+        headers = (["Source"])
+        rows=[]
+        _src=""
+        for line in procedure.source.source:
+            _src = _src + string.rjust(str(line.line_no),6) + ": " +  line.text
+        rows.append([self.html.pre(self.html._quotehtml(_src))])
+        text = text + self.html.table(title, headers, rows)
+        text = text + self.html.page_footer()
+        file_name = os.path.join(self.doc_dir, "procedure-%s.html" % procedure.name)
+        self._write(text, file_name)        
+
+
+        
+    def _print_procedure_list_page(self):
+        text = self.html.page_header("Procedures")
+        text = text + self.html.context_bar( None)
+        text = text + self.html.hr()
+        rows = []
+        for procedure in self.schema.procedures:
+            name = self.html.href_to_procedure(procedure.name)
+            # add entry to doc index
+            self._add_index_entry(procedure.name, name, "procedure")
+            rows.append([name])
+        headers = ["Name"]
+        name = "Procedures"
+        text = text + self.html.table(name, headers, rows)
+        text = text + self.html.page_footer()
+        file_name = os.path.join(self.doc_dir, "procedures-list.html")
+        self._write(text, file_name)
+
+
+
+    def _print_function(self, function):
+        "print function page"
+        # create header and context bar
+        text = self.html.page_header("Function-" + function.name + " returns " + function.return_data_type)
+        local_nav_bar = []
+        local_nav_bar.append(("Arguments", "f-args"))
+        local_nav_bar.append(("Source", "f-src"))
+        text = text + self.html.context_bar(local_nav_bar)
+        text = text + self.html.hr()
+        text = text + self.html.heading(function.name, 2)
+        
+        title = "Arguments:" + self.html.anchor("f-args")
+        headers = "Name", "Data Type", "Default Value", "In/Out"
+        rows = []
+        for argument in function.arguments:
+            if argument.default_value:
+                _default_value = argument.default_value
+            else:
+                _default_value = ""
+            row = argument.name, argument.data_type, self.html._quotehtml(_default_value), argument.in_out
+            rows.append(row)
+        text = text + self.html.table(title, headers, rows)
+
+        text = text + self.html.heading("Returns:",3) + function.return_data_type
+
+        title = "Source" + self.html.anchor("f-src")
+        headers = (["Source"])
+        rows=[]
+        _src=""
+        for line in function.source.source:
+            _src = _src + string.rjust(str(line.line_no),6) + ": " +  line.text
+        rows.append([self.html.pre(self.html._quotehtml(_src))])
+        text = text + self.html.table(title, headers, rows)
+       
+        text = text + self.html.page_footer()
+        file_name = os.path.join(self.doc_dir, "function-%s.html" % function.name)
+        self._write(text, file_name)
+
+
+    def _print_function_list_page(self):
+        text = self.html.page_header("Functions")
+        text = text + self.html.context_bar( None)
+        text = text + self.html.hr()
+        rows = []
+        for function in self.schema.functions:
+            name = self.html.href_to_function(function.name)
+            # add entry to doc index
+            self._add_index_entry(function.name, name, "function")
+            row = ([name])
+            rows.append(row)
+        headers = (["Name"])
+        name = "Functions"
+        text = text + self.html.table(name, headers, rows)
+        text = text + self.html.page_footer()
+        file_name = os.path.join(self.doc_dir, "functions-list.html")
+        self._write(text, file_name)
+
+
+
     def _print_symbol_index_page(self):
         text = self.html.page_header("Schema Objects Index")
         local_nav_bar = []
@@ -467,6 +666,63 @@ class OraSchemaDoclet:
         file_name = os.path.join(self.doc_dir, "symbol-index.html")
         self._write(text, file_name)        
         
+    def _print_package(self, package):
+        "print procedure page"
+        # create header and context bar
+        text = self.html.page_header("Package -" + package.name)
+        local_nav_bar = []
+        local_nav_bar.append(("Procedures", "p-proc"))
+        local_nav_bar.append(("Functions", "p-func"))
+        local_nav_bar.append(("Package source", "p-psrc"))
+        local_nav_bar.append(("Package body source", "p-bsrc"))
+        text = text + self.html.context_bar(local_nav_bar)
+        text = text + self.html.hr()
+        text = text + self.html.heading(package.name, 2)
+        text = text + self.html.heading("Procedures:",2) + self.html.anchor("p-proc")
+        # print procedures
+        for procedure in package.procedures:
+            title = procedure.name
+            headers = "Name", "Data Type", "Default Value", "In/Out"
+            rows = []
+            for argument in procedure.arguments:
+                if argument.default_value:
+                    _default_value = argument.default_value
+                else:
+                    _default_value = ""
+                row = argument.name, argument.data_type, self.html._quotehtml(_default_value), argument.in_out
+                rows.append(row)
+            text = text + self.html.table(title, headers, rows) + "<br>"
+
+        text = text + self.html.heading("Functions:", 2) + self.html.anchor("p-pfunc")
+        # print functions
+        for function in package.functions:
+            title = function.name + " returns " + function.return_data_type 
+            headers = "Name", "Data Type", "Default Value", "In/Out"
+            rows = []
+            for argument in function.arguments:
+                if argument.default_value:
+                    _default_value = argument.default_value
+                else:
+                    _default_value = ""
+                row = argument.name, argument.data_type, self.html._quotehtml(_default_value), argument.in_out
+                rows.append(row)
+            text = text + self.html.table(title, headers, rows) + "<br>"
+        
+
+##        title = "Source" + self.html.anchor("p-src")
+##        headers = (["Source"])
+##        rows=[]
+##        _src=""
+##        for line in procedure.source.source:
+##            _src = _src + string.rjust(str(line.line_no),6) + ": " +  line.text
+##        rows.append([self.html.pre(self.html._quotehtml(_src))])
+##        text = text + self.html.table(title, headers, rows)
+        text = text + self.html.page_footer()
+        file_name = os.path.join(self.doc_dir, "package-%s.html" % package.name)
+        self._write(text, file_name)        
+
+        
+
     def _write(self, text, file_name):
         f = open(file_name, 'w')
         f.write(text)
@@ -478,6 +734,7 @@ class OraSchemaDoclet:
             self.index[key] = t = []
         t.append((link, description))
 
+    
     
     
 if __name__ == '__main__':

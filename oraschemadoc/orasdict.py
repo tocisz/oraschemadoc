@@ -229,10 +229,10 @@ class OraSchemaDataDictionary:
                     t = self.proc_arguments.get(name, None)
                     if not t:
                         t = {}
-                        self.proc_arguments = t
+                        self.proc_arguments[name] = t
                     t[int(float(position))]= [argument_name, data_type, default_value, in_out]
                 else:
-                    self.func_return_arguments[name] = [data_type]
+                    self.func_return_arguments[name] = data_type
             else:
                 if position:
                     p = self.package_arguments.get(package_name, None)
@@ -248,6 +248,7 @@ class OraSchemaDataDictionary:
                     p = self.package_return_values.get(package_name, None)
                     if not p:
                         p = {}
+                        self.package_return_values[package_name] = p
                     p[name] = data_type
 
         

@@ -62,6 +62,8 @@ class HtmlWidgets:
                   <td><a href="indexes-list.html"><b>Indexes</b></a></td>
                   <td><a href="constraints-list.html"><b>Constraints</b></a></td>
                   <td><a href="triggers-list.html"><b>Triggers</b></a></td>
+                  <td><a href="procedures-list.html"><b>Procedures</b></a></td>
+                  <td><a href="functions-list.html"><b>Functions</b></a></td>
                   <td><a href="symbol-index.html"><b>Index</b></a></td>
                 </tr>
              </table>
@@ -123,6 +125,18 @@ class HtmlWidgets:
         else:
             return '<a href="view-%s.html" target="%s"> %s </a>' % (view_name, target_frame, view_name)
 
+    def href_to_procedure(self, procedure_name, target_frame = None):
+        if not target_frame:
+            return '<a href="procedure-%s.html"> %s </a>' % (procedure_name, procedure_name)
+        else:
+            return '<a href="procedure-%s.html" target="%s"> %s </a>' % (procedure_name, target_frame, procedure_name)
+        
+    def href_to_function(self, function_name, target_frame = None):
+        if not target_frame:
+            return '<a href="function-%s.html"> %s </a>' % (function_name, function_name)
+        else:
+            return '<a href="function-%s.html" target="%s"> %s </a>' % (function_name, target_frame, function_name)
+        
     def href_to_view_column(self, label, view_name, column_name):
         return '<a href="view-%s.html#col-%s">%s </a>\n' % (view_name, column_name, label)
 
@@ -168,7 +182,8 @@ class HtmlWidgets:
                   </frameset>
                   <noframes>
                   <h2>Frame Alert</h2><p>
-                  This document is designed to be viewed using the frames feature. If you see this message, you are using a non-frame-capable web client.
+                  This document is designed to be viewed using the frames feature.
+                  If you see this message, you are using a non-frame-capable web client.
                   <br>
                   Link to<a HREF="main.html">Non-frame version.</a></noframes>
                   </html>''' 
@@ -181,6 +196,8 @@ class HtmlWidgets:
                   <a href="indexes-index.html" target="List"><b>Indexes</b></a><br>
                   <a href="constraints-index.html" target="List"><b>Constraints</b></a><br>
                   <a href="triggers-index.html" target="List"><b>Triggers</b></a><br>
+                  <a href="procedures-index.html" target="List"><b>Procedures</b></a><br>
+                  <a href="functions-index.html" target="List"><b>Functions</b></a><br>
                   </body><html>''' % name 
 
     def _quotehtml (self, text):

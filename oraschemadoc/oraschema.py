@@ -83,7 +83,7 @@ class OracleSchema:
         functions = []
         for name in data_dict.all_function_names:
             function = OracleFunction(name, data_dict.proc_arguments.get(name, None), \
-                                      data_dict.func_return_arguments.get(name, None),\
+                                      data_dict.func_return_arguments[name],\
                                       data_dict.all_functions.get(name, None))
             functions.append(function)
         return functions
@@ -356,7 +356,7 @@ class OracleProcedure:
 class OracleFunction(OracleProcedure):
     
     def __init__(self, name, arguments, return_data_type, source = None):
-        OracleProcedure(name, arguments, source)
+        OracleProcedure.__init__(self, name, arguments, source)
         self.return_data_type = return_data_type
     
             
