@@ -24,21 +24,76 @@ __version__ = '$Version: 0.25'
 
 # TODO: implement debug statements
 
-import os 
-
 class DiaUmlDiagramGenerator:
 
-    def __init__(self, schema, doc_dir, name, description, debug_mode, conf_file):
+    def __init__(self, schema, dia_file, name, debug_mode, conf_file):
         
         self.schema = schema
-        self.doc_dir = doc_dir
+        self.dia_file = dia_file
         self.name = name
-        self.description = description
 
         # prepare file header
         header = '<?xml version="1.0" encoding="UTF-8"?>'
-        header += '<dia:diagram xmlns:dia="http://www.lysator.liu.se/~alla/dia/">'
+        header += '<dia:diagram xmlns:dia="http://www.lysator.liu.se/~alla/dia/">\n'
+
+        header += ' <dia:diagramdata>\n'
+        header += '    <dia:attribute name="background">\n'
+        header += '      <dia:color val="#ffffff"/>\n'
+        header += '    </dia:attribute>\n'
+        header += '    <dia:attribute name="paper">\n'
+        header += '      <dia:composite type="paper">\n'
+        header += '        <dia:attribute name="name">\n'
+        header += '          <dia:string>#A4#</dia:string>\n'
+        header += '        </dia:attribute>\n'
+        header += '        <dia:attribute name="tmargin">\n'
+        header += '          <dia:real val="2.8222"/>\n'
+        header += '        </dia:attribute>\n'
+        header += '        <dia:attribute name="bmargin">\n'
+        header += '          <dia:real val="2.8222"/>\n'
+        header += '        </dia:attribute>\n'
+        header += '        <dia:attribute name="lmargin">\n'
+        header += '          <dia:real val="2.8222"/>\n'
+        header += '        </dia:attribute>\n'
+        header += '        <dia:attribute name="rmargin">\n'
+        header += '          <dia:real val="2.8222"/>\n'
+        header += '        </dia:attribute>\n'
+        header += '        <dia:attribute name="is_portrait">\n'
+        header += '          <dia:boolean val="true"/>\n'
+        header += '        </dia:attribute>\n'
+        header += '        <dia:attribute name="scaling">\n'
+        header += '          <dia:real val="1"/>\n'
+        header += '        </dia:attribute>\n'
+        header += '        <dia:attribute name="fitto">\n'
+        header += '          <dia:boolean val="false"/>\n'
+        header += '        </dia:attribute>\n'
+        header += '      </dia:composite>\n'
+        header += '    </dia:attribute>\n'
+        header += '   <dia:attribute name="grid">\n'
+        header += '      <dia:composite type="grid">\n'
+        header += '        <dia:attribute name="width_x">\n'
+        header += '          <dia:real val="1"/>\n'
+        header += '        </dia:attribute>\n'
+        header += '        <dia:attribute name="width_y">\n'
+        header += '          <dia:real val="1"/>\n'
+        header += '        </dia:attribute>\n'
+        header += '        <dia:attribute name="visible_x">\n'
+        header += '          <dia:int val="1"/>\n'
+        header += '        </dia:attribute>\n'
+        header += '        <dia:attribute name="visible_y">\n'
+        header += '          <dia:int val="1"/>\n'
+        header += '        </dia:attribute>\n'
+        header += '      </dia:composite>\n'
+        header += '    </dia:attribute>\n'
+        header += '    <dia:attribute name="guides">\n'
+        header += '      <dia:composite type="guides">\n'
+        header += '        <dia:attribute name="hguides"/>\n'
+        header += '        <dia:attribute name="vguides"/>\n'
+        header += '      </dia:composite>\n'
+        header += '    </dia:attribute>\n'
+        header += '  </dia:diagramdata>\n'
+
         header += '  <dia:layer name="Background" visible="true">'
+
         
         table_ids = {}
         i = 0
@@ -51,36 +106,72 @@ class DiaUmlDiagramGenerator:
             i = i+1
             table_ids[table.name] = i
             table_text += '    <dia:object type="UML - Class" version="0" id="%s">' % i
-            table_text += '      <dia:attribute name="name">'
+            table_text += '      <dia:attribute name="name">\n'
             table_text += '        <dia:string>#%s#</dia:string>'  % table.name
-            table_text += '      </dia:attribute>'
-            table_text += '      <dia:attribute name="abstract">'
-            table_text += '        <dia:boolean val="false"/>'
-            table_text += '      </dia:attribute>'
-            table_text += '      <dia:attribute name="suppress_attributes">'
-            table_text += '        <dia:boolean val="false"/>'
-            table_text += '      </dia:attribute>'
-            table_text += '      <dia:attribute name="suppress_operations">'
-            table_text += '        <dia:boolean val="false"/>'
-            table_text += '      </dia:attribute>'
-            table_text += '      <dia:attribute name="visible_attributes">'
-            table_text += '        <dia:boolean val="true"/>'
-            table_text += '      </dia:attribute>'
+            table_text += '      </dia:attribute>\n'
+            table_text += '      <dia:attribute name="abstract">\n'
+            table_text += '        <dia:boolean val="false"/>\n'
+            table_text += '      </dia:attribute>\n'
+            table_text += '      <dia:attribute name="suppress_attributes">\n'
+            table_text += '        <dia:boolean val="false"/>\n'
+            table_text += '      </dia:attribute>\n'
+            table_text += '      <dia:attribute name="suppress_operations">\n'
+            table_text += '        <dia:boolean val="true"/>\n'
+            table_text += '      </dia:attribute>\n'
+            table_text += '      <dia:attribute name="visible_attributes">\n'
+            table_text += '        <dia:boolean val="true"/>\n'
+            table_text += '      </dia:attribute>\n'
+
+            table_text += '      <dia:attribute name="visible_operations">\n'
+            table_text += '        <dia:boolean val="false"/>\n'
+            table_text += '      </dia:attribute>\n'
+            table_text += '      <dia:attribute name="foreground_color">\n'
+            table_text += '        <dia:color val="#000000"/>\n'
+            table_text += '      </dia:attribute>\n'
+            table_text += '      <dia:attribute name="background_color">\n'
+            table_text += '        <dia:color val="#ffffff"/>\n'
+            table_text += '      </dia:attribute>\n'
+            table_text += '      <dia:attribute name="normal_font">\n'
+            table_text += '        <dia:font name="Helvetica"/>\n'
+            table_text += '      </dia:attribute>\n'
+            table_text += '      <dia:attribute name="abstract_font">\n'
+            table_text += '        <dia:font name="NewCenturySchoolbook-Roman"/>\n'
+            table_text += '      </dia:attribute>\n'
+            table_text += '      <dia:attribute name="classname_font">\n'
+            table_text += '        <dia:font name="Helvetica-BoldOblique"/>\n'
+            table_text += '      </dia:attribute>\n'
+            table_text += '      <dia:attribute name="abstract_classname_font">\n'
+            table_text += '        <dia:font name="Times-Bold"/>\n'
+            table_text += '      </dia:attribute>\n'
+            table_text += '      <dia:attribute name="font_height">\n'
+            table_text += '        <dia:real val="0.6"/>\n'
+            table_text += '      </dia:attribute>\n'
+            table_text += '      <dia:attribute name="abstract_font_height">\n'
+            table_text += '        <dia:real val="0.6"/>\n'
+            table_text += '      </dia:attribute>\n'
+            table_text += '      <dia:attribute name="classname_font_height">\n'
+            table_text += '        <dia:real val="0.7"/>\n'
+            table_text += '      </dia:attribute>\n'
+            table_text += '      <dia:attribute name="abstract_classname_font_height">\n'
+            table_text += '        <dia:real val="1"/>\n'
+            table_text += '      </dia:attribute>\n'
            
             table_text += self.get_columns_text(table)
             table_text += self.get_constraints_text(table)
-            table_text += '      <dia:attribute name="visible_operations">'
-            table_text += '        <dia:boolean val="false"/>'
-            table_text += '      </dia:attribute>'
-            table_text += '      <dia:attribute name="operations"/>'
-            table_text += '      <dia:attribute name="template">'
-            table_text += '        <dia:boolean val="false"/>'
-            table_text += '      </dia:attribute>'
-            table_text += '      <dia:attribute name="templates"/>'
-            table_text += '    </dia:object>'
+            table_text += '      <dia:attribute name="visible_operations">\n'
+            table_text += '        <dia:boolean val="false"/>\n'
+            table_text += '      </dia:attribute>\n'
+            table_text += '      <dia:attribute name="operations"/>\n'
+            table_text += '      <dia:attribute name="template">\n'
+            table_text += '        <dia:boolean val="false"/>\n'
+            table_text += '      </dia:attribute>\n'
+            table_text += '      <dia:attribute name="templates"/>\n'
+            table_text += '    </dia:object>\n'
 
         # link components together
         cs_text = ''
+        table_id = 0
+        constraint_count = 0
         for table in self.schema.tables:
             if table.referential_constraints:
                 for cs in table.referential_constraints:
@@ -91,24 +182,23 @@ class DiaUmlDiagramGenerator:
                     t_id = table_ids[table.name]
                     col_pos = 7 + int(self.get_col_pos(cs.columns[1], table))
                     r_t_id = table_ids[cs.r_table]
-                    r_cs = filter(lambda c: c.name == cs.r_constraint_name, self.schema.constraints)[0]
-                    r_table = filter(lambda t: t.name == cs.r_table, self.schema.tables)[0]
+                    r_cs = filter(lambda c, z=cs: c.name == z.r_constraint_name, self.schema.constraints)[0]
+                    r_table = filter(lambda t, x=cs: t.name == x.r_table, self.schema.tables)[0]
                     r_col_pos = 7 + int(self.get_col_pos(r_cs.columns[1], r_table))
-                    cs_text += '    <dia:object type="UML - Constraint" version="0" id="%s">' % i
-                    cs_text += '      <dia:attribute name="constraint">'
-                    cs_text += '        <dia:string>#%s#</dia:string>' % col_list
-                    cs_text += '      </dia:attribute>'
-                    cs_text += '      <dia:connections>'
-                    cs_text += '        <dia:connection handle="0" to="%s" connection="%s"/>' % (t_id, col_pos)
-                    cs_text += '        <dia:connection handle="1" to="%s" connection="%s"/>' % (r_t_id, r_col_pos)
-                    cs_text += '      </dia:connections>'
-                    cs_text += '    </dia:object>'
-            
-        footer = '  </dia:layer>'
-        footer += '</dia:diagram>'
+                    cs_text += '    <dia:object type="UML - Constraint" version="0" id="%s">\n' % i
+                    cs_text += '      <dia:attribute name="constraint">\n'
+                    cs_text += '        <dia:string>#%s#</dia:string>\n' % col_list
+                    cs_text += '      </dia:attribute>\n'
+                    cs_text += '      <dia:connections>\n'
+                    cs_text += '        <dia:connection handle="0" to="%s" connection="%s"/>\n' % (t_id, col_pos)
+                    cs_text += '        <dia:connection handle="1" to="%s" connection="%s"/>\n' % (r_t_id, r_col_pos)
+                    cs_text += '      </dia:connections>\n'
+                    cs_text += '    </dia:object>\n'
 
-        file_name = os.path.join(self.doc_dir, "dm-diagram.dia")
-        f = open(file_name, 'w')
+        footer = '  </dia:layer>\n'
+        footer += '</dia:diagram>\n'
+
+        f = open(dia_file, 'w')
         f.write(header + table_text + cs_text + footer)
         f.close()
         
@@ -125,40 +215,40 @@ class DiaUmlDiagramGenerator:
             nullable_text = ''
             if column.nullable == 'N':
                nullable_text =  ' not null'
-            text += '        <dia:composite type="umlattribute">'
-            text += '          <dia:attribute name="name">'
-            text += '            <dia:string>#%s#</dia:string>' % column.name
-            text += '          </dia:attribute>'
-            text += '          <dia:attribute name="type">'
+            text += '        <dia:composite type="umlattribute">\n'
+            text += '          <dia:attribute name="name">\n'
+            text += '            <dia:string>#%s#</dia:string>\n' % column.name
+            text += '          </dia:attribute>\n'
+            text += '          <dia:attribute name="type">\n'
             text += '            <dia:string>#%s#</dia:string>' % column.data_type + nullable_text
-            text += '          </dia:attribute>'
+            text += '          </dia:attribute>\n'
             
             # handle default value
             if column.data_default:
-                text += '          <dia:attribute name="value">'
-                text += '            <dia:string>#%s#</dia:string>' % column.data_default
-                text += '          </dia:attribute>'
+                text += '          <dia:attribute name="value">\n'
+                text += '            <dia:string>#%s#</dia:string>\n' % column.data_default
+                text += '          </dia:attribute>\n'
             else:
-                text += '          <dia:attribute name="value">'
-                text += '            <dia:string/>'
-                text += '          </dia:attribute>'
+                text += '          <dia:attribute name="value">\n'
+                text += '            <dia:string/>\n'
+                text += '          </dia:attribute>\n'
                 
             v_type = '3'
             if pk_columns and pk_columns.count(column.name) > 0:
                 v_type = '2'
                 
-            text += '          <dia:attribute name="visibility">'
-            text += '            <dia:enum val="%s"/>' % v_type
-            text += '          </dia:attribute>'
-            text += '          <dia:attribute name="abstract">'
-            text += '            <dia:boolean val="false"/>'
-            text += '          </dia:attribute>'
-            text += '            <dia:attribute name="class_scope">'
-            text += '          <dia:boolean val="false"/>'
-            text += '            </dia:attribute>'
-            text += '        </dia:composite>' 
+            text += '          <dia:attribute name="visibility">\n'
+            text += '            <dia:enum val="%s"/>\n' % v_type
+            text += '          </dia:attribute>\n'
+            text += '          <dia:attribute name="abstract">\n'
+            text += '            <dia:boolean val="false"/>\n'
+            text += '          </dia:attribute>\n'
+            text += '            <dia:attribute name="class_scope">\n'
+            text += '          <dia:boolean val="false"/>\n'
+            text += '            </dia:attribute>\n'
+            text += '        </dia:composite>\n' 
             
-        return '       <dia:attribute name="attributes">' + text + '</dia:attribute>'
+        return '       <dia:attribute name="attributes">\n' + text + '</dia:attribute>\n'
 
 
     def get_constraints_text(self, table):
@@ -169,39 +259,39 @@ class DiaUmlDiagramGenerator:
                     continue
                 name = cs.name
 
-                cs_text += '      <dia:composite type="umloperation">'
-                cs_text += '        <dia:attribute name="name">'
-                cs_text += '          <dia:string>##</dia:string>'
-                cs_text += '        </dia:attribute>'
-                cs_text += '        <dia:attribute name="visibility">'
-                cs_text += '          <dia:enum val="3"/>'
-                cs_text += '        </dia:attribute>'
-                cs_text += '        <dia:attribute name="abstract">'
-                cs_text += '          <dia:boolean val="false"/>'
-                cs_text += '        </dia:attribute>'
-                cs_text += '        <dia:attribute name="class_scope">'
-                cs_text += '          <dia:boolean val="false"/>'
-                cs_text += '        </dia:attribute>'
-                cs_text += '        <dia:attribute name="parameters">'
-                cs_text += '          <dia:composite type="umlparameter">'
-                cs_text += '            <dia:attribute name="name">'
-                cs_text += '              <dia:string>#%s#</dia:string>' % name 
-                cs_text += '            </dia:attribute>'
-                cs_text += '            <dia:attribute name="value">'
-                cs_text += '              <dia:string/>'
-                cs_text += '            </dia:attribute>'
-                cs_text += '            <dia:attribute name="kind">'
-                cs_text += '              <dia:enum val="0"/>'
-                cs_text += '            </dia:attribute>'
-                cs_text += '          </dia:composite>'
-                cs_text += '        </dia:attribute>'
-                cs_text += '      </dia:composite>'
+                cs_text += '      <dia:composite type="umloperation">\n'
+                cs_text += '        <dia:attribute name="name">\n'
+                cs_text += '          <dia:string>##</dia:string>\n'
+                cs_text += '        </dia:attribute>\n'
+                cs_text += '        <dia:attribute name="visibility">\n'
+                cs_text += '          <dia:enum val="3"/>\n'
+                cs_text += '        </dia:attribute>\n'
+                cs_text += '        <dia:attribute name="abstract">\n'
+                cs_text += '          <dia:boolean val="false"/>\n'
+                cs_text += '        </dia:attribute>\n'
+                cs_text += '        <dia:attribute name="class_scope">\n'
+                cs_text += '          <dia:boolean val="false"/>\n'
+                cs_text += '        </dia:attribute>\n'
+                cs_text += '        <dia:attribute name="parameters">\n'
+                cs_text += '          <dia:composite type="umlparameter">\n'
+                cs_text += '            <dia:attribute name="name">\n'
+                cs_text += '              <dia:string>#%s#</dia:string>\n' % name 
+                cs_text += '            </dia:attribute>\n'
+                cs_text += '            <dia:attribute name="value">\n'
+                cs_text += '              <dia:string/>\n'
+                cs_text += '            </dia:attribute>\n'
+                cs_text += '            <dia:attribute name="kind">\n'
+                cs_text += '              <dia:enum val="0"/>\n'
+                cs_text += '            </dia:attribute>\n'
+                cs_text += '          </dia:composite>\n'
+                cs_text += '        </dia:attribute>\n'
+                cs_text += '      </dia:composite>\n'
             return cs_text
         else:
             return '''        <dia:attribute name="visible_operations">
           <dia:boolean val="false"/> 
         </dia:attribute>
-        <dia:attribute name="operations"/>'''
+        <dia:attribute name="operations"/>\n'''
 
     def get_col_pos(self, column_name, table):
         i = 0
@@ -230,7 +320,7 @@ if __name__ == '__main__':
     connection = cx_Oracle.connect('bugzilla/bugzilla')
     s = orasdict.OraSchemaDataDictionary(connection, 'Oracle',0)
     schema = oraschema.OracleSchema(s,0)
-    doclet = DiaUmlDiagramGenerator(schema, "/tmp/oraschemadoc/", "vtr Data Model", "Really cool project",0,None)
+    doclet = DiaUmlDiagramGenerator(schema, "/tmp/oraschemadoc/", "vtr Data Model", 0,None)
     
         
         

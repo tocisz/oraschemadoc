@@ -24,19 +24,22 @@
 import getopt, sys, os
 
 def usage():
-    print 'Oracle Schema Documentation Generator v0.25'
-    print 'usage: oraschemadoc [--verbose] [-d|--dia [--dia-table-list file]] oracleuser/password[@dbalias] output_dir  "application name"'
+    print 'Oracle Schema Documentation Generator v0.26'
+    print 'usage: oraschemadoc [--verbose] [-d|--dia=filename [--dia-table-list=filename]] [--no-html] [--xml-file=filename] oracleuser/password[@dbalias] output_dir  "application name"'
     print ''
     print 'Arguments:'
-    print 'oracleuser/password[@dbalias] -  db connect string'
-    print 'output_dir                    -  directory where files will be generated'
-    print 'application_name              -  short name for application/datamodel'
+    print 'oracleuser/password[@dbalias] - db connect string'
+    print 'output_dir                    - directory where files will be generated'
+    print 'application_name              - short name for application/datamodel'
     print ''
     print 'Optional arguments:'
-    print '-v --verbose         turns on debuging messages'
-    print '-d --dia             export datamodel to dia uml diagram'
-    print '   --dia-table-list  path to file which contains table names for export to dia diagram'
-    print '-h --help            print this help screen'
+    print '-v --verbose                    turn on debuging messages'
+    print '   --no-html                    turn off generation of html files'
+    print '-d --dia=filename               export datamodel to dia uml diagram. File with file name will be'
+    print '                                created under output_dir'
+    print '   --dia-table-list=filename    path to file which contains table names for export to dia diagram'
+    print '   --xml-file=filename          dump dm into xml file. File will be created under output_dir'
+    print '-h --help                       print this help screen'
     print ''
     print 'For more information see README'
 
@@ -45,14 +48,17 @@ def main():
 
     # variable used for turning on debug messages
     verbose_mode = None
+    # Generate "javadocish" html output, by default yes
+    html_output = 1
     # if specified dia_uml_output turns on export to dia uml diagram
     dia_uml_output = None
     # if specified, restrict export to dia only for table names included in file 
     dia_conf_file = None
-    
+    # if specified, dumps data into xml
+    xml_output = None   
     
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'hdv', ['help','verbose','dia','dia-table-list'])
+        opts, args = getopt.getopt(sys.argv[1:], 'hdv', ['help','verbose','no-html','dia=','dia-table-list=','xml-file='])
     except getopt.error, e:
         # print help information and exit:
         usage()
@@ -65,10 +71,15 @@ def main():
         if opt in ('v', '--verbose'):
             #print verbose messages
             verbose_mode = 1
+        if opt == '--no-html':
+            html_output = None
         if opt in ('-d', '--dia'):
             dia_uml_output = 1;
+            dia_file_name = value;
         if opt == '--dia-table-list':
             dia_conf_file = value
+        if opt == '--xml-file':
+            xml_file=value
 
     if len(args) == 3: 
         connect_string, output_dir, name = args
@@ -99,14 +110,18 @@ def main():
     s = oraschemadoc.orasdict.OraSchemaDataDictionary(connection, name, verbose_mode)
     schema = oraschemadoc.oraschema.OracleSchema(s, verbose_mode)
 
-    file_name = os.path.join(output_dir, "schema.xml")
-    f = open(file_name, 'w')
-    f.write(schema.getXML())
-    f.close()
+    if xml_file:
+        file_name = os.path.join(output_dir, xml_file)
+        f = open(file_name, 'w')
+        f.write(schema.getXML())
+        f.close()
 
-    doclet = oraschemadoc.docgen.OraSchemaDoclet(schema, output_dir, name, "", verbose_mode)
+    if html_output:
+        doclet = oraschemadoc.docgen.OraSchemaDoclet(schema, output_dir, name, "", verbose_mode)
+
     if dia_uml_output:
-        dia_diagram = oraschemadoc.diagen.DiaUmlDiagramGenerator(schema, "/tmp/oraschemadoc/", "vtr Data Model", "Really cool project", 0, dia_conf_file)
+        file_name = os.path.join(output_dir, dia_file_name)
+        dia_diagram = oraschemadoc.diagen.DiaUmlDiagramGenerator(schema, file_name, "Blah Data Model", 0, dia_conf_file)
         
     
 if __name__ == '__main__':

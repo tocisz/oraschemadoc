@@ -1,0 +1,10 @@
+<aram_at_kananov_dot_com> at 22-AUG-2003
+      dump dm into xml file (experimental feature)
+      add --no-html to supress html doc generation (modified patch from patch Michael G. Mullis)
+      add --xml-file to dump dm into xml
+      add --dia=filename, so user can specify the file_name (remake of patch from Michael G. Mullis)
+      remove hardcoded path for dia diagram (based on patch from Michael G. Mullis)
+      fix broken parsing of args for dia-table-list
+      patch for missing fk indexes html table header from Michael G. Mullis
+      patch from Michael G. Mullis for "beautifying" source an layout of dia output file
+

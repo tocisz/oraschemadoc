@@ -691,7 +691,7 @@ class OraSchemaDoclet:
                         generate these indexes is <a href="fk-indexes.sql"> here</a>'''
             
             title = '"Unindexed" foreign keys'
-            headers = "Constraint name", "Table Name", "Columns"
+            headers = "Table Name", "Constraint name", "Columns"
             rows = []
             for constraint in scheck.fk_no_indexes:
                 row=[]
