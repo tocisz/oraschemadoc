@@ -116,7 +116,8 @@ class OraSchemaDataDictionary:
                      self.table_foreign_key_map[table_name] = t
                  t.append(constraint_name)
                  # put row in table_referenced_by
-                 _table_name, _type, _check_cond, _r_owner, _r_constraint_name, _delete_rule = self.all_constraints[r_constraint_name]
+                 _table_name, _type, _check_cond, _r_owner, _r_constraint_name, _delete_rule\
+                              = self.all_constraints[r_constraint_name]
                  t = self.table_referenced_by.get(_table_name)
                  if not t:
                      t= []
@@ -154,6 +155,25 @@ class OraSchemaDataDictionary:
                 self.table_index_map[table_name] = t
             t.append(index_name)
             
+#        self.all_triggers = _get_all_triggers(conn)
+#        self.all_trigger_names = self.all_triggers.keys()
+#        self.all_trigger_names.sort()
+#        self.all_trigger_columns = _get_all_trigger_columns(conn)
+#        # attention that holds mapping for views as well
+#        self.table_trigger_map = {}
+#        self.shema_triggers = []
+#        for trigger_name in self.all_trigger_names:
+#            name, type, event, base_object_type, table_name, column_name, referencing_names, \
+#                          when_clause, status, description, action_type, body \
+#                          = self.all_triggers[trigger_name]
+#            if event in ('TABLE', 'VIEW'):
+#                t = self.table_trigger_map.get(table_name)
+#                if not t:
+#                    t = []
+#                    self.table_trigger_map = t
+#                t.append(name)
+#            elif event  == 'SCHEMA':
+#                self.shema_triggers.append(trigger_name)
 
         #self._all_cons_columns     = _get_all_cons_columns(conn)
         #self._all_col_comments     = _get_all_col_comments(conn)
@@ -328,7 +348,32 @@ def _get_all_updatable_columns(conn):
         view_updatable_columns[table_name, column_name] = (insertable, updatable, deletable)
     return view_updatable_columns
     
+def _get_all_triggers(conn):
+    "get all triggers"
+    stmt = """select trigger_name, trigger_type, triggering_event, base_object_type, table_name,
+                   column_name, referencing_names, when_clause, status, description, action_type, trigger_body
+                   from user_triggers"""
+    triggers = {}
+    print "get all triggers"
+    for name, type, event, base_object_type, table_name, column_name, referencing_names, when_clause, status,\
+        description, action_type, body in _query(stmt, stmt):
+        triggers[name] = (name, type, event, base_object_type, table_name, column_name, referencing_names, \
+                          when_clause, status, description, action_type, body)
+    return triggers
 
+#def _get_all_trigger_columns(conn):
+#    "get all trigger columns"
+#    stmt = "select trigger_name, table_name, column_name, column_list, column_usage from user_trigger_cols"
+#    trigger_columns = {}
+#    print "get all trigger columns"
+#    for name, table_name, column_name, column_list, column_usage in _query(stmt):
+#        t = trigger_columns.get(name)
+#        if not t:
+#            t = []
+#            trigger_columns[name] = t
+#        t.append((name, table_name, column_name, column_list, column_usage))
+#    return trigger_columns
+        
 def _query(conn, querystr):
     "execute query end return results in array"    
     cur = conn.cursor()
