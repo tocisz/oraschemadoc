@@ -103,6 +103,15 @@ class OraSchemaDoclet:
         self._write(text, file_name)
 
 
+    def _print_index_frame(self, header, index_rows, file_name):
+        print "index frame"
+        text = self.html.frame_header(header)
+        text = text + self.html.hr()
+        for row in index_rows:
+            text = text + row + '<br>'
+        text = text + self.html.frame_footer()
+        f_name = os.path.join(self.doc_dir, file_name)
+        self.write(text, file_name)
 
     def _print_table_index_frame(self):
         print "print table list frame"
