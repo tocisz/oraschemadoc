@@ -55,7 +55,7 @@ def main():
     # if specified, restrict export to dia only for table names included in file 
     dia_conf_file = None
     # if specified, dumps data into xml
-    xml_output = None   
+    xml_file = None   
     
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'hdv', ['help','verbose','no-html','dia=','dia-table-list=','xml-file='])
