@@ -51,7 +51,7 @@ class HtmlWidgets:
         ''' % (self.name , title)
 
     def context_bar(self, local_nav_bar):
-        text = '''<table width="100%" border=0>
+        text = '''<table width="100%%" border=0>
         <tr>
            <td colspan=2 bgcolor="#EEEEFF">
              <table>
@@ -65,17 +65,21 @@ class HtmlWidgets:
                   <td><a href="procedures-list.html"><b>Procedures</b></a></td>
                   <td><a href="functions-list.html"><b>Functions</b></a></td>
                   <td><a href="packages-list.html"><b>Packages</b></a></td>
+                  <td><a href="sanity-check.html"><b>Sanity check</b></a></td>
                   <td><a href="symbol-index.html"><b>Index</b></a></td>
                 </tr>
              </table>
-           </td>\n'''
-        text = text + '<td align="right" valign="top" rowspan=2><h3> %s</h3> </td>\n' % self.name 
-        text = text + '</tr>\n'
-        text = text + '<tr><td colspan =2><table><tr>\n'
+           </td>
+           <td align="right" valign="top" rowspan=2><h3> %s</h3> </td>\n           
+        </tr>
+        <tr>
+           <td colspan =2>
+             <table>
+               <tr>\n''' % self.name
         if local_nav_bar:
             for label, link in local_nav_bar:
                 text = text + '<td bgcolor="white"><font size="-1"><a href="#%s"> %s </font> </td>' % (link, label)
-            text = text + '</tr></table></tr>'
+        text = text + '</tr></table></td></tr>'
         text = text + '</table>'
         return text
         
@@ -181,7 +185,7 @@ class HtmlWidgets:
     def _index_page(self, name):
         return '<html><head><title>' + name + '''</title></head>
                   <frameset cols="20%,80%">
-                    <frameset rows="10%,90%">
+                    <frameset rows="20%,80%">
                        <frame src="nav.html" name="GlobalNav">
                        <frame src="tables-index.html" name="List">
                     </frameset>
@@ -206,6 +210,7 @@ class HtmlWidgets:
                   <a href="procedures-index.html" target="List"><b>Procedures</b></a><br>
                   <a href="functions-index.html" target="List"><b>Functions</b></a><br>
                   <a href="packages-index.html" target="List"><b>Packages</b></a><br>
+                  <a href="sanity-check.html" target="Main"><b>Sanity check</b></a><br>
                   </body><html>''' % name 
 
     def _quotehtml (self, text):
