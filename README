@@ -1,0 +1,50 @@
+oraschemadoc: Oracle Schema Documentation Generator v0.10
+
+--------
+CONTENTS
+--------
+1. OVERVIEW
+2. INSTALLATION
+3. USAGE
+
+
+-----------
+1. OVERVIEW
+-----------
+   Goal of oraschemadoc is "JavaDoc" style detailed documentation for all objects 
+in schema covering Oracle specific features. Result of execution of oraschemadoc 
+is set of static html files. 
+
+--------------
+2. INSTALLATION
+--------------
+
+Requirements:
+a) Python, version 2.0 or later. 
+   http://www.python.org
+b) Oracle Server, version 8.1.6 or later. 
+   http://technet.oracle.com 
+c) Oracle Server Client (see supported versions by cx_Oracle)
+   http://technet.oracle.com  
+d) cx_Oracle - a Python extension module that allows access to Oracle 
+   http://www.computronix.com/utilities
+
+Installation
+a) check version of python. type in shell "python -V" to get python version number
+a) install cx_Oracle if neccessary 
+b) untar oraschemadoc file into destination directory
+
+--------
+3. USAGE
+--------
+a) go to directory where oraschemadoc is installed
+b) to generate documentation run:
+  % ./oracshemadoc.py connect_string output_directory name
+or 
+  % python oracshemadoc.py connect_string output_directory name
+
+where: 
+    connect_string - username/password@dbalias
+    output_directory - directory where html files will be placed
+    name - name of project, application or whatever
+
