@@ -39,6 +39,7 @@ class OracleSchema:
         self.functions = self._get_all_functions(data_dict)
         self.packages = self._get_all_packages(data_dict)
         self.sequences = self._get_all_sequences(data_dict)
+        self.java_sources = self._get_all_java_sources(data_dict)
         # TODO: why i need that name? 
         self.name = "Foobarizm" 
 
@@ -91,6 +92,14 @@ class OracleSchema:
                                         data_dict.all_procedures.get(name, None))
             procedures.append(procedure)
         return procedures
+
+    def _get_all_java_sources(self, data_dict):
+        print 'generating java sources'
+        java_sources = []
+        for name in data_dict.all_java_source_names:
+            java_source = OracleJavaSource(name,data_dict.all_java_sources.get(name, None))
+            java_sources.append(java_source)
+        return java_sources
     
     def _get_all_functions(self, data_dict):
         print 'generating functions'
@@ -426,7 +435,11 @@ class OraclePLSQLSource:
         lines.sort()
         for line_no in lines:
             self.source.append(OraclePLSQLSourceLine(line_no, source[line_no]))
-        
+
+class OracleJavaSource(OraclePLSQLSource):
+    def__init__(self, name, source):
+        debug_message("debug: generating java source ")
+        OraclePLSQLSource.__init__(self,source)
             
 
 class OraclePLSQLSourceLine:

@@ -114,6 +114,7 @@ class OraSchemaDataDictionary:
         self.all_procedures = {}
         self.all_packages = {}
         self.all_package_bodies = {}
+        self.all_java_sources = {}
         for name, type, line, text in self.get_user_source(conn):
             if type == 'PROCEDURE':
                 t = self.all_procedures.setdefault(name, {})
@@ -123,6 +124,8 @@ class OraSchemaDataDictionary:
                 t = self.all_packages.setdefault(name, {})
             elif type == 'PACKAGE BODY':
                 t = self.all_package_bodies.setdefault(name, {})
+            elif type == 'JAVA SOURCE':
+                t = self.all_java_sources.setdefault(name, {})
             t[int(float(line))] = text
 
         self.all_procedure_names = self.all_procedures.keys()
