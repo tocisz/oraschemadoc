@@ -64,6 +64,7 @@ class HtmlWidgets:
                   <td><a href="triggers-list.html"><b>Triggers</b></a></td>
                   <td><a href="procedures-list.html"><b>Procedures</b></a></td>
                   <td><a href="functions-list.html"><b>Functions</b></a></td>
+                  <td><a href="packages-list.html"><b>Packages</b></a></td>
                   <td><a href="symbol-index.html"><b>Index</b></a></td>
                 </tr>
              </table>
@@ -136,6 +137,12 @@ class HtmlWidgets:
             return '<a href="function-%s.html"> %s </a>' % (function_name, function_name)
         else:
             return '<a href="function-%s.html" target="%s"> %s </a>' % (function_name, target_frame, function_name)
+
+    def href_to_package(self, package_name, target_frame = None):
+        if not target_frame:
+            return '<a href="package-%s.html"> %s </a>' % (package_name, package_name)
+        else:
+            return '<a href="package-%s.html" target="%s"> %s </a>' % (package_name, target_frame, package_name)
         
     def href_to_view_column(self, label, view_name, column_name):
         return '<a href="view-%s.html#col-%s">%s </a>\n' % (view_name, column_name, label)
@@ -198,6 +205,7 @@ class HtmlWidgets:
                   <a href="triggers-index.html" target="List"><b>Triggers</b></a><br>
                   <a href="procedures-index.html" target="List"><b>Procedures</b></a><br>
                   <a href="functions-index.html" target="List"><b>Functions</b></a><br>
+                  <a href="packages-index.html" target="List"><b>Packages</b></a><br>
                   </body><html>''' % name 
 
     def _quotehtml (self, text):

@@ -54,6 +54,8 @@ class OraSchemaDoclet:
         self._print_function_list_page()
         self._print_function_index_frame()        
         self._print_packages()
+        self._print_package_list_page()
+        self._print_package_index_frame()  
         self._print_symbol_index_page()
         self._print_common_pages()
 
@@ -174,6 +176,18 @@ class OraSchemaDoclet:
             text = text + link + '<br>'
         text = text + self.html.frame_footer()
         file_name = os.path.join(self.doc_dir, "functions-index.html")
+        self._write(text, file_name)
+
+
+    def _print_package_index_frame(self):
+        text = self.html.frame_header("Packages")
+        text = text + self.html.hr()
+        rows = []
+        for package in self.schema.packages:
+            link = self.html.href_to_package(package.name, "Main")
+            text = text + link + '<br>'
+        text = text + self.html.frame_footer()
+        file_name = os.path.join(self.doc_dir, "packages-index.html")
         self._write(text, file_name)
 
         
@@ -620,7 +634,6 @@ class OraSchemaDoclet:
         file_name = os.path.join(self.doc_dir, "function-%s.html" % function.name)
         self._write(text, file_name)
 
-
     def _print_function_list_page(self):
         text = self.html.page_header("Functions")
         text = text + self.html.context_bar( None)
@@ -671,57 +684,54 @@ class OraSchemaDoclet:
         # create header and context bar
         text = self.html.page_header("Package -" + package.name)
         local_nav_bar = []
-        local_nav_bar.append(("Procedures", "p-proc"))
-        local_nav_bar.append(("Functions", "p-func"))
-        local_nav_bar.append(("Package source", "p-psrc"))
+        local_nav_bar.append(("Package source", "p-src"))
         local_nav_bar.append(("Package body source", "p-bsrc"))
         text = text + self.html.context_bar(local_nav_bar)
         text = text + self.html.hr()
         text = text + self.html.heading(package.name, 2)
-        text = text + self.html.heading("Procedures:",2) + self.html.anchor("p-proc")
-        # print procedures
-        for procedure in package.procedures:
-            title = procedure.name
-            headers = "Name", "Data Type", "Default Value", "In/Out"
-            rows = []
-            for argument in procedure.arguments:
-                if argument.default_value:
-                    _default_value = argument.default_value
-                else:
-                    _default_value = ""
-                row = argument.name, argument.data_type, self.html._quotehtml(_default_value), argument.in_out
-                rows.append(row)
-            text = text + self.html.table(title, headers, rows) + "<br>"
-
-        text = text + self.html.heading("Functions:", 2) + self.html.anchor("p-pfunc")
-        # print functions
-        for function in package.functions:
-            title = function.name + " returns " + function.return_data_type 
-            headers = "Name", "Data Type", "Default Value", "In/Out"
-            rows = []
-            for argument in function.arguments:
-                if argument.default_value:
-                    _default_value = argument.default_value
-                else:
-                    _default_value = ""
-                row = argument.name, argument.data_type, self.html._quotehtml(_default_value), argument.in_out
-                rows.append(row)
-            text = text + self.html.table(title, headers, rows) + "<br>"
         
+        title = "Package source" + self.html.anchor("p-src")
+        headers = (["Source"])
+        rows=[]
+        _src=""
+        for line in package.source.source:
+            _src = _src + string.rjust(str(line.line_no),6) + ": " +  line.text
+        rows.append([self.html.pre(self.html._quotehtml(_src))])
+        text = text + self.html.table(title, headers, rows)
 
-##        title = "Source" + self.html.anchor("p-src")
-##        headers = (["Source"])
-##        rows=[]
-##        _src=""
-##        for line in procedure.source.source:
-##            _src = _src + string.rjust(str(line.line_no),6) + ": " +  line.text
-##        rows.append([self.html.pre(self.html._quotehtml(_src))])
-##        text = text + self.html.table(title, headers, rows)
+        title = "Package body source" + self.html.anchor("p-bsrc")
+        headers = (["Source"])
+        rows=[]
+        _src=""
+        for line in package.body_source.source:
+            _src = _src + string.rjust(str(line.line_no),6) + ": " +  line.text
+        rows.append([self.html.pre(self.html._quotehtml(_src))])
+        text = text + self.html.table(title, headers, rows)
+
+
         text = text + self.html.page_footer()
         file_name = os.path.join(self.doc_dir, "package-%s.html" % package.name)
         self._write(text, file_name)        
 
-        
+    def _print_package_list_page(self):
+        text = self.html.page_header("Packages")
+        text = text + self.html.context_bar( None)
+        text = text + self.html.hr()
+        rows = []
+        for package in self.schema.packages:
+            name = self.html.href_to_package(package.name)
+            # add entry to doc index
+            self._add_index_entry(package.name, name, "package")
+            row = ([name])
+            rows.append(row)
+        headers = (["Name"])
+        name = "Packages"
+        text = text + self.html.table(name, headers, rows)
+        text = text + self.html.page_footer()
+        file_name = os.path.join(self.doc_dir, "packages-list.html")
+        self._write(text, file_name)
+
+       
 
     def _write(self, text, file_name):
         f = open(file_name, 'w')

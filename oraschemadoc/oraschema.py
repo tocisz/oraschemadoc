@@ -388,20 +388,7 @@ class OraclePackage:
 
     def __init__(self, name, all_arguments, all_return_values, definition_source, body_source):
         self.name = name
-        self.procedures = []
-        self.functions = []
-
-        _names =  all_arguments.keys()
-        _names.sort()
-        for _name in _names:
-            if all_return_values and all_return_values.has_key(_name):
-                function = OracleFunction(_name, all_arguments[_name], all_return_values[_name])
-                self.functions.append(function)
-            else:
-                procedure = OracleProcedure(_name, all_arguments[_name])
-                self.procedures.append(procedure)
-        
-        self.definition_source = OraclePLSQLSource(definition_source)
+        self.source = OraclePLSQLSource(definition_source)
         self.body_source = OraclePLSQLSource(body_source)
         
 if __name__ == '__main__':
