@@ -65,6 +65,7 @@ class HtmlWidgets:
                   <td><a href="procedures-list.html"><b>Procedures</b></a></td>
                   <td><a href="functions-list.html"><b>Functions</b></a></td>
                   <td><a href="packages-list.html"><b>Packages</b></a></td>
+                  <td><a href="sequences.html"><b>Sequences</b></a></td>
                   <td><a href="sanity-check.html"><b>Sanity check</b></a></td>
                   <td><a href="symbol-index.html"><b>Index</b></a></td>
                 </tr>
@@ -111,7 +112,6 @@ class HtmlWidgets:
             return '<a href="table-%s.html#trg-%s">%s </a>\n' % (table_name, trigger_name, label)
         else:
             return '<a href="table-%s.html#trg-%s" target="%s">%s </a>\n' % (table_name, trigger_name, target_frame, label)
-
     def href_to_index(self, label, table_name, index_name, target_frame = None):
         if not target_frame:
             return '<a href="table-%s.html#ind-%s">%s </a>\n' % (table_name, index_name, label)
@@ -123,6 +123,11 @@ class HtmlWidgets:
             return '<a href="table-%s.html"> %s </a>' % (table_name, table_name)
         else:
             return '<a href="table-%s.html" target="%s"> %s </a>' % (table_name, target_frame, table_name) 
+    def href_to_sequence(self, name, target_frame = None):
+        if not target_frame:
+            return '<a href="sequences.html#%s"> %s </a>' % (name, name)
+        else:
+            return '<a href="sequences.html#%s" target="%s"> %s </a>' % (name, target_frame, name) 
 
     def href_to_view(self, view_name, target_frame = None):
         if not target_frame:
@@ -210,6 +215,7 @@ class HtmlWidgets:
                   <a href="procedures-index.html" target="List"><b>Procedures</b></a><br>
                   <a href="functions-index.html" target="List"><b>Functions</b></a><br>
                   <a href="packages-index.html" target="List"><b>Packages</b></a><br>
+                  <a href="sequences-index.html" target="List"><b>Sequences</b></a><br>
                   <a href="sanity-check.html" target="Main"><b>Sanity check</b></a><br>
                   </body><html>''' % name 
 

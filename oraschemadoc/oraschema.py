@@ -38,6 +38,8 @@ class OracleSchema:
         self.procedures = self._get_all_procedures(data_dict)
         self.functions = self._get_all_functions(data_dict)
         self.packages = self._get_all_packages(data_dict)
+        self.sequences = self._get_all_sequences(data_dict)
+        # TODO: why i need that name? 
         self.name = "Foobarizm" 
 
     def _get_all_tables(self, data_dict):
@@ -112,6 +114,14 @@ class OracleSchema:
             packages.append(package)
         return packages
 
+    def _get_all_sequences(self, data_dict):
+        print "generating sequences"
+        sequences = []
+        for name in data_dict.sequence_names:
+            min_value, max_value, step, cycled, ordered, cache_size = data_dict.sequences[name]
+            seq = OracleSequence(name, min_value, max_value, step, cycled, ordered, cache_size)
+            sequences.append(seq)
+        return sequences
         
 class OracleTable:
 
@@ -435,6 +445,20 @@ class OraclePackage:
         if body_source:
             self.body_source = OraclePLSQLSource(body_source)
 
+
+class OracleSequence:
+
+    def __init__(self, name, min_value, max_value, step, cycle_flag, ordered, cache_size):
+        debug_message("debug: genarating sequence " + name)
+        self.name = name
+        self.min_value = min_value
+        self.max_value = max_value
+        self.step = step
+        self.cycle_flag = cycle_flag
+        self.ordered = ordered
+        self.cache_size = cache_size
+        
+        
 if __name__ == '__main__':
     import cx_Oracle
     import orasdict

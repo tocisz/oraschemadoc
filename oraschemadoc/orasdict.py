@@ -23,6 +23,7 @@ __author__ = 'Aram Kananov <arcanan@flashmail.com>'
 __version__ = '$Version: 0.23'
 
 from oraverbose import *
+import fpformat
 
 class OraSchemaDataDictionary:
 
@@ -152,8 +153,9 @@ class OraSchemaDataDictionary:
                     self.package_return_values.setdefault(package_name, {})[name]= data_type
 
         
-
-
+        self.sequences = self.get_sequences(conn)
+        self.sequence_names = self.sequences.keys()
+        self.sequence_names.sort()
 
     ################################################
     # INTERNAL FUNCTIONS FOR QUERY DATA DICTIONARY #
@@ -435,6 +437,16 @@ class OraSchemaDataDictionary:
         return user_source
 
 
+    def get_sequences (self,conn):
+        "get user sequences"
+        stmt = """select sequence_name, min_value, max_value, increment_by, cycle_flag, order_flag, cache_size
+                      from user_sequences"""
+        sequences = {}
+        print "get sequences"
+        for name, min_value, max_value, step, cycled, ordered, cache_size in self.query(conn, stmt):
+            sequences[name] = fpformat.fix(min_value,0), str(max_value), fpformat.fix(step,0), cycled, ordered, fpformat.fix(cache_size,0)
+        return sequences
+    
 
     def query(self, conn, querystr):
         "execute query end return results in array"    

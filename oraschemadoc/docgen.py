@@ -59,7 +59,9 @@ class OraSchemaDoclet:
         self._print_function_index_frame()        
         self._print_packages()
         self._print_package_list_page()
-        self._print_package_index_frame()  
+        self._print_package_index_frame()
+        self._print_sequences()
+        self._print_sequence_index_frame()
         self._print_symbol_index_page()
         self._sanity_check()
         self._print_common_pages()
@@ -217,7 +219,17 @@ class OraSchemaDoclet:
         file_name = os.path.join(self.doc_dir, "triggers-index.html")
         self._write(text, file_name)         
 
-
+    def _print_sequence_index_frame(self):
+        print "print sequences list frame"
+        text = self.html.frame_header("Sequences")
+        text = text + self.html.hr()
+        rows = []
+        for sequence in self.schema.sequences:
+            link = self.html.href_to_sequence(sequence.name, "Main")
+            text = text + link + "<br>"
+        text = text + self.html.frame_footer()
+        file_name = os.path.join(self.doc_dir, "sequences-index.html")
+        self._write(text, file_name)
 
     def _print_tables(self):
         print "print tables"
@@ -493,6 +505,22 @@ class OraSchemaDoclet:
         file_name = os.path.join(self.doc_dir, "views-list.html")
         self._write(text, file_name)
 
+
+    def _print_sequences(self):
+        print "print sequences list page"
+        text = self.html.page_header("Sequnces")
+        text = text + self.html.context_bar(None)
+        text = text + self.html.hr()
+        rows = []
+        for s in self.schema.sequences:
+            rows.append((s.name + self.html.anchor(s.name), s.min_value, s.max_value, s.step, s.cycle_flag, s.ordered, s.cache_size))
+            self._add_index_entry(s.name, self.html.href_to_sequence(s.name), "index")
+        headers = "Name", "Min Value", "Max Value", "Step", "Cycled", "Ordered", "Cache Size"
+        name = "Sequences"
+        text = text + self.html.table(name, headers, rows)
+        text = text + self.html.page_footer()
+        file_name = os.path.join(self.doc_dir, "sequences.html")
+        self._write(text, file_name)
 
 
     def _print_view(self, view):
