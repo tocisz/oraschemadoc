@@ -1,4 +1,4 @@
-# OraSchemaDoc v0.10
+# OraSchemaDoc v0.23
 # Copyright (C) Aram Kananov <arcanan@flashmail.com> , 2002
 #
 # This program is free software; you can redistribute it and/or
@@ -20,7 +20,7 @@
 
 __author__ = 'Aram Kananov <arcanan@flashmail.com>'
 
-__version__ = '$Version: 0.1'
+__version__ = '$Version: 0.23'
 
 from oraverbose import *
 
@@ -254,7 +254,7 @@ class OraSchemaDataDictionary:
         
         stmt = """select  table_name, constraint_name, constraint_type, search_condition, r_owner,
             r_constraint_name , delete_rule
-            from user_constraints"""
+            from user_constraints where r_owner is null or r_owner = user"""
         cons ={}
         print  "get all_table/view constraints"
         for   table_name,name, type, check_cond, r_owner, r_constraint_name, delete_rule in self.query(conn, stmt):
