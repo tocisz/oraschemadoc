@@ -1,3 +1,0 @@
-15.03.2002 - docwigets.py - added _quotehtml to quote properly \, &, <, >
-15.03.2002 - docgen.py 	  - htmlquote check constraints, view query texts and descriptions
-   
