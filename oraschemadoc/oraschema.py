@@ -74,10 +74,13 @@ class OracleTable:
         self.check_constraints       = self._get_check_constraints(name, data_dict)
         self.referential_constraints = self._get_ref_constraints(name, data_dict)
         self.indexes                 = self._get_indexes(name, data_dict)
+        self.triggers                = self._get_triggers(data_dict)
+        print "table -", self.name , "triggers", self.triggers
+
         self.referenced_by = None
         if data_dict.table_referenced_by.has_key(name):
             self.referenced_by       = data_dict.table_referenced_by[name]
-        
+
 
     def _get_primary_key(self, table_name, data_dict):
         _primary_key_name = data_dict.table_primary_key_map.get(table_name)
@@ -138,6 +141,12 @@ class OracleTable:
                 indexes.append(index)
         return indexes
             
+    def _get_triggers(self, data_dict):
+        triggers = []
+        if  data_dict.table_trigger_map.has_key(self.name):
+            for trigger_name in data_dict.table_trigger_map[self.name]:
+                triggers.append(OracleTrigger(trigger_name, data_dict))
+        return triggers
 
 class OracleColumn:
 
@@ -260,6 +269,27 @@ class OracleViewConstraint:
         for table_name, column_name, position in data_dict.all_constraited_columns[name]:
             self.columns[position]=column_name
 
+
+class OracleTrigger:
+
+    def __init__(self, name, data_dict):
+        self.name, self.type, self.event, self.base_object_type, self.table_name, self.nested_column_name, \
+                   self.referencing_names, self.when_clause, self.status, self.description, self.action_type,\
+                   self.body = data_dict.all_triggers[name]
+        # initalize trigger columns
+        columns = []
+        if data_dict.all_trigger_columns.has_key(self.name):
+            for name, table_name, column_name, column_list, column_usage in data_dict.all_trigger_columns[self.name]:
+                columns.append(OracleTriggerColumn(column_name, column_list, column_usage))
+
+class OracleTriggerColumn:
+
+    def __init__(self, column_name, column_list, column_usage):
+        self.column_name = column_name
+        self.column_list = column_list
+        self.column_usage = column_usage
+        
+        
 
 if __name__ == '__main__':
     import cx_Oracle
