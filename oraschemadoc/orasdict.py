@@ -60,7 +60,8 @@ class OraSchemaDataDictionary:
         self.view_constraint_map = {}
         self.table_referenced_by = {}
         for constraint_name in self.all_constraint_names:
-            table_name, type, check_cond, r_owner, r_constraint_name, delete_rule = self.all_constraints[constraint_name]
+            table_name, type, check_cond, r_owner, r_constraint_name, delete_rule = \
+                        self.all_constraints[constraint_name]
             if type == 'P':
                self.table_primary_key_map[table_name] = constraint_name
             elif type == 'U':
@@ -153,6 +154,7 @@ class OraSchemaDataDictionary:
         
 
 
+
     ################################################
     # INTERNAL FUNCTIONS FOR QUERY DATA DICTIONARY #
     ################################################
@@ -186,7 +188,8 @@ class OraSchemaDataDictionary:
                 _nested = 'Yes'
             if temporary == 'Y':
                 _temporary = 'Yes'
-            tables[table] = _partitioned, _secondary, _index_organized, _clustered, _cluster_name, _nested, _temporary
+            tables[table] = _partitioned, _secondary, _index_organized, _clustered, _cluster_name, _nested,\
+                            _temporary
         return tables
 
 

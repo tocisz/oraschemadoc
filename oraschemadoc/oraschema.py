@@ -339,12 +339,14 @@ class OracleViewConstraint:
         self.table_name, type, check_cond, r_owner, r_constraint_name, delete_rule = data_dict.all_constraints[name]
         if type == 'O':
             self.type = "With read only on view"
+            columns = []
         else:
             self.type = "With check option on view"
+            self.columns = {}
+            for table_name, column_name, position in data_dict.all_constraited_columns.get(name, []):
+                self.columns[position]=column_name
         self.check_cond = check_cond
-        self.columns = {}
-        for table_name, column_name, position in data_dict.all_constraited_columns[name]:
-            self.columns[position]=column_name
+
 
 
 class OracleTrigger:

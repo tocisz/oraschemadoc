@@ -20,7 +20,7 @@
 
 __author__ = 'Aram Kananov <arcanan@flashmail.com>'
 
-__version__ = '$Version: 0.21'
+__version__ = '$Version: 0.22'
 
 import os, string, docwidgets, analyze
 
@@ -531,8 +531,8 @@ class OraSchemaDoclet:
             title = "Constraints:" + self.html.anchor("v-cc")
             rows = []
             for constraint in view.constraints:
-                rows.append((constraint.name + self.html.anchor("cs-%s" % constraint.name),constraint.check_cond))
-            text = text + self.html.table(title, ("Constraint Name","Check Condition"), rows)
+                rows.append((constraint.name + self.html.anchor("cs-%s" % constraint.name),constraint.type))
+            text = text + self.html.table(title, ("Constraint Name","Type"), rows)
             
         # print triggers
         if view.triggers:
