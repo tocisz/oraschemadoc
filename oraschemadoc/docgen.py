@@ -22,7 +22,7 @@ __author__ = 'Aram Kananov <arcanan@flashmail.com>'
 
 __version__ = '$Version: 0.1'
 
-import os, string, docwidgets
+import os, string, docwidgets, analyze
 
 class OraSchemaDoclet:
 
@@ -57,6 +57,7 @@ class OraSchemaDoclet:
         self._print_package_list_page()
         self._print_package_index_frame()  
         self._print_symbol_index_page()
+        self._sanity_check()
         self._print_common_pages()
 
 
@@ -703,10 +704,11 @@ class OraSchemaDoclet:
         headers = (["Source"])
         rows=[]
         _src=""
-        for line in package.body_source.source:
-            _src = _src + string.rjust(str(line.line_no),6) + ": " +  line.text
-        rows.append([self.html.pre(self.html._quotehtml(_src))])
-        text = text + self.html.table(title, headers, rows)
+        if package.body_source:
+            for line in package.body_source.source:
+                _src = _src + string.rjust(str(line.line_no),6) + ": " +  line.text
+            rows.append([self.html.pre(self.html._quotehtml(_src))])
+            text = text + self.html.table(title, headers, rows)
 
 
         text = text + self.html.page_footer()
@@ -731,8 +733,47 @@ class OraSchemaDoclet:
         file_name = os.path.join(self.doc_dir, "packages-list.html")
         self._write(text, file_name)
 
-       
+    def _sanity_check(self):
+        text = self.html.page_header("Sanity Check")
+        text += self.html.context_bar(None)
+        text += self.html.hr()
 
+        scheck = analyze.SchemaAnalyzer(self.schema)
+        if scheck.fk_no_indexes:
+            text += self.html.heading("No indexes on columns involved in foreign key constraints",2)
+            text += ''' You should almost always index foreign keys. The only exception is when
+                        the matching unique or primary key is never updated or deleted. For
+                        more information take a look on
+                        <a href="http://oradoc.photo.net/ora817/DOC/server.817/a76965/c24integ.htm#2299">
+                        Concurrency Control, Indexes, and Foreign Keys</a>. <br> The sql file which will
+                        generate these indexes is <a href="fk-indexes.sql"> here</a>'''
+            
+            title = '"Unindexed" foreign keys'
+            headers = "Constraint name", "Table Name", "Columns"
+            rows = []
+            for constraint in scheck.fk_no_indexes:
+                row=[]
+                row.append( self.html.href_to_table(constraint.table_name))
+                row.append( self.html.href_to_constraint(constraint.name, constraint.table_name, constraint.name))
+                columns = ''
+                columns_count = len(constraint.columns)
+                print 'name of constraint', constraint.name
+                i=0
+                for j in constraint.columns.keys():
+                    columns += constraint.columns[j]
+                    i +=1
+                    if i != columns_count:
+                        columns += ', '
+                row.append(columns)
+                rows.append(row)
+                #write sql
+                file_name = os.path.join(self.doc_dir, "fk-indexes.sql")
+                self._write(scheck.fk_no_indexes_sql,file_name)
+            text += self.html.table(title,headers,rows)
+        text = text + self.html.page_footer()
+        file_name = os.path.join(self.doc_dir, "sanity-check.html")
+        self._write(text, file_name)
+            
     def _write(self, text, file_name):
         f = open(file_name, 'w')
         f.write(text)
