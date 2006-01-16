@@ -1,4 +1,4 @@
-# OraSchemaDoc v0.25
+# Copyright (C) Petr Vanek <petr@yarpen.cz> , 2005
 # Copyright (C) Aram Kananov <arcanan@flashmail.com> , 2002
 #
 # This program is free software; you can redistribute it and/or
@@ -16,19 +16,20 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
-# HTML Widgets
+"""XHTML Widgets"""
 
-__author__ = 'Aram Kananov <arcanan@flashmail.com>'
+__author__ = 'Aram Kananov <arcanan@flashmail.com>, Petr Vanek <petr@yarpen.cz>'
 
 __version__ = '$Version: 0.25'
 
 import string
+import time
 
 class HtmlWidgets:
     
-    def __init__(self, name):
+    def __init__(self, name, css):
         self.name = name
-        self.table_bgcolor =  "#CCCCFF"
+        self.css = css
     
     def i(self, text):
         return "<i>%s</i>" %text
@@ -46,58 +47,65 @@ class HtmlWidgets:
             return '''<a href="%s" target="%s">%s</a>''' % (url, target_frame, text)
     
     def page_header(self, title):
-        return '''<html><head><title> %s - %s </title></head>
-        <body bgcolor="#ffffff">
-        ''' % (self.name , title)
+        return '''<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
+        <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+        <head><title> %s - %s </title>
+        <link rel="stylesheet" type="text/css" href="%s" />
+        <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+        <meta name="author" content="Petr Vanek, petr@yarpen.cz" />
+        <meta name="generator" content="oraschemadoc" />
+        </head>
+        <body>''' % (self.name , title, self.css)
 
     def context_bar(self, local_nav_bar):
-        text = '''<table width="100%%" border=0>
-        <tr>
-           <td colspan=2 bgcolor="#EEEEFF">
-             <table>
-                <tr>
-                  <td><a href="main.html"><b>Main</b></a></td>
-                  <td><a href="tables-list.html"><b>Tables</b></a></td>
-                  <td><a href="views-list.html"><b>Views</b></a></td>
-                  <td><a href="indexes-list.html"><b>Indexes</b></a></td>
-                  <td><a href="constraints-list.html"><b>Constraints</b></a></td>
-                  <td><a href="triggers-list.html"><b>Triggers</b></a></td>
-                  <td><a href="procedures-list.html"><b>Procedures</b></a></td>
-                  <td><a href="functions-list.html"><b>Functions</b></a></td>
-                  <td><a href="packages-list.html"><b>Packages</b></a></td>
-                  <td><a href="sequences.html"><b>Sequences</b></a></td>
-                  <td><a href="java-sources-list.html">Java Sources</b></a></td>
-                  <td><a href="sanity-check.html"><b>Sanity Check</b></a></td>
-                  <td><a href="symbol-index.html"><b>Index</b></a></td>
-                </tr>
-             </table>
-           </td>
-           <td align="right" valign="top" rowspan=2><h3> %s</h3> </td>\n           
-        </tr>
-        <tr>
-           <td colspan =2>
-             <table>
-               <tr>\n''' % self.name
+        text = '''
+            <div class="contextbar">
+            <a href="main.html">Main</a>
+            <a href="tables-list.html">Tables</a>
+            <a href="views-list.html">Views</a>
+            <a href="mviews-list.html">Materialized&nbsp;Views</a>
+            <a href="indexes-list.html">Indexes</a>
+            <a href="constraints-list.html">Constraints</a>
+            <a href="triggers-list.html">Triggers</a>
+            <a href="procedures-list.html">Procedures</a>
+            <a href="functions-list.html">Functions</a>
+            <a href="packages-list.html">Packages</a>
+            <a href="sequences.html">Sequences</a>
+            <a href="java-sources-list.html">Java&nbsp;Sources</a>
+            <a href="sanity-check.html">Sanity&nbsp;Check</a>
+            <a href="symbol-index.html">Index</a>
+            </div>'''
+
         if local_nav_bar:
+            text = text + '''
+                <div class="subcontextbar">'''
             for label, link in local_nav_bar:
-                text = text + '<td bgcolor="white"><font size="-1"><a href="#%s"> %s </font> </td>' % (link, label)
-        text = text + '</tr></table></td></tr>'
-        text = text + '</table>'
+                text = text + '<a href="#%s">%s</a> ' % (link, label)
+            text = text + '</div>'
         return text
-        
         
 
     def frame_header(self, title):
-        header = '''<html><head><title> %s </title></head><body bgcolor="#ffffff">''' %title
+        header = '''<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
+        <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+        <head><title> %s</title>
+        <link rel="stylesheet" type="text/css" href="%s" />
+        <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+        <meta name="author" content="Petr Vanek, petr@yarpen.cz" />
+        <meta name="generator" content="oraschemadoc" />
+        </head>
+        <body class="navigationframe">''' % (title, self.css)
         return header + self.heading(title,1)
 
     def frame_footer(self):
         return "</body></html>"
     
     def page_footer(self):
-        return '''<br><hr size=1 noshade>
-        <small>Generated by  <a href="http://oraschemadoc.sourceforge.net/">OraSchemaDoc</a>,
-        (c) Aram Kananov, 2002</small>\n</body></html>\n'''
+        return '''<div class="footer">
+        Generated by  <a href="http://www.yarpen.cz/oraschemadoc">OraSchemaDoc</a>,
+        (c) Petr Vanek, 2005; Aram Kananov, 2002, on ''' + time.ctime() + '''</div>\n</body></html>\n'''
     
     def href_to_column(self, label, table_name, column_name):
         return '<a href="table-%s.html#col-%s">%s </a>\n' % (table_name, column_name, label)
@@ -113,6 +121,7 @@ class HtmlWidgets:
             return '<a href="table-%s.html#trg-%s">%s </a>\n' % (table_name, trigger_name, label)
         else:
             return '<a href="table-%s.html#trg-%s" target="%s">%s </a>\n' % (table_name, trigger_name, target_frame, label)
+
     def href_to_index(self, label, table_name, index_name, target_frame = None):
         if not target_frame:
             return '<a href="table-%s.html#ind-%s">%s </a>\n' % (table_name, index_name, label)
@@ -135,6 +144,12 @@ class HtmlWidgets:
             return '<a href="view-%s.html"> %s </a>' % (view_name, view_name)
         else:
             return '<a href="view-%s.html" target="%s"> %s </a>' % (view_name, target_frame, view_name)
+
+    def href_to_mview(self, mview_name, target_frame = None):
+        if not target_frame:
+            return '<a href="mview-%s.html"> %s </a>' % (mview_name, mview_name)
+        else:
+            return '<a href="mview-%s.html" target="%s"> %s </a>' % (mview_name, target_frame, mview_name)
 
     def href_to_procedure(self, procedure_name, target_frame = None):
         if not target_frame:
@@ -170,6 +185,11 @@ class HtmlWidgets:
     def pre(self, text):
         return "<pre>\n"+text+"</pre>\n"
 
+
+    def p(self, text):
+        return "<p>" + text + "</p>"
+
+
     def table(self, name, headers, rows, width = None):
         text = ""
         if name:
@@ -177,18 +197,18 @@ class HtmlWidgets:
         if not rows:
             return text + "<p>None"
         if width:
-            text = text + '<table border=1 width='+width+'%>'
+            text = text + '<table width='+width+'%>'
         else:
-            text = text + '<table border=1>\n'
-        text = text + '<tr bgcolor="' +self.table_bgcolor + '">'
+            text = text + '<table>\n'
+        text = text + '<tr>'
         for header in headers:
-            text = text + '<th>' + header + '</th>'
+            text = text + '<th>' + str(header) + '</th>'
         text = text + '</tr>'
         for row in rows:
             text = text + '<tr>'
             for column in row:
                 if column:
-                   text = text + '<td>' + column + '</td>'
+                   text = text + '<td>' + str(column) + '</td>'
                 else:
                    text = text + '<td>&nbsp;</td>'
             text = text + '</tr>\n'
@@ -196,37 +216,53 @@ class HtmlWidgets:
         return text
 
     def _index_page(self, name):
-        return '<html><head><title>' + name + '''</title></head>
-                  <frameset cols="20%,80%">
-                    <frameset rows="20%,80%">
-                       <frame src="nav.html" name="GlobalNav">
-                       <frame src="tables-index.html" name="List">
-                    </frameset>
-                    <frame src="main.html" name="Main">
-                  </frameset>
+        return '''<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "XHTML1-f.dtd">
+        <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+        <head><title>''' + name + '''</title>
+        <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+        <meta name="author" content="Petr Vanek, petr@yarpen.cz" />
+        <meta name="generator" content="oraschemadoc" />
+        </head>
+                  <frameset cols="21%,79%">
+                    <frame src="nav.html" name="List" />
+                    <frame src="main.html" name="Main" />
                   <noframes>
-                  <h2>Frame Alert</h2><p>
-                  This document is designed to be viewed using the frames feature.
-                  If you see this message, you are using a non-frame-capable web client.
-                  <br>
-                  Link to<a HREF="main.html">Non-frame version.</a></noframes>
-                  </html>''' 
+                  <body>
+                  <h2>Frame Alert</h2>
+                  <p>This document is designed to be viewed using the frames feature.
+                  If you see this message, you are using a non-frame-capable web client.</p>
+                  <p>Link to<a href="main.html">Non-frame version.</a></p>
+                  </body>
+                  </noframes>
+                  </frameset>
+                  </html>'''
+    
 
     def _global_nav_frame(self, name):
-        return '''<html>
-                  <head><title>%s</title></head><body bgcolor="#ffffff">
-                  <a href="tables-index.html" target="List"><b>Tables</b></a><br>
-                  <a href="views-index.html" target="List"><b>Views</b></a><br>
-                  <a href="indexes-index.html" target="List"><b>Indexes</b></a><br>
-                  <a href="constraints-index.html" target="List"><b>Constraints</b></a><br>
-                  <a href="triggers-index.html" target="List"><b>Triggers</b></a><br>
-                  <a href="procedures-index.html" target="List"><b>Procedures</b></a><br>
-                  <a href="functions-index.html" target="List"><b>Functions</b></a><br>
-                  <a href="packages-index.html" target="List"><b>Packages</b></a><br>
-                  <a href="sequences-index.html" target="List"><b>Sequences</b></a><br>
-                  <a href="java-sources-index.html" target="List"><b>Java Sources</b></a><br>
-                  <a href="sanity-check.html" target="Main"><b>Sanity Check</b></a><br>
-                  </body><html>''' % name 
+        return '''<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
+        <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+        <head><title> %s</title>
+        <link rel="stylesheet" type="text/css" href="%s" />
+        <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+        <meta name="author" content="Petr Vanek, petr@yarpen.cz" />
+        <meta name="generator" content="oraschemadoc" />
+        </head>
+        <body class="navigationframe">
+                  <a href="tables-index.html">Tables</a>
+                  <a href="views-index.html">Views</a>
+                  <a href="mviews-index.html">Materialized&nbsp;Views</a>
+                  <a href="indexes-index.html">Indexes</a>
+                  <a href="constraints-index.html">Constraints</a>
+                  <a href="triggers-index.html">Triggers</a>
+                  <a href="procedures-index.html">Procedures</a>
+                  <a href="functions-index.html">Functions</a>
+                  <a href="packages-index.html">Packages</a>
+                  <a href="sequences-index.html">Sequences</a>
+                  <a href="java-sources-index.html">Java&nbsp;Sources</a>
+                  <a href="sanity-check.html" target="Main">Sanity&nbsp;Check</a>
+                  </body></html>''' % (name, self.css)
 
     def _quotehtml (self, text):
         text = string.replace(text, "&", "&amp;")
@@ -235,11 +271,16 @@ class HtmlWidgets:
         text = string.replace(text, ">", "&gt;")
         return text
     
-    def _main_frame(self, name):
+    def _main_frame(self, name, description, highlight):
         text = text = self.page_header("name")
         text = text + self.context_bar( None)
-        text = text + self.hr()
         text = text + self.heading(name,1)
+        text = text + self.p(description)
+        if highlight:
+            h = 'Yes'
+        else:
+            h = 'No'
+        text = text + self.p('<b>Using syntax highlighting:</b> ' + h)
         text = text + self.page_footer()
         return text
 

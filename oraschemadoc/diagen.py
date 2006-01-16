@@ -1,5 +1,5 @@
-# OraSchemaDoc v0.25
 # Copyright (C) Aram Kananov <arcanan@flashmail.com> , 2002
+# Copyright (C) Petr Vanek <petr@yarpen.cz>, 2005
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -16,26 +16,28 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
-# Dia UML Diagram XML File Generator
+"""Dia UML Diagram XML File Generator"""
 
-__author__ = 'Aram Kananov <arcanan@flashmail.com>'
+__author__ = 'Aram Kananov <arcanan@flashmail.com>, Petr Vanek <petr@yarpen.cz>'
 
 __version__ = '$Version: 0.25'
 
-# TODO: implement debug statements
+import os 
 
 class DiaUmlDiagramGenerator:
+    """ Creates dummy DIA file.
+    It tries to gzip the file if possible
+    TODO: clever placement of the objects in diagram."""
 
-    def __init__(self, schema, dia_file, name, debug_mode, conf_file):
+    def __init__(self, schema, filename, description, debug_mode, conf_file, compress=True):
         
         self.schema = schema
-        self.dia_file = dia_file
-        self.name = name
+        self.filename = filename
+        self.description = description
 
         # prepare file header
-        header = '<?xml version="1.0" encoding="UTF-8"?>'
+        header = '<?xml version="1.0" encoding="UTF-8"?>\n'
         header += '<dia:diagram xmlns:dia="http://www.lysator.liu.se/~alla/dia/">\n'
-
         header += ' <dia:diagramdata>\n'
         header += '    <dia:attribute name="background">\n'
         header += '      <dia:color val="#ffffff"/>\n'
@@ -91,9 +93,7 @@ class DiaUmlDiagramGenerator:
         header += '      </dia:composite>\n'
         header += '    </dia:attribute>\n'
         header += '  </dia:diagramdata>\n'
-
-        header += '  <dia:layer name="Background" visible="true">'
-
+        header += '  <dia:layer name="Background" visible="true">\n'
         
         table_ids = {}
         i = 0
@@ -105,9 +105,9 @@ class DiaUmlDiagramGenerator:
                 continue
             i = i+1
             table_ids[table.name] = i
-            table_text += '    <dia:object type="UML - Class" version="0" id="%s">' % i
+            table_text += '    <dia:object type="UML - Class" version="0" id="%s">\n' % i
             table_text += '      <dia:attribute name="name">\n'
-            table_text += '        <dia:string>#%s#</dia:string>'  % table.name
+            table_text += '        <dia:string>#%s#</dia:string>\n'  % table.name
             table_text += '      </dia:attribute>\n'
             table_text += '      <dia:attribute name="abstract">\n'
             table_text += '        <dia:boolean val="false"/>\n'
@@ -198,9 +198,25 @@ class DiaUmlDiagramGenerator:
         footer = '  </dia:layer>\n'
         footer += '</dia:diagram>\n'
 
-        f = open(dia_file, 'w')
-        f.write(header + table_text + cs_text + footer)
-        f.close()
+
+        print 'GZIPping...'
+        try:
+            if not compress:
+                raise Exception
+            import gzip
+            f = gzip.GzipFile(self.filename, 'w')
+            f.write(header + table_text + cs_text + footer)
+            f.close()
+        except:
+            if not compress:
+                print 'GZIP passed. Running raw text writting'
+            else:
+                print 'GZIP failed. Running raw text writting'
+            f = open(self.filename, 'w')
+            f.write(header + table_text + cs_text + footer)
+            f.close()
+        print 'Done\n'
+
         
     def get_columns_text(self, table):
         columns = table.columns
@@ -220,7 +236,7 @@ class DiaUmlDiagramGenerator:
             text += '            <dia:string>#%s#</dia:string>\n' % column.name
             text += '          </dia:attribute>\n'
             text += '          <dia:attribute name="type">\n'
-            text += '            <dia:string>#%s#</dia:string>' % column.data_type + nullable_text
+            text += '            <dia:string>#%s#</dia:string>\n' % column.data_type + nullable_text
             text += '          </dia:attribute>\n'
             
             # handle default value
@@ -253,6 +269,7 @@ class DiaUmlDiagramGenerator:
 
     def get_constraints_text(self, table):
         if table.referential_constraints:
+
             cs_text = ''
             for cs in table.referential_constraints:
                 if self.export_tables.count(cs.r_table) == 0:
@@ -293,12 +310,14 @@ class DiaUmlDiagramGenerator:
         </dia:attribute>
         <dia:attribute name="operations"/>\n'''
 
+
     def get_col_pos(self, column_name, table):
         i = 0
         for j in table.columns.keys():
             i = i + 1
             if table.columns[j].name == column_name:
                 return i
+
 
     def get_tables_for_export(self, conf_file):
         r_list = []
@@ -317,10 +336,8 @@ if __name__ == '__main__':
     import cx_Oracle
     import orasdict
     import oraschema
-    connection = cx_Oracle.connect('bugzilla/bugzilla')
+    connection = cx_Oracle.connect('s0/s0@test1')
     s = orasdict.OraSchemaDataDictionary(connection, 'Oracle',0)
     schema = oraschema.OracleSchema(s,0)
-    doclet = DiaUmlDiagramGenerator(schema, "/tmp/oraschemadoc/", "vtr Data Model", 0,None)
-    
-        
-        
+    doclet = DiaUmlDiagramGenerator(schema, ".", "vtr Data Model", "Really cool project",0,None, False)
+

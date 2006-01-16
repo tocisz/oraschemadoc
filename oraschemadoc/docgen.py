@@ -1,4 +1,6 @@
-# OraSchemaDoc v0.25
+""" Doc Generator """
+
+# Copyright (C) Petr Vanek <petr@yarpen.cz> , 2005
 # Copyright (C) Aram Kananov <arcanan@flashmail.com> , 2002
 #
 # This program is free software; you can redistribute it and/or
@@ -16,28 +18,31 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
-# Doc Generator
-
-__author__ = 'Aram Kananov <arcanan@flashmail.com>'
+__author__ = 'Aram Kananov <arcanan@flashmail.com>, Petr Vanek <petr@yarpen.cz>'
 
 __version__ = '$Version: 0.25'
 
 import os, string, docwidgets, analyze
+import sqlhighlighter
 
 from oraverbose import *
 
+
 class OraSchemaDoclet:
 
-    def __init__(self, schema, doc_dir, name, description, debug_mode):
+
+    def __init__(self, connection, schema, doc_dir, name, description, debug_mode, syntaxHiglighting, css):
         
-        #
         set_verbose_mode(debug_mode)
+
+        self.syntaxHighlighter = sqlhighlighter.SqlHighlighter(highlight=syntaxHiglighting)
+        self.connection = connection
         
         self.schema = schema
         self.doc_dir = doc_dir
         self.name = name
         self.description = description
-        self.html = docwidgets.HtmlWidgets(self.name)
+        self.html = docwidgets.HtmlWidgets(self.name, css)
         self.index = {}
 
         # print html files
@@ -56,6 +61,10 @@ class OraSchemaDoclet:
         for view in self.schema.views:
             self._print_view(view)
 
+        print 'print materialized views'
+        for mview in self.schema.mviews:
+            self._print_mview(mview)
+
         print "print functions"
         for function in self.schema.functions:
             self._print_function(function)
@@ -73,6 +82,7 @@ class OraSchemaDoclet:
             self._print_java_source(jsource)
         
         self._print_symbol_index_page()
+
 
     def _print_index_frames(self):
         #
@@ -109,6 +119,13 @@ class OraSchemaDoclet:
             rows.append(link)
         self._print_index_frame("Views", rows, "views-index.html")
 
+        # materialized views
+        rows = []
+        for mview in self.schema.mviews:
+            link = self.html.href_to_mview(mview.name, "Main")
+            rows.append(link)
+        self._print_index_frame("Materialized&nbsp;Views", rows, "mviews-index.html")
+
         #procedures
         rows = []
         for procedure in self.schema.procedures:
@@ -143,7 +160,7 @@ class OraSchemaDoclet:
             link = self.html.href_to_sequence(sequence.getName(), "Main")
             rows.append(link)
         self._print_index_frame("Sequences", rows, "sequences-index.html")
-        
+
         #java sources
         rows = []
         for jsoursce in self.schema.java_sources:
@@ -224,6 +241,17 @@ class OraSchemaDoclet:
         ht_table = self.html.table("Views", headers, rows)
         self._print_list_page("Views", ht_table, "views-list.html")
         
+        # mviews
+        rows = []
+        for mview in self.schema.mviews:
+            name = self.html.href_to_mview(mview.name)
+            # add entry to doc index
+            self._add_index_entry(mview.name, name, "materialized view")
+            rows.append([name])
+        headers = [("Materialized View")]
+        ht_table = self.html.table("Materialized Views", headers, rows)
+        self._print_list_page("Materialized Views", ht_table, "mviews-list.html")
+        
         #procedures
         rows = []
         for procedure in self.schema.procedures:
@@ -282,11 +310,8 @@ class OraSchemaDoclet:
         headers = (["Name"])
         ht_table = self.html.table("Java Sources", headers, rows)
         self._print_list_page("Java Sources", ht_table, "java-sources-list.html")
-        
 
-            
-                    
-            
+
     def _print_table(self, table):
         "print table page"
         # create header and context bar
@@ -302,15 +327,16 @@ class OraSchemaDoclet:
         local_nav_bar.append(("Indexes", "t-ind"))
         local_nav_bar.append(("Referenced by", "t-refs"))
         local_nav_bar.append(("Triggers", "t-trgs"))
+        local_nav_bar.append(("Partitions", "t-parts"))
+
         text = text + self.html.context_bar(local_nav_bar)
-        text = text + self.html.hr()
         text = text + self.html.heading(table.name, 2)
         # punt entry in doc index
         self._add_index_entry(table.name, self.html.href_to_table(table.name), "table")
         # print comments
         if table.comments:
             text = text + self.html.heading("Description:",3) + self.html.anchor("t-descr")
-            text = text + self.html.pre(self.html._quotehtml(table.comments))
+            text = text + self.html.p(self.html._quotehtml(table.comments))
         #print columns
         rows = []
         # fixme iot table overflow segment column problem
@@ -380,13 +406,14 @@ class OraSchemaDoclet:
         # print table options
         title = "Options:" + self.html.anchor("t-opt")
         rows = []
+        rows.append(("Tablespace", table.tablespace_name))
         rows.append(("Index Organized", table.index_organized))
         rows.append(("Generated by Oracle", table.secondary))
         rows.append(("Clustered", table.clustered))
         if table.clustered == 'Yes':
             rows.append(("Cluster", table.cluster_name))
         rows.append(("Nested", table.nested))
-        rows.append(("Temporary", table.temporary))                
+        rows.append(("Temporary", table.temporary))
         headers = "Option","Settings"
         text = text + self.html.table(title, headers, rows)
         # print indexes
@@ -420,22 +447,26 @@ class OraSchemaDoclet:
         if table.triggers:
             text = text +"<br>" + self.html.heading("Triggers",3) + self.html.anchor("t-trgs")
             for trigger in table.triggers:
-                headers = []
-                rows = []
-                headers.append( "<b> Name: </b>"+trigger.name+"<br>" + self.html.anchor('trg-%s' % trigger.name))
-                row = "<pre>"
-                #if trigger.nested_column_name:
-                #    row = row + "on " + trigger.nested_column_name+"\n"
-                #row = row +  trigger.type+ " "+ trigger.event +"\n"
-                row = row + 'CREATE TRIGGER ' + trigger.description
-                row = row +   trigger.referencing_names+"\n"
+                text = text + self.html.anchor('trg-%s' % trigger.name)
+                trigg = 'CREATE TRIGGER ' + trigger.description
+                trigg = trigg + trigger.referencing_names+"\n"
                 if trigger.when_clause:
-                    row = row + "When " + self.html._quotehtml(trigger.when_clause)+"\n"
-                row = row +   self.html._quotehtml(trigger.body)+"\n</pre>"
-                t = []
-                t.append(row)
-                rows.append(t)
-                text = text + self.html.table(None, headers, rows, '100')+"<p>"
+                    trigg = trigg + "When " + trigger.when_clause +"\n"
+                trigg = trigg + trigger.body
+                self.syntaxHighlighter.setStatement(trigg)
+                self.syntaxHighlighter.parse()
+                text = text + self.html.pre(self.syntaxHighlighter.getHeader())
+                text = text + self.html.pre(self.syntaxHighlighter.getOutput())
+
+        # print partitions
+        if table.tab_partitions:
+            text = text + self.html.heading("Partitions", 3) + self.html.anchor("t-parts")
+            headers = ["Partition name", "Position", "Tablespace name", "High value"]
+            rows = []
+            for partition in table.tab_partitions:
+                rows.append([partition.partition_name, str(partition.partition_position),
+                            partition.tablespace_name, str(partition.high_value)])
+            text = text + self.html.table(None, headers, rows)
                        
         text = text + self.html.page_footer()
         file_name = os.path.join(self.doc_dir, "table-%s.html" % table.name)
@@ -453,12 +484,11 @@ class OraSchemaDoclet:
         local_nav_bar.append(("Constraints", "v-cc"))
         local_nav_bar.append(("Triggers", "v-trgs"))
         text = text + self.html.context_bar(local_nav_bar)
-        text = text + self.html.hr()
         text = text + self.html.heading(view.name, 2)
         # print comments
         if view.comments:
             text = text + self.html.heading("Description:",3) + self.html.anchor("v-descr")
-            text = text + self.html.pre(self.html._quotehtml(view.comments))
+            text = text + self.html.p(self.html._quotehtml(view.comments))
         #print columns
         rows = []
         for i in range(len(view.columns)):
@@ -472,7 +502,10 @@ class OraSchemaDoclet:
         text = text + self.html.table("Columns" + self.html.anchor('v-cols'), headers, rows)
         # print query
         text = text + self.html.heading("Query:",3) + self.html.anchor("v-query")
-        text = text + self.html.pre(view.text)
+        self.syntaxHighlighter.setStatement(view.text)
+        self.syntaxHighlighter.parse()
+        text = text + self.html.pre(self.syntaxHighlighter.getHeader())
+        text = text + self.html.pre(self.syntaxHighlighter.getOutput())
         # print constraints
         if view.constraints:
             title = "Constraints:" + self.html.anchor("v-cc")
@@ -483,7 +516,7 @@ class OraSchemaDoclet:
             
         # print triggers
         if view.triggers:
-            text = text +"<br>" + self.html.heading("Triggers",3) + self.html.anchor("v-trgs")
+            text = text + self.html.heading("Triggers",3) + self.html.anchor("v-trgs")
             for trigger in view.triggers:
                 headers = []
                 rows = []
@@ -500,11 +533,83 @@ class OraSchemaDoclet:
                 t = []
                 t.append(row)
                 rows.append(t)
-                text = text + self.html.table(None, headers, rows, '100')+"<p>"
+                text = text + self.html.table(None, headers, rows)
         
         text = text + self.html.page_footer()
         file_name = os.path.join(self.doc_dir, "view-%s.html" % view.name)
         self._write(text, file_name)
+
+
+    def _print_mview(self, mview):
+        " print materialized view"
+        text = self.html.page_header("MView-" + mview.name)
+        local_nav_bar = []
+        local_nav_bar.append(("Description", "v-descr"))
+        local_nav_bar.append(("Columns", "v-cols"))
+        local_nav_bar.append(("Query", "v-query"))
+        local_nav_bar.append(("Constraints", "v-cc"))
+        local_nav_bar.append(("Triggers", "v-trgs"))
+        text = text + self.html.context_bar(local_nav_bar)
+        text = text + self.html.heading(mview.name, 2)
+
+        th = ['Container', 'Updatable']
+        container = self.html.href_to_table(mview.container)
+        td = [(container, mview.mv_updatable)]
+        text = text + self.html.table(None, th, td)
+        # print comments
+        if mview.comments:
+            text = text + self.html.heading("Description:",3) + self.html.anchor("v-descr")
+            text = text + self.html.p(self.html._quotehtml(mview.comments))
+        #print columns
+        rows = []
+        for i in range(len(mview.columns)):
+            column = mview.columns[i+1]
+            # add entry to doc index
+            self._add_index_entry(column.name, self.html.href_to_view_column(column.name, mview.name, column.name), \
+                                  "column of of view %s" % mview.name)
+            rows.append((column.name+self.html.anchor('col-%s' % column.name), column.data_type, column.nullable,\
+                         column.insertable, column.updatable, column.deletable, column.comments))
+        headers = "Name", "Type", "Nullable","Insertable","Updatable", "Deletable", "Comment"
+        text = text + self.html.table("Columns" + self.html.anchor('v-cols'), headers, rows)
+        # print query
+        text = text + self.html.heading("Query:",3) + self.html.anchor("v-query")
+        self.syntaxHighlighter.setStatement(mview.query)
+        self.syntaxHighlighter.parse()
+        text = text + self.html.pre(self.syntaxHighlighter.getHeader())
+        text = text + self.html.pre(self.syntaxHighlighter.getOutput())
+        # print constraints
+        if mview.constraints:
+            title = "Constraints:" + self.html.anchor("v-cc")
+            rows = []
+            for constraint in mview.constraints:
+                rows.append((constraint.name + self.html.anchor("cs-%s" % constraint.name),constraint.type))
+            text = text + self.html.table(title, ("Constraint Name","Type"), rows)
+            
+        # print triggers
+        if mview.triggers:
+            text = text + self.html.heading("Triggers",3) + self.html.anchor("v-trgs")
+            for trigger in mview.triggers:
+                headers = []
+                rows = []
+                headers.append( "<b> Name: </b>"+trigger.name+"<br>" + self.html.anchor('trg-%s' % trigger.name))
+                row = "<pre>"
+                #if trigger.nested_column_name:
+                #    row = row + "on " + trigger.nested_column_name+"\n"
+                #row = row +  trigger.type+ " "+ trigger.event +"\n"
+                row = row + 'CREATE TRIGGER ' + trigger.description
+                row = row +   trigger.referencing_names+"\n"
+                if trigger.when_clause:
+                    row = row + "When " + self.html._quotehtml(trigger.when_clause)+"\n"
+                row = row +   self.html._quotehtml(trigger.body)+"\n</pre>"
+                t = []
+                t.append(row)
+                rows.append(t)
+                text = text + self.html.table(None, headers, rows)
+        
+        text = text + self.html.page_footer()
+        file_name = os.path.join(self.doc_dir, "mview-%s.html" % mview.name)
+        self._write(text, file_name)
+
 
     def _print_procedure(self, procedure):
         "print procedure page"
@@ -514,7 +619,6 @@ class OraSchemaDoclet:
         local_nav_bar.append(("Arguments", "p-args"))
         local_nav_bar.append(("Source", "p-src"))
         text = text + self.html.context_bar(local_nav_bar)
-        text = text + self.html.hr()
         text = text + self.html.heading(procedure.name, 2)
         
         title = "Arguments:" + self.html.anchor("p-args")
@@ -532,18 +636,18 @@ class OraSchemaDoclet:
         #       text = text + self.html.heading("Source:",3) + self.html.anchor("p-src")
         #       text = text + self.html.pre(self.html._quotehtml(procedure.source))
         
-        title = "Source" + self.html.anchor("p-src")
-        headers = (["Source"])
-        rows=[]
+        text = text + self.html.heading("Source", 2) + self.html.anchor("p-src")
         _src=""
         for line in procedure.source.source:
             _src = _src + string.rjust(str(line.line_no),6) + ": " +  line.text
-        rows.append([self.html.pre(self.html._quotehtml(_src))])
-        text = text + self.html.table(title, headers, rows)
+        self.syntaxHighlighter.setStatement(_src)
+        self.syntaxHighlighter.parse()
+        text = text + self.html.pre(self.syntaxHighlighter.getHeader())
+        text = text + self.html.pre(self.syntaxHighlighter.getOutput())
+
         text = text + self.html.page_footer()
         file_name = os.path.join(self.doc_dir, "procedure-%s.html" % procedure.name)
         self._write(text, file_name)        
-
 
         
     def _print_function(self, function):
@@ -554,7 +658,6 @@ class OraSchemaDoclet:
         local_nav_bar.append(("Arguments", "f-args"))
         local_nav_bar.append(("Source", "f-src"))
         text = text + self.html.context_bar(local_nav_bar)
-        text = text + self.html.hr()
         text = text + self.html.heading(function.name, 2)
         
         title = "Arguments:" + self.html.anchor("f-args")
@@ -571,18 +674,20 @@ class OraSchemaDoclet:
 
         text = text + self.html.heading("Returns:",3) + function.return_data_type
 
-        title = "Source" + self.html.anchor("f-src")
-        headers = (["Source"])
-        rows=[]
+        text = text + self.html.heading("Source", 2) + self.html.anchor("f-src")
+
         _src=""
         for line in function.source.source:
             _src = _src + string.rjust(str(line.line_no),6) + ": " +  line.text
-        rows.append([self.html.pre(self.html._quotehtml(_src))])
-        text = text + self.html.table(title, headers, rows)
+        self.syntaxHighlighter.setStatement(_src)
+        self.syntaxHighlighter.parse()
+        text = text + self.html.pre(self.syntaxHighlighter.getHeader())        
+        text = text + self.html.pre(self.syntaxHighlighter.getOutput())
        
         text = text + self.html.page_footer()
         file_name = os.path.join(self.doc_dir, "function-%s.html" % function.name)
         self._write(text, file_name)
+
 
     def _print_java_source(self, java_source):
         "print function page"
@@ -590,7 +695,6 @@ class OraSchemaDoclet:
         text = self.html.page_header("Source of " + java_source.name + " class")
         local_nav_bar = []
         text = text + self.html.context_bar(local_nav_bar)
-        text = text + self.html.hr()
         text = text + self.html.heading(java_source.name, 2)
         
         title = "Source" 
@@ -611,7 +715,6 @@ class OraSchemaDoclet:
         self._write(text, file_name)
         
         
-        
     def _print_symbol_index_page(self):
         print "print symbols index page"
         text = self.html.page_header("Schema Objects Index")
@@ -625,7 +728,6 @@ class OraSchemaDoclet:
                 letter = key[:1] 
                 local_nav_bar.append((letter,letter))
         text = text + self.html.context_bar(local_nav_bar)
-        text = text + self.html.hr()
         
         letter = ""
         for key in keys:
@@ -637,6 +739,7 @@ class OraSchemaDoclet:
         text = text + self.html.page_footer()
         file_name = os.path.join(self.doc_dir, "symbol-index.html")
         self._write(text, file_name)        
+
         
     def _print_package(self, package):
         "print procedure page"
@@ -646,28 +749,27 @@ class OraSchemaDoclet:
         local_nav_bar.append(("Package source", "p-src"))
         local_nav_bar.append(("Package body source", "p-bsrc"))
         text = text + self.html.context_bar(local_nav_bar)
-        text = text + self.html.hr()
         text = text + self.html.heading(package.name, 2)
         
-        title = "Package source" + self.html.anchor("p-src")
-        headers = (["Source"])
-        rows=[]
+        title = self.html.heading("Package source", 2) + self.html.anchor("p-src")
         _src=""
         for line in package.source.source:
             _src = _src + string.rjust(str(line.line_no),6) + ": " +  line.text
-        rows.append([self.html.pre(self.html._quotehtml(_src))])
-        text = text + self.html.table(title, headers, rows)
+        
+        self.syntaxHighlighter.setStatement(_src)
+        self.syntaxHighlighter.parse()
+        text = text + title + self.html.pre(self.syntaxHighlighter.getHeader())
+        text = text + self.html.pre(self.syntaxHighlighter.getOutput())
 
-        title = "Package body source" + self.html.anchor("p-bsrc")
-        headers = (["Source"])
-        rows=[]
+        title = self.html.heading("Package body source", 2) + self.html.anchor("p-bsrc")
         _src=""
         if package.body_source:
             for line in package.body_source.source:
                 _src = _src + string.rjust(str(line.line_no),6) + ": " +  line.text
-            rows.append([self.html.pre(self.html._quotehtml(_src))])
-            text = text + self.html.table(title, headers, rows)
-
+            self.syntaxHighlighter.setStatement(_src)
+            self.syntaxHighlighter.parse()
+            text = text + title + self.html.pre(self.syntaxHighlighter.getHeader())
+            text = text + self.html.pre(self.syntaxHighlighter.getOutput())
 
         text = text + self.html.page_footer()
         file_name = os.path.join(self.doc_dir, "package-%s.html" % package.name)
@@ -676,19 +778,26 @@ class OraSchemaDoclet:
 
     def _sanity_check(self):
         print "print sanity check page"
+        problems = False
         text = self.html.page_header("Sanity Check")
-        text += self.html.context_bar(None)
-        text += self.html.hr()
+        local_nav_bar = []
+        local_nav_bar.append(("FK indexes", "fk-ix"))
+        local_nav_bar.append(("Invalid objects", "inv"))
+        text += self.html.context_bar(local_nav_bar)
+        
+        text += self.html.heading("Sanity Check", 1)
 
-        scheck = analyze.SchemaAnalyzer(self.schema)
+        scheck = analyze.SchemaAnalyzer(self.connection, self.schema)
         if scheck.fk_no_indexes:
+            text += self.html.anchor("fk-ix")
             text += self.html.heading("No indexes on columns involved in foreign key constraints",2)
-            text += ''' You should almost always index foreign keys. The only exception is when
+            text += '''<p>You should almost always index foreign keys. The only exception is when
                         the matching unique or primary key is never updated or deleted. For
                         more information take a look on
                         <a href="http://oradoc.photo.net/ora817/DOC/server.817/a76965/c24integ.htm#2299">
-                        Concurrency Control, Indexes, and Foreign Keys</a>. <br> The sql file which will
-                        generate these indexes is <a href="fk-indexes.sql"> here</a>'''
+                        Concurrency Control, Indexes, and Foreign Keys</a>.</p>
+                        <p>The sql file which will
+                        generate these indexes is <a href="fk-indexes.sql">created for you</a></p>'''
             
             title = '"Unindexed" foreign keys'
             headers = "Table Name", "Constraint name", "Columns"
@@ -711,12 +820,43 @@ class OraSchemaDoclet:
                 file_name = os.path.join(self.doc_dir, "fk-indexes.sql")
                 self._write(scheck.fk_no_indexes_sql,file_name)
             text += self.html.table(title,headers,rows)
+            problems = True
+
+        if len(scheck.invalids) != 0:
+            problems = True
+            text += self.html.anchor("inv")
+            text += self.html.heading('Invalid objects', 2)
+            text += '''<p>Invalid object does not mean a problem sometimes. Sometimes will 
+                    fix itself as is is executed or accessed.  But if there is an error in
+                    USER_ERRORS table, you are in trouble then...</p>
+                    <p>The sql file which will compile these objects is 
+                    <a href="compile-objects.sql">created for you</a>.</p>'''
+            self._write(scheck.invalids_sql, os.path.join(self.doc_dir, 'compile-objects.sql'))
+            invalids = scheck.invalids
+            for i in invalids:
+                if i[1] == 'PACKAGE' or i[1] == 'PACKAGE BODY':
+                    i[0] = self.html.href_to_package(i[0])
+                if i[1] == 'PROCEDURE':
+                    i[0] = self.html.href_to_procedure(i[0])
+                if i[1] == 'FUNCTION':
+                    i[0] = self.html.href_to_function(i[0])
+                if i[1] == 'VIEW':
+                    i[0] = self.html.href_to_view(i[0])
+                if i[1] == 'TRIGGER':
+                    for j in self.schema.triggers:
+                        if j.name == i[0]:
+                            i[0] = self.html.href_to_trigger(i[0], j.table_name, i[0])
+                            break
+            text += self.html.table('Invalids', ['Object name', 'Type', 'Error', 'At line'], invalids)
+
+        if problems == False:
+            # no checks
+            text += self.html.p('No known problems.')
         text = text + self.html.page_footer()
         file_name = os.path.join(self.doc_dir, "sanity-check.html")
         self._write(text, file_name)
         
         
-            
     def _write(self, text, file_name):
         # write file to fs
         debug_message("debug: writing file " + file_name)
@@ -724,12 +864,14 @@ class OraSchemaDoclet:
         f.write(text)
         f.close()
 
+
     def _add_index_entry(self, key , link, description):
         # add new entry to symbol index
         t = self.index.get(key)
         if not t:
             self.index[key] = t = []
         t.append((link, description))
+
 
     def _print_common_pages(self):
         # print index.html, nav.html and main.html
@@ -739,10 +881,11 @@ class OraSchemaDoclet:
         text = self.html._global_nav_frame(self.name)
         file_name = os.path.join(self.doc_dir, "nav.html")
         self._write(text, file_name)
-        text = self.html._main_frame(self.name)
+        text = self.html._main_frame(self.name, self.description, self.syntaxHighlighter.highlight)
         file_name = os.path.join(self.doc_dir, "main.html")
         self._write(text, file_name)
-    
+
+
     def _print_index_frame(self, header, item_list, file_name):
         # generic procedure to print index frame on left side
         # excpects:
@@ -751,20 +894,20 @@ class OraSchemaDoclet:
         #          file_name - relative file name 
         print "index frame for " + header
         text = self.html.frame_header(header)
-        text = text + self.html.hr()
+        text = text + self.html.href('nav.html', 'Categories')
         for row in item_list:
-            text = text + row + '<br>'
+            text = text + row
         text = text + self.html.frame_footer()
         #java sources contain simbol / inside name, in file_names should be replaced with "-"
         f_name = os.path.join(self.doc_dir, file_name.replace("/","-"))
         self._write(text, f_name)
 
+
     def _print_list_page(self, title, ht_table, file_name):
         # print list pages
-        print "print " + " list page"
+        print "print %s list page" % title
         text = self.html.page_header(title)
         text = text + self.html.context_bar( None)
-        text = text + self.html.hr()
         text = text + ht_table
         text = text + self.html.page_footer()
         
@@ -780,6 +923,6 @@ if __name__ == '__main__':
     connection = cx_Oracle.connect('aram_v1/aram_v1')
     s = orasdict.OraSchemaDataDictionary(connection, 'Oracle')
     schema = oraschema.OracleSchema(s)
-    doclet = OraSchemaDoclet(schema, "/tmp/oraschemadoc/", "vtr Data Model", "Really cool project", None)
+    doclet = OraSchemaDoclet(schema, "/tmp/oraschemadoc/", "vtr Data Model", "Really cool project")
         
     

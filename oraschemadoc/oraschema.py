@@ -1,4 +1,6 @@
-# OraSchemaDoc v0.25
+""" OraSchemaDataDictionary class queries data from Oracle Data Dictionary """
+
+# Copyright (C) Petr Vanek <petr@yarpen.cz>, 2005
 # Copyright (C) Aram Kananov <arcanan@flashmail.com> , 2002
 #
 # This program is free software; you can redistribute it and/or
@@ -16,24 +18,26 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
-# OraSchemaDataDictionary class queries data from Oracle Data Dictionary 
-
-__author__ = 'Aram Kananov <arcanan@flashmail.com>'
+__author__ = 'Aram Kananov <arcanan@flashmail.com>, Petr Vanek, <petr@yarpen.cz>'
 
 __version__ = '$Version: 0.25'
 
 from oraverbose import *
 
+
 class OracleSchema:
 
-    def __init__(self, data_dict , debug_mode):
+    def __init__(self, data_dict , debug_mode, packageBodies=False):
 
         set_verbose_mode(debug_mode)
         
+        self.packageBodies = packageBodies
+
         self.tables = self._get_all_tables(data_dict)
         self.indexes = self._get_all_indexes(data_dict)
         self.constraints = self._get_all_constraints(data_dict)
         self.views = self._get_all_views(data_dict)
+        self.mviews = self._get_all_mviews(data_dict)
         self.triggers = self._get_all_table_triggers(data_dict)
         self.procedures = self._get_all_procedures(data_dict)
         self.functions = self._get_all_functions(data_dict)
@@ -41,7 +45,7 @@ class OracleSchema:
         self.sequences = self._get_all_sequences(data_dict)
         self.java_sources = self._get_all_java_sources(data_dict)
         # TODO: why i need that name? 
-        #self.name = "Foobarizm" 
+        self.name = "Foobarizm" 
 
 
     def getXML(self):
@@ -52,6 +56,9 @@ class OracleSchema:
             print "generating xml for " + table.getName() 
         for view in self.views:
             xml_text += view.getXML()
+
+        for mview in self.mviews:
+            xml_text += mview.getXML()
         
         for sequence in self.sequences:
             xml_text += sequence.getXML()
@@ -67,7 +74,8 @@ class OracleSchema:
  
         xml_text += '</schema>'            
         return xml_text 
-         
+
+
     def _get_all_tables(self, data_dict):
         tables = []
         print 'generating tables'
@@ -101,6 +109,15 @@ class OracleSchema:
         for view_name in data_dict.all_view_names:
             views.append(OracleView(view_name, data_dict))
         return views
+
+
+    def _get_all_mviews(self, data_dict):
+        print 'generating materialized views'
+        mviews = []
+        for mv_name in data_dict.all_mview_names:
+            mviews.append(OracleMView(mv_name, data_dict))
+        return mviews
+
 
     def _get_all_table_triggers(self, data_dict):
         print 'generating triggers'
@@ -143,7 +160,10 @@ class OracleSchema:
             all_arguments = data_dict.package_arguments.get(name, None)
             all_return_values = data_dict.package_return_values.get(name, None)
             def_source = data_dict.all_packages[name]
-            body_source = data_dict.all_package_bodies.get(name, None)
+            if self.packageBodies == True:
+                body_source = data_dict.all_package_bodies.get(name, None)
+            else:
+                body_source = {0: 'Source code generator disabled'}
             package = OraclePackage(name, all_arguments, all_return_values, def_source, body_source)
             packages.append(package)
         return packages
@@ -156,15 +176,18 @@ class OracleSchema:
             seq = OracleSequence(name, min_value, max_value, step, cycled, ordered, cache_size)
             sequences.append(seq)
         return sequences
-        
+
+
 class OracleTable:
 
     def __init__(self, name, data_dict):
         debug_message('debug: creating table object '+ name)
-        
         # TODO delete old crap below
         self.name = name
-        self.partitioned, self.secondary, self.index_organized, self.clustered, self.cluster_name, self.nested, self.temporary = data_dict.all_tables[name]
+        self.partitioned, self.secondary, self.index_organized, \
+            self.clustered, self.cluster_name, self.nested, \
+            self.temporary, self.tablespace_name = data_dict.all_tables[name]
+
         self.comments = data_dict.all_table_comments.get(name)
         self.columns = self._get_columns(data_dict)
 
@@ -174,6 +197,8 @@ class OracleTable:
         self.referential_constraints = self._get_ref_constraints(name, data_dict)
         self.indexes                 = self._get_indexes(name, data_dict)
         self.triggers                = self._get_triggers(data_dict)
+
+        self.tab_partitions          = self._get_tab_partitions(name, data_dict)
         self.referenced_by = None
         if data_dict.table_referenced_by.has_key(name):
             self.referenced_by       = data_dict.table_referenced_by[name]
@@ -181,7 +206,7 @@ class OracleTable:
         # all above should be replaced by this 
         self.__name = name 
         self.__partitioned, self.__secondary, self.__index_organized, self.__clustered, self.__cluster_name, \
-            self.__nested, self.__temporary = data_dict.all_tables[name]
+            self.__nested, self.__temporary, self.__tablespace_name = data_dict.all_tables[name]
         self.__columns = self._get_columns(data_dict)
         self.__comments = self.comments
         self.__primary_key = self.primary_key
@@ -191,8 +216,7 @@ class OracleTable:
         self.__indexes = self.indexes
         self.__triggers = self.triggers
         self.__referenced_by = self.referenced_by
-        
-        
+
     def getName(self):
         """get name of table"""
         return self.__name
@@ -202,7 +226,7 @@ class OracleTable:
         return self.__partitioned
     
     def isIndexOrganized(self):
-        """is OIT table"""
+        """is IOT table"""
         return self.__index_organized
     
     def isSecondary(self):
@@ -224,8 +248,10 @@ class OracleTable:
     def isTemporary(self):
         """is table is temporary table"""
         return self.__temporary
-    
-    
+
+    def getTablespaceName(self):
+        """returns tbs name"""
+        return self.__tablespace_name
 
     def _get_primary_key(self, table_name, data_dict):
         
@@ -271,6 +297,17 @@ class OracleTable:
             constraint = OracleReferentialConstraint(constraint_name, data_dict)
             referential_constraints.append(constraint)
         return referential_constraints
+
+
+    def _get_tab_partitions(self, name, data_dict):
+        debug_message('debug: generating partitions')
+        partitions = []
+        if not data_dict.all_tab_partitions.has_key(self.name):
+            debug_message('debug: no partitons found')
+            return []
+        for partition_position, partition_name, tablespace_name, high_value in data_dict.all_tab_partitions[self.name]:
+            partitions.append(OracleTabPartition(partition_position, partition_name, tablespace_name, high_value))
+        return partitions
     
 
     def _get_columns(self, data_dict):
@@ -306,12 +343,13 @@ class OracleTable:
                 debug_message('debug: generating trigger ' + trigger_name)
                 triggers.append(OracleTrigger(trigger_name, data_dict))
         return triggers
-    
+
     def getXML(self):
         """get xml represention of table"""
         xml_text = '''<table id="table-%s">
                          <name>%s</name>
                          <index_orginized>%s</index_orginized>
+                         <tablespace>%s</tablespace>
                          <partitioned>%s</partitioned>
                          <temporary>%s</temporary>
                          <nested>%s</nested>
@@ -322,6 +360,7 @@ class OracleTable:
                          ''' % (self.__name, 
                                 self.__name,
                                 self.__index_organized,
+                                self.__tablespace_name,
                                 self.__partitioned,
                                 self.__temporary,
                                 self.__nested,
@@ -364,8 +403,16 @@ class OracleTable:
             xml_text += '</references>'
         xml_text += '</table>\n'
         return xml_text 
-        
-    
+
+
+class OracleTabPartition:
+
+    def __init__(self, partition_position, partition_name, tablespace_name, high_value):
+        self.partition_position = partition_position
+        self.partition_name = partition_name
+        self.tablespace_name = tablespace_name
+        self.high_value = high_value
+
 
 class OracleColumn:
     """Oracle column represents table column object"""
@@ -426,9 +473,7 @@ class OracleColumn:
                     self.__name, self.__position, self.__data_type,
                     self.__default_value, self.__nullable, 
                     self.__comments)
-      
-    
-        
+
 
 class OracleUniqueConstraint:
 
@@ -471,7 +516,7 @@ class OracleUniqueConstraint:
                                                        self.__table_name, self.__columns[position])
         xml_text += '</ind_columns>\n</constraint>\n'
         return xml_text
-        
+
 
 class OracleCheckConstraint:
 
@@ -504,6 +549,7 @@ class OracleCheckConstraint:
                                                           self.__name, self.__name, self.__check_cond)
         xml_text += '</constraint>\n'
         return xml_text        
+      
 
 class OracleReferentialConstraint:
 
@@ -548,7 +594,6 @@ class OracleReferentialConstraint:
 
         xml_text += '</constraint>\n'
         return xml_text
-       
 
 
 class OracleIndex:
@@ -588,8 +633,8 @@ class OracleIndex:
             xml_text += '<column>column-%s</column>' % self.columns[position]
         xml_text += '</ind_columns></index>'
         return xml_text
-    
-    
+
+
 class OracleView:
 
     def __init__(self, name, data_dict):
@@ -599,8 +644,9 @@ class OracleView:
         self.columns = self._get_columns(data_dict)
         self.constraints = self._get_constraints(data_dict)
         self.comments = data_dict.all_table_comments.get(name)
-        self.triggers                = self._get_triggers(data_dict)
-        
+        self.triggers = self._get_triggers(data_dict)
+
+
     def getXML(self):
         """get data about view in xml"""
         xml_text = '''<view id="view-%s">
@@ -629,8 +675,8 @@ class OracleView:
         xml_text += '</view>'
 
         return xml_text
-    
-    
+
+
     def _get_columns(self, data_dict):
         columns = {}
         for column, data_type, nullable, column_id, data_default in data_dict.all_columns[self.name]:
@@ -663,9 +709,12 @@ class OracleViewColumn(OracleColumn):
     def __init__(self, name, column_id, data_type, nullable, data_default, comments, table_name, data_dict):
         debug_message("debug: generating view column" + name)
         OracleColumn.__init__(self, name, column_id, data_type, nullable, data_default, comments)
-        self.insertable, self.updatable, self.deletable = data_dict.all_updatable_columns[table_name, name]
-
-        
+        # check due the e.g. count(*) columns...
+        try:
+            self.insertable, self.updatable, self.deletable = data_dict.all_updatable_columns[table_name, name]
+        except KeyError:
+            self.insertable = self.updatable = self.deletable = 'n/a'
+    
     def getXML(self, table_name):
         """get xml representation of column"""
         #TODO: and it sucks to pass table_name via getXML, fix it
@@ -683,8 +732,8 @@ class OracleViewColumn(OracleColumn):
                     self.name, self.column_id , self.data_type,
                     self.data_default , self.nullable, 
                     self.comments, self.insertable, self.updatable, self.deletable)
-        
-    
+
+
 class OracleViewConstraint:
 
     def __init__(self, name, data_dict):
@@ -715,6 +764,18 @@ class OracleViewConstraint:
         xml_text += '</constraint>'
         return xml_text
 
+
+class OracleMView(OracleView):
+
+    def __init__(self, name, data_dict):
+        self.name = name
+        self.columns = self._get_columns(data_dict)
+        self.constraints = self._get_constraints(data_dict)
+        self.comments = data_dict.all_table_comments.get(name)
+        self.triggers = self._get_triggers(data_dict)
+        self.container, self.query, self.mv_updatable = data_dict.all_mviews[name]
+
+
 class OracleTrigger:
 
     def __init__(self, name, data_dict):
@@ -727,7 +788,8 @@ class OracleTrigger:
         if data_dict.all_trigger_columns.has_key(self.name):
             for name, table_name, column_name, column_list, column_usage in data_dict.all_trigger_columns[self.name]:
                 self.columns.append(OracleTriggerColumn(column_name, column_list, column_usage))
-                
+
+
     def getXML(self):
         code_text = 'CREATE TRIGGER %s\n' % self.description
         code_text += self.referencing_names + '\n'
@@ -739,8 +801,7 @@ class OracleTrigger:
                         <name>%s</name>
                         <code><![CDATA[%s]]></code></trigger>''' % (self.name, self.name, code_text )
         return xml_text
-        
-        
+
 
 class OracleTriggerColumn:
 
@@ -781,10 +842,8 @@ class OracleProcedure:
             
         xml_text += '</procedure>'
         return xml_text
-        
-           
-        
-              
+
+
 class OracleFunction(OracleProcedure):
     
     def __init__(self, name, arguments, return_data_type, source = None):
@@ -809,6 +868,7 @@ class OracleFunction(OracleProcedure):
             
         xml_text += '</function>'
         return xml_text            
+            
 
 class OracleProcedureArgument:
     def __init__(self, name, data_type, default_value, in_out ):
@@ -817,7 +877,7 @@ class OracleProcedureArgument:
         self.data_type = data_type
         self.default_value = default_value
         self.in_out = in_out
-        
+
     def getXML(self):
         """get argument metadata in xml"""
         return '''<argument>
@@ -826,7 +886,7 @@ class OracleProcedureArgument:
                     <default_value>%s</default_value>
                     <in_out>%s</in_out>
                   </argument>''' % (self.name, self.data_type, self.default_value, self.in_out)
-                  
+
 
 class OraclePLSQLSource:
     def __init__(self, source):
@@ -836,7 +896,7 @@ class OraclePLSQLSource:
         lines.sort()
         for line_no in lines:
             self.source.append(OraclePLSQLSourceLine(line_no, source[line_no]))
-            
+
     def getXML(self):
         """get source in xml"""
         xml_text = '<pl_sql_source>'
@@ -844,7 +904,7 @@ class OraclePLSQLSource:
             xml_text += '<line><line_no>%s</line_no><text><![CDATA[%s]]></text></line>' % (line.line_no, line.text)
         xml_text += '</pl_sql_source>'
         return xml_text
-            
+
 
 class OracleJavaSource(OraclePLSQLSource):
     def __init__(self, name, source):
@@ -868,7 +928,7 @@ class OraclePackage:
         self.body_source = None
         if body_source:
             self.body_source = OraclePLSQLSource(body_source)
-    
+
     def getXML(self):
         """get package metadata"""
         xml_text = '''<package id="package-%s">
@@ -881,9 +941,9 @@ class OraclePackage:
 
 class OracleSequence:
     """Represents Oracle sequence database object"""
-    
+
     def __init__(self, name, min_value, max_value, step, cycle_flag, ordered, cache_size):
-        debug_message("debug: generating sequence " + name)
+        debug_message("debug: genarating sequence " + name)
         self.__name = name
         self.__min_value = min_value
         self.__max_value = max_value
@@ -934,10 +994,11 @@ class OracleSequence:
                                         self.__step, self.__cycle_flag, self.__cache_size, self.__ordered)
         return xml_text
 
+
 class OracleTypeSource(OraclePLSQLSource):
     """Source code of type"""
     pass
-        
+
         
 class OracleTypeAttribute:
     """Type attribute object"""
@@ -996,7 +1057,7 @@ class OracleTypeAttribute:
     def getCharSetName(self):
         """Get character set name of the attribute"""
         return self.__character_set_name
-    
+
 
 class OracleTypeMethod:
     """Represents Oracle Type methods"""
@@ -1021,7 +1082,8 @@ class OracleTypeMethod:
     def getParametersCount(self):
         """Get count of method parameters"""
         return self.__param_count
-        
+
+
 class OracleType:
     """Represents Oracle Object type"""
 
@@ -1081,13 +1143,12 @@ class OracleType:
     def getAttributesCount(self):
         """Get count of attributes in the type"""
         return self.__attrubutes_count
-    
+
         
 if __name__ == '__main__':
     import cx_Oracle
     import orasdict
-    connection = cx_Oracle.connect('aram_v1/aram_v1')
-    s = orasdict.OraSchemaDataDictionary(connection, 'Oracle', None)
-    schema = OracleSchema(s,None)
-        
+    connection = cx_Oracle.connect('s0/s0@test1')
+    s = orasdict.OraSchemaDataDictionary(connection, 'Oracle', False)
+    schema = OracleSchema(s, True)
     
