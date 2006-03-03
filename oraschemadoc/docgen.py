@@ -31,18 +31,18 @@ from oraverbose import *
 class OraSchemaDoclet:
 
 
-    def __init__(self, connection, schema, doc_dir, name, description, debug_mode, syntaxHiglighting, css):
-        
+    def __init__(self, connection, schema, doc_dir, name, description, debug_mode, syntaxHiglighting, css, encoding):
+
         set_verbose_mode(debug_mode)
 
         self.syntaxHighlighter = sqlhighlighter.SqlHighlighter(highlight=syntaxHiglighting)
         self.connection = connection
-        
+
         self.schema = schema
         self.doc_dir = doc_dir
         self.name = name
         self.description = description
-        self.html = docwidgets.HtmlWidgets(self.name, css)
+        self.html = docwidgets.HtmlWidgets(self.name, css, encoding)
         self.index = {}
 
         # print html files
@@ -52,11 +52,10 @@ class OraSchemaDoclet:
         self._print_common_pages()
 
         #print pages for objects
-        
         print "print tables"
         for table in self.schema.tables:
             self._print_table(table)
-            
+
         print "print views"
         for view in self.schema.views:
             self._print_view(view)
@@ -76,11 +75,11 @@ class OraSchemaDoclet:
         print "print packages"
         for package in self.schema.packages:
             self._print_package(package)
-            
+
         print "print java sources"
         for jsource in self.schema.java_sources:
             self._print_java_source(jsource)
-        
+
         self._print_symbol_index_page()
 
 
@@ -88,7 +87,7 @@ class OraSchemaDoclet:
         #
         # print index frames 
         #
-        
+
         # tables
         rows = []
         for table in self.schema.tables:
@@ -97,7 +96,7 @@ class OraSchemaDoclet:
                 link = self.html.i(link)
             rows.append(link)
         self._print_index_frame("Tables", rows, "tables-index.html") 
-        
+
         # indexes
         rows = []
         for index in self.schema.indexes:

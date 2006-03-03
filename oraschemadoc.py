@@ -4,7 +4,7 @@
 
 # OraSchemaDoc v0.25
 # Copyright (C) Aram Kananov <arcanan@flashmail.com>, 2002
-# Copyright (C) Petr Vanek <petr@yarpen.cz>, 2005
+# Copyright (C) Petr Vanek <petr@scribus.info>, 2005
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -23,6 +23,11 @@
 
 
 import getopt, sys, os, shutil
+from oraschemadoc.oracleencoding import OracleNLSCharset
+
+sys.setappdefaultencoding('utf-8')
+
+
 try:
     import cx_Oracle
 except ImportError:
@@ -67,7 +72,7 @@ def usage():
     print ''
     print 'For more information see README\n'
 
-    
+
 def main():
 
     # variable used for turning on debug messages
@@ -86,10 +91,10 @@ def main():
     csspath = os.path.join(sys.path[0], 'css')
     css = 'oraschemadoc.css'
     # decription
-    desc = ''
+    desc = None
     # package bodies
     pb = False
-    
+
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'hdvs',
                                    ['help', 'verbose', 'dia=', 'dia-table-list=',
@@ -152,8 +157,28 @@ def main():
         if os.access(output_dir, os.W_OK) != 1:
             print 'ERROR: Cannot write into directory ', output_dir
             sys.exit(2)
-            
+
     connection = cx_Oracle.connect(connect_string)
+
+    # know encoding we will use
+    oraenc = OracleNLSCharset()
+    encoding = oraenc.getClientNLSCharset()
+    if encoding == None:
+        encoding = oraenc.getPythonEncoding(oraenc.getOracleNLSCharacterset(connection))
+    else:
+        encoding = oraenc.getPythonEncoding(encoding)
+    print 'Using codec: %s\n' % encoding
+
+    # recode the inputs into final encoding
+    try:
+        if desc != None:
+            desc = desc.encode(encoding)
+        name = name.encode(encoding)
+    except:
+        print 'Convert your description and given name into %s failed.' % encoding
+        print 'You can get index documentation page screwed...'
+
+    # start the show...
     import oraschemadoc.orasdict
     import oraschemadoc.oraschema
     import oraschemadoc.docgen
@@ -173,7 +198,7 @@ def main():
         print '\nCreating HTML docs'
         doclet = doclet = oraschemadoc.docgen.OraSchemaDoclet(connection, schema,
                                     output_dir, name, desc, verbose_mode,
-                                    syntaxHighlighting, css)
+                                    syntaxHighlighting, css, encoding)
         # copy css
         # There is problem with sys.path[0] in cx_Freeze. These exceptionse
         # are here as I try to find css file freezy way
@@ -197,8 +222,8 @@ def main():
         file_name = os.path.join(output_dir, dia_file_name)
         print '\nCreating DIA file: %s', file_name
         dia_diagram = oraschemadoc.diagen.DiaUmlDiagramGenerator(schema, file_name, desc, 0, dia_conf_file)
-        
-    
+
+
 if __name__ == '__main__':
     main()
 

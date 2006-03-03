@@ -1,6 +1,6 @@
 """ OraSchemaDataDictionary class queries data from Oracle Data Dictionary """
 
-# Copyright (C) Petr Vanek, <petr@yarpen.cz>, 2005
+# Copyright (C) Petr Vanek, <petr@scribus.info>, 2005
 # Copyright (C) Aram Kananov <arcanan@flashmail.com> , 2002
 #
 # This program is free software; you can redistribute it and/or
@@ -18,7 +18,7 @@
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #
 
-__author__ = 'Aram Kananov <arcanan@flashmail.com>, Petr Vanek <petr@yarpen.cz>'
+__author__ = 'Aram Kananov <arcanan@flashmail.com>, Petr Vanek <petr@scribus.info>'
 
 __version__ = '$Revision$'
 
@@ -411,7 +411,7 @@ class OraSchemaDataDictionary:
                 t = []
                 ind_columns[name] = t
             t.append(( table_name, column_name, column_position))
-            
+
         return ind_columns
 
 

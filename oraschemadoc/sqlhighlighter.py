@@ -3,7 +3,7 @@ It takes sql statement and produces colorized XHTML output (spanned).
 
 """
 
-# Copyright (C) Petr Vanek <petr@yarpen.cz>, 2005
+# Copyright (C) Petr Vanek <petr@scribus.info>, 2005
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -20,7 +20,7 @@ It takes sql statement and produces colorized XHTML output (spanned).
 # Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 # 
 
-__author__ = 'Petr Vanek <petr@yarpen.cz>'
+__author__ = 'Petr Vanek <petr@scribus.info>'
 
 
 import string
