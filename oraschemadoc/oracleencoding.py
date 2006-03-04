@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # Copyright (C) Stevo Oravec <pichtik@rt.sk>, 2006
 # Copyright (C) Petr Vanek <petr@scribus.info>, 2006
+# Cyrilic encodings by Vlad (aka Freeman)
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -51,7 +52,7 @@ class OracleNLSCharset:
             #'AR8HPARABIC8T':''
             'AR8ISO8859P6':'iso-8859-6',
             #'AR8MSAWIN':''
-            #'AR8MSWIN1256':''
+            'AR8MSWIN1256':'windows-1256',
             #'AR8MUSSAD768':''
             #'AR8MUSSAD768T':''
             #'AR8NAFITHA711':''
@@ -68,10 +69,10 @@ class OracleNLSCharset:
             #'BLT8EBCDIC1112':''
             #'BLT8EBCDIC1112S':''
             'BLT8ISO8859P13':'iso-8859-13',
-            #'BLT8MSWIN1257':''
-            #'BLT8PC775':''
+            'BLT8MSWIN1257':'windows-1257',
+            'BLT8PC775':'cp775',
             #'BN8BSCII':''
-            #'CDN8PC863':''
+            'CDN8PC863':'cp863',
             'CEL8ISO8859P14':'iso-8859-14',
             #'CE8BS2000':''
             #'CH7DEC':''
@@ -85,11 +86,11 @@ class OracleNLSCharset:
             #'CL8EBCDIC1158R':''
             #'CL8ISOIR111':''
             'CL8ISO8859P5':'iso-8859-5',
-            #'CL8KOI8R':'koi8_r'
-            #'CL8KOI8U':'koi8_u'
-            #'CL8MACCYRILLIC':''
+            'CL8KOI8R':'koi8-r',
+            'CL8KOI8U':'koi8-u',
+            'CL8MACCYRILLIC':'x-mac-cyrillic',
             #'CL8MACCYRILLICS':''
-            'CL8MSWIN1251':'cp1251',
+            'CL8MSWIN1251':'windows-1251',
             #'DK7SIEMENS9780X':''
             #'DK8BS2000':''
             #'DK8EBCDIC1142':''
@@ -110,7 +111,7 @@ class OracleNLSCharset:
             #'EE8MACCES':''
             #'EE8MACCROATIAN':''
             #'EE8MACCROATIANS':''
-            'EE8MSWIN1250':'cp1250',
+            'EE8MSWIN1250':'windows-1250',
             'EE8PC852':'cp852',
             #'EL8DEC':''
             #'EL8EBCDIC423R':''
@@ -119,14 +120,14 @@ class OracleNLSCharset:
             #'EL8EBCDIC875S':''
             #'EL8GCOS7':''
             'EL8ISO8859P7':'iso-8859-7',
-            #'EL8MACGREEK':''
+            'EL8MACGREEK':'x-mac-greek',
             #'EL8MACGREEKS':''
-            #'EL8MSWIN1253':''
+            'EL8MSWIN1253':'windows-1253',
             #'EL8PC437S':''
-            #'EL8PC737':''
-            #'EL8PC851':''
-            #'EL8PC869':''
-            #'ET8MSWIN923':''
+            'EL8PC737':'cp737',
+            'EL8PC851':'cp851',
+            'EL8PC869':'cp869',
+            'ET8MSWIN923':'windows-923',
             #'E7DEC':''
             #'E7SIEMENS9780X':''
             #'E8BS2000':''
@@ -144,7 +145,7 @@ class OracleNLSCharset:
             #'ISO2022-KR':''
             #'IS8MACICELANDIC':''
             #'IS8MACICELANDICS':''
-            #'IS8PC861':''
+            'IS8PC861':'cp861',
             #'IW7IS960':''
             #'IW8EBCDIC1086':''
             #'IW8EBCDIC424':''
@@ -152,8 +153,8 @@ class OracleNLSCharset:
             'IW8ISO8859P8':'iso-8859-8',
             #'IW8MACHEBREW':''
             #'IW8MACHEBREWS':''
-            #'IW8MSWIN1255':''
-            #'IW8PC1507':''
+            'IW8MSWIN1255':'windows-1255',
+            'IW8PC1507':'cp1507',
             #'I7DEC':''
             #'I7SIEMENS9780X':''
             #'I8EBCDIC1144':''
@@ -166,7 +167,7 @@ class OracleNLSCharset:
             #'JA16EUCTILDE':''
             #'JA16EUCYEN':''
             #'JA16MACSJIS':''
-            #'JA16SJIS':''
+            'JA16SJIS':'Shift_JIS',
             #'JA16SJISFIXED':''
             #'JA16SJISTILDE':''
             #'JA16SJISYEN':''
@@ -178,14 +179,14 @@ class OracleNLSCharset:
             #'KO16KSCCS':''
             #'KO16KSC5601':''
             #'KO16KSC5601FIXED':''
-            #'KO16MSWIN949':''
+            'KO16MSWIN949':'windows-949',
             #'KO16TSTSET':''
             #'LA8ISO6937':''
             #'LA8PASSPORT':''
-            #'LT8MSWIN921':''
-            #'LT8PC772':''
-            #'LT8PC774':''
-            #'LV8PC1117':''
+            'LT8MSWIN921':'windows-921',
+            'LT8PC772':'cp772',
+            'LT8PC774':'cp774',
+            'LV8PC1117':'cp1117',
             #'LV8PC8LR':''
             #'LV8RST104090':''
             #'NDK7DEC':''
@@ -193,10 +194,10 @@ class OracleNLSCharset:
             'NE8ISO8859P10':'iso-8859-10',
             #'NL7DEC':''
             #'N7SIEMENS9780X':''
-            #'N8PC865':''
+            'N8PC865':'cp865',
             #'RU8BESTA':''
-            #'RU8PC855':''
-            #'RU8PC866':''
+            'RU8PC855':'cp855',
+            'RU8PC866':'cp866',
             'SE8ISO8859P3':'iso-8859-3',
             #'SF7ASCII':''
             #'SF7DEC':''
@@ -216,16 +217,16 @@ class OracleNLSCharset:
             #'TR8EBCDIC1026S':''
             #'TR8MACTURKISH':''
             #'TR8MACTURKISHS':''
-            #'TR8MSWIN1254':''
-            #'TR8PC857':''
+            'TR8MSWIN1254':'windows-1254',
+            'TR8PC857':'cp857',
             #'US16TSTFIXED':''
-            #'US7ASCII':''
+            #'US7ASCII':'us_ascii'
             #'US8BS2000':''
             #'US8ICL':''
-            #'US8PC437':''
+            'US8PC437':'cp437',
             #'UTFE':''
             'UTF8':'utf-8',
-            #'VN8MSWIN1258':''
+            'VN8MSWIN1258':'windows-1258',
             #'VN8VN3':''
             #'WE16DECTST':''
             #'WE16DECTST2':''
@@ -255,17 +256,17 @@ class OracleNLSCharset:
             #'WE8HP':''
             #'WE8ICL':''
             #'WE8ISOICLUK':''
-            'WE8ISO8859P1':'latin_1',
+            'WE8ISO8859P1':'iso-8859-1',
             'WE8ISO8859P15':'iso-8859-15',
             'WE8ISO8859P9':'iso-8859-9',
             #'WE8MACROMAN8':''
             #'WE8MACROMAN8S':''
-            #'WE8MSWIN1252':''
+            'WE8MSWIN1252':'windows-1252',
             #'WE8NCR4970':''
             #'WE8NEXTSTEP':''
-            #'WE8PC850':''
-            #'WE8PC858':''
-            #'WE8PC860':''
+            'WE8PC850':'cp850',
+            'WE8PC858':'cp858',
+            'WE8PC860':'cp860',
             #'WE8ROMAN8':''
             #'YUG7ASCII':''
             #'ZHS16CGB231280':''
@@ -283,7 +284,7 @@ class OracleNLSCharset:
             #'ZHT16DBCSFIXED':''
             #'ZHT16DBT':''
             #'ZHT16HKSCS':''
-            #'ZHT16MSWIN950':''
+            'ZHT16MSWIN950':'windows-950'
             #'ZHT32EUC':''
             #'ZHT32EUCFIXED':''
             #'ZHT32EUCTST':''
@@ -311,9 +312,9 @@ class OracleNLSCharset:
             #'':'AR8EBCDICX'
             #'':'AR8EBCDIC420S'
             #'':'AR8HPARABIC8T'
-            'iso8859_6':'AR8ISO8859P6',
+            'iso8859-6':'AR8ISO8859P6',
             #'':'AR8MSAWIN'
-            #'':'AR8MSWIN1256'
+            'windows-1256':'AR8MSWIN1256',
             #'':'AR8MUSSAD768'
             #'':'AR8MUSSAD768T'
             #'':'AR8NAFITHA711'
@@ -326,15 +327,15 @@ class OracleNLSCharset:
             #'':'AR8XBASIC'
             #'':'BG8MSWIN'
             #'':'BG8PC437S'
-            #'':'BLT8CP921'
+            'cp921':'BLT8CP921',
             #'':'BLT8EBCDIC1112'
             #'':'BLT8EBCDIC1112S'
-            'iso8859_13':'BLT8ISO8859P13',
-            #'':'BLT8MSWIN1257'
-            #'':'BLT8PC775'
+            'iso-8859-13':'BLT8ISO8859P13',
+            'windows-1257':'BLT8MSWIN1257',
+            'cp775':'BLT8PC775',
             #'':'BN8BSCII'
-            #'':'CDN8PC863'
-            'iso8859_14':'CEL8ISO8859P14',
+            'cp863':'CDN8PC863',
+            'iso-8859-14':'CEL8ISO8859P14',
             #'':'CE8BS2000'
             #'':'CH7DEC'
             #'':'CL8BS2000'
@@ -346,12 +347,12 @@ class OracleNLSCharset:
             #'':'CL8EBCDIC1158'
             #'':'CL8EBCDIC1158R'
             #'':'CL8ISOIR111'
-            'iso8859_5':'CL8ISO8859P5',
-            'koi8_r':'CL8KOI8R',
-            'koi8_u':'CL8KOI8U',
-            #'':'CL8MACCYRILLIC'
+            'iso-8859-5':'CL8ISO8859P5',
+            'koi8-r':'CL8KOI8R',
+            'koi8-u':'CL8KOI8U',
+            'x-mac-cyrillic':'CL8MACCYRILLIC',
             #'':'CL8MACCYRILLICS'
-            #'':'CL8MSWIN1251'
+            'windows-1251':'CL8MSWIN1251',
             #'':'DK7SIEMENS9780X'
             #'':'DK8BS2000'
             #'':'DK8EBCDIC1142'
@@ -367,7 +368,7 @@ class OracleNLSCharset:
             #'':'EE8EBCDIC870'
             #'':'EE8EBCDIC870C'
             #'':'EE8EBCDIC870S'
-            'iso8859_2':'EE8ISO8859P2',
+            'iso-8859-2':'EE8ISO8859P2',
             #'':'EE8MACCE'
             #'':'EE8MACCES'
             #'':'EE8MACCROATIAN'
@@ -380,15 +381,15 @@ class OracleNLSCharset:
             #'':'EL8EBCDIC875R'
             #'':'EL8EBCDIC875S'
             #'':'EL8GCOS7'
-            'iso8859_7':'EL8ISO8859P7',
-            #'':'EL8MACGREEK'
+            'iso-8859-7':'EL8ISO8859P7',
+            'x-mac-greek':'EL8MACGREEK',
             #'':'EL8MACGREEKS'
-            #'':'EL8MSWIN1253'
+            'windows-1253':'EL8MSWIN1253',
             #'':'EL8PC437S'
-            #'':'EL8PC737'
-            #'':'EL8PC851'
-            #'':'EL8PC869'
-            #'':'ET8MSWIN923'
+            'cp737':'EL8PC737',
+            'cp851':'EL8PC851',
+            'cp869':'EL8PC869',
+            'windows-923':'ET8MSWIN923',
             #'':'E7DEC'
             #'':'E7SIEMENS9780X'
             #'':'E8BS2000'
@@ -406,16 +407,16 @@ class OracleNLSCharset:
             #'':'ISO2022-KR'
             #'':'IS8MACICELANDIC'
             #'':'IS8MACICELANDICS'
-            #'':'IS8PC861'
-            #'':'IW7IS960'
+            'cp861':'IS8PC861',
+            'cp960':'IW7IS960',
             #'':'IW8EBCDIC1086'
             #'':'IW8EBCDIC424'
             #'':'IW8EBCDIC424S'
-            'iso8859_8':'IW8ISO8859P8',
+            'iso-8859-8':'IW8ISO8859P8',
             #'':'IW8MACHEBREW'
             #'':'IW8MACHEBREWS'
-            #'':'IW8MSWIN1255'
-            #'':'IW8PC1507'
+            'windows-1255':'IW8MSWIN1255',
+            'cp1507':'IW8PC1507',
             #'':'I7DEC'
             #'':'I7SIEMENS9780X'
             #'':'I8EBCDIC1144'
@@ -440,26 +441,26 @@ class OracleNLSCharset:
             #'':'KO16KSCCS'
             #'':'KO16KSC5601'
             #'':'KO16KSC5601FIXED'
-            #'':'KO16MSWIN949'
+            'windows-949':'KO16MSWIN949',
             #'':'KO16TSTSET'
-            #'':'LA8ISO6937'
+            'iso-6937':'LA8ISO6937',
             #'':'LA8PASSPORT'
-            #'':'LT8MSWIN921'
-            #'':'LT8PC772'
-            #'':'LT8PC774'
-            #'':'LV8PC1117'
+            'windows-921':'LT8MSWIN921',
+            'cp772':'LT8PC772',
+            'cp774':'LT8PC774',
+            'cp1117':'LV8PC1117',
             #'':'LV8PC8LR'
             #'':'LV8RST104090'
             #'':'NDK7DEC'
-            'iso8859_4':'NEE8ISO8859P4',
-            'iso8859_10':'NE8ISO8859P10',
+            'iso-8859-4':'NEE8ISO8859P4',
+            'iso-8859-10':'NE8ISO8859P10',
             #'':'NL7DEC'
             #'':'N7SIEMENS9780X'
-            #'':'N8PC865'
+            'cp865':'N8PC865',
             #'':'RU8BESTA'
-            #'':'RU8PC855'
-            #'':'RU8PC866'
-            'iso8859_3':'SE8ISO8859P3',
+            'cp855':'RU8PC855',
+            'cp866':'RU8PC866',
+            'iso-8859-3':'SE8ISO8859P3',
             #'':'SF7ASCII'
             #'':'SF7DEC'
             #'':'S7DEC'
@@ -478,16 +479,16 @@ class OracleNLSCharset:
             #'':'TR8EBCDIC1026S'
             #'':'TR8MACTURKISH'
             #'':'TR8MACTURKISHS'
-            #'':'TR8MSWIN1254'
-            #'':'TR8PC857'
+            'windows-1254':'TR8MSWIN1254',
+            'cp857':'TR8PC857',
             #'':'US16TSTFIXED'
-            #'':'US7ASCII'
+            'us_ascii':'US7ASCII',
             #'':'US8BS2000'
             #'':'US8ICL'
-            #'':'US8PC437'
+            'cp437':'US8PC437',
             #'':'UTFE'
-            'utf_8':'UTF8',
-            #'':'VN8MSWIN1258'
+            'utf-8':'UTF8',
+            'windows-1258':'VN8MSWIN1258',
             #'':'VN8VN3'
             #'':'WE16DECTST'
             #'':'WE16DECTST2'
@@ -517,17 +518,17 @@ class OracleNLSCharset:
             #'':'WE8HP'
             #'':'WE8ICL'
             #'':'WE8ISOICLUK'
-            'latin_1':'WE8ISO8859P1',
-            'iso8859_15':'WE8ISO8859P15',
-            'iso8859_9':'WE8ISO8859P9',
+            'iso-8859-1':'WE8ISO8859P1',
+            'iso-8859-15':'WE8ISO8859P15',
+            'iso-8859-9':'WE8ISO8859P9',
             #'':'WE8MACROMAN8'
             #'':'WE8MACROMAN8S'
-            #'':'WE8MSWIN1252'
+            'windows-1252':'WE8MSWIN1252',
             #'':'WE8NCR4970'
             #'':'WE8NEXTSTEP'
-            #'':'WE8PC850'
-            #'':'WE8PC858'
-            #'':'WE8PC860'
+            'cp850':'WE8PC850',
+            'cp858':'WE8PC858',
+            'cp860':'WE8PC860',
             #'':'WE8ROMAN8'
             #'':'YUG7ASCII'
             #'':'ZHS16CGB231280'
@@ -545,7 +546,7 @@ class OracleNLSCharset:
             #'':'ZHT16DBCSFIXED'
             #'':'ZHT16DBT'
             #'':'ZHT16HKSCS'
-            #'':'ZHT16MSWIN950'
+            'windows-950':'ZHT16MSWIN950'
             #'':'ZHT32EUC'
             #'':'ZHT32EUCFIXED'
             #'':'ZHT32EUCTST'
@@ -608,11 +609,12 @@ class OracleNLSCharset:
 if __name__ == '__main__':
     # only chickens use unit tests...
     import cx_Oracle
-    connection = cx_Oracle.connect('s0/s0@s0test')
+    #connection = cx_Oracle.connect('s0/s0@s0test')
     ora = OracleNLSCharset()
-    print ora.getOracleNLSCharacterset(connection)
-    connection.close()
+    #print ora.getOracleNLSCharacterset(connection)
+    #connection.close()
     print ora.getClientNLSCharset()
     print ora.getPythonEncoding('UTF8')
     print ora.getOracleEncoding('ISO-8859-2')
     print ora.getOracleEncoding('iso8859_2')
+    print ora.getOracleEncoding('iso-8859-2')
