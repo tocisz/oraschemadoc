@@ -27,10 +27,10 @@ import time
 
 class HtmlWidgets:
 
-    def __init__(self, name, css, encoding):
+    def __init__(self, name, css, webEncoding):
         self.name = name
         self.css = css
-        self.encoding = encoding
+        self.webEncoding = webEncoding
 
     def i(self, text):
         return "<i>%s</i>" %text
@@ -57,7 +57,7 @@ class HtmlWidgets:
         <meta name="author" content="Petr Vanek, petr@scribus.info" />
         <meta name="generator" content="oraschemadoc" />
         </head>
-        <body>''' % (self.encoding, self.name , title, self.css, self.encoding)
+        <body>''' % (self.webEncoding, self.name , title, self.css, self.webEncoding)
 
     def context_bar(self, local_nav_bar):
         text = '''
@@ -97,7 +97,7 @@ class HtmlWidgets:
         <meta name="author" content="Petr Vanek, petr@scribus.info" />
         <meta name="generator" content="oraschemadoc" />
         </head>
-        <body class="navigationframe">''' % (self.encoding, title, self.css, self.encoding)
+        <body class="navigationframe">''' % (self.webEncoding, title, self.css, self.webEncoding)
         return header + self.heading(title,1)
 
     def frame_footer(self):
@@ -188,7 +188,7 @@ class HtmlWidgets:
 
 
     def p(self, text):
-        return "<p>" + text + "</p>"
+        return "<p>" + str(text) + "</p>"
 
 
     def table(self, name, headers, rows, width = None):
@@ -217,11 +217,11 @@ class HtmlWidgets:
         return text
 
     def _index_page(self, name):
-        return '''<?xml version="1.0" encoding="'''+ self.encoding +'''" ?>
+        return '''<?xml version="1.0" encoding="'''+ self.webEncoding +'''" ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN" "XHTML1-f.dtd">
         <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
         <head><title>''' + name + '''</title>
-        <meta http-equiv="Content-Type" content="text/html;charset='''+ self.encoding + '''" />
+        <meta http-equiv="Content-Type" content="text/html;charset='''+ self.webEncoding + '''" />
         <meta name="author" content="Petr Vanek, petr@scribus.info" />
         <meta name="generator" content="oraschemadoc" />
         </head>
@@ -263,7 +263,7 @@ class HtmlWidgets:
                   <a href="sequences-index.html">Sequences</a>
                   <a href="java-sources-index.html">Java&nbsp;Sources</a>
                   <a href="sanity-check.html" target="Main">Sanity&nbsp;Check</a>
-        </body></html>''' % (self.encoding, name, self.css, self.encoding)
+        </body></html>''' % (self.webEncoding, name, self.css, self.webEncoding)
 
     def _quotehtml (self, text):
         text = string.replace(text, "&", "&amp;")
@@ -282,7 +282,7 @@ class HtmlWidgets:
         else:
             h = 'No'
         text = text + self.p('<b>Using syntax highlighting:</b> ' + h)
-        text = text + self.p('<b>Character set:</b> ' + self.encoding)
+        text = text + self.p('<b>Character set:</b> ' + self.webEncoding)
         text = text + self.page_footer()
         return text
 

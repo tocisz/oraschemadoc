@@ -125,7 +125,7 @@ def main():
             syntaxHighlighting = True
         if opt == '--css':
             if not os.path.exists(os.path.join(csspath, value)):
-                print '\nWARNING: ' + value + ' doesn\'t exists. Using default instead.\n'
+                print '\nWARNING: %s doesn\'t exists. Using default instead.\n' % value
             else:
                 css = value
         if opt == '--desc':
@@ -167,16 +167,23 @@ def main():
         encoding = oraenc.getPythonEncoding(oraenc.getOracleNLSCharacterset(connection))
     else:
         encoding = oraenc.getPythonEncoding(encoding)
-    print 'Using codec: %s\n' % encoding
+    webEncoding = encoding[1]
+    encoding = encoding[0]
+    print 'Using codec: %s' % encoding
+    print 'HTML encoding: %s\n' % webEncoding
 
     # recode the inputs into final encoding
     try:
         if desc != None:
-            desc = desc.encode(encoding)
+           desc = desc.encode(encoding)
         name = name.encode(encoding)
     except:
         print 'Convert your description and given name into %s failed.' % encoding
         print 'You can get index documentation page screwed...'
+        print '\nYou can try to set NLS_LANG variable to the value you have'
+        print 'your environment configured. E.g. in windows:'
+        print 'set NLS_LANG=CZECH_CZECH REPUBLIC.EE8MSWIN1250'
+        print 'export NLS_LANG in bash etc. This problem is mainly in Windows.\n'
 
     # start the show...
     import oraschemadoc.orasdict
@@ -198,7 +205,7 @@ def main():
         print '\nCreating HTML docs'
         doclet = doclet = oraschemadoc.docgen.OraSchemaDoclet(connection, schema,
                                     output_dir, name, desc, verbose_mode,
-                                    syntaxHighlighting, css, encoding)
+                                    syntaxHighlighting, css, webEncoding)
         # copy css
         # There is problem with sys.path[0] in cx_Freeze. These exceptionse
         # are here as I try to find css file freezy way
