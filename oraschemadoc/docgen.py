@@ -24,6 +24,7 @@ __version__ = '$Version: 0.25'
 
 import os, string, docwidgets, analyze
 import sqlhighlighter
+import dot
 
 from oraverbose import *
 
@@ -36,6 +37,7 @@ class OraSchemaDoclet:
         set_verbose_mode(debug_mode)
 
         self.syntaxHighlighter = sqlhighlighter.SqlHighlighter(highlight=syntaxHiglighting)
+        self.dotEngine = dot.Dot(doc_dir)
         self.connection = connection
 
         self.schema = schema
@@ -370,9 +372,17 @@ class OraSchemaDoclet:
                 rows.append((constraint.name + self.html.anchor("cs-%s" % constraint.name), \
                              self.html._quotehtml(constraint.check_cond)))
             text = text + self.html.table(title, ("Constraint Name","Check Condition"), rows)
-        # print referential constraints
+        #print referential constraints
         if table.referential_constraints:
             title = "Foreign Keys:" + self.html.anchor("t-fk")
+            # create an image
+            aList = []
+            for constraint in table.referential_constraints:
+                aList.append(constraint.r_table)
+            imgname = self.dotEngine.fileGraphList(table.name, aList)
+            if imgname != None:
+                text += self.html.img(imgname)
+            # html table
             rows = []
             for constraint in table.referential_constraints:
                 columns = ''
@@ -391,7 +401,7 @@ class OraSchemaDoclet:
         # print unique keys
         if table.unique_keys:
             title = "Unique Keys:" + self.html.anchor("t-uc")
-            rows = []           
+            rows = []
             for constraint in table.unique_keys:
                 columns = ''
                 for i in range(len(constraint.columns)):

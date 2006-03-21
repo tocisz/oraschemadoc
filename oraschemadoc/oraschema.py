@@ -565,7 +565,7 @@ class OracleReferentialConstraint:
         self.columns = {}
         for table_name, column_name, position in data_dict.all_constraited_columns[name]:
             self.columns[position]=column_name
-            
+
         self.__name = name
         self.__table_name = self.table_name
         self.__type = type
@@ -574,11 +574,11 @@ class OracleReferentialConstraint:
         self.__r_constraint_name = r_constraint_name
         self.__delete_rule = delete_rule
         self.__columns = self.columns
-        
+
     def getName(self): 
         """get constraint name"""
         return self.__columns
-    
+
     def getXML(self):
         """get data about constraint in xml"""
         xml_text = '''<constraint id="constraint-%s" type="referential">

@@ -47,6 +47,9 @@ class HtmlWidgets:
         else:
             return '''<a href="%s" target="%s">%s</a>''' % (url, target_frame, text)
 
+    def img(self, url):
+        return '<img src="%s"/>' % str(url)
+
     def page_header(self, title):
         return '''<?xml version="1.0" encoding="%s" ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">

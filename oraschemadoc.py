@@ -140,6 +140,7 @@ def main():
 
     if len(args) == 3: 
         connect_string, output_dir, name = args
+        output_dir = os.path.abspath(output_dir)
     else:
         usage()
         sys.exit()
