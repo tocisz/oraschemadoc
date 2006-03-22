@@ -56,16 +56,19 @@ class Dot:
 
     def makeKeyNode(self, node):
         """ Make base node """
-        s = '%s [label="%s" height=0.2,width=0.4,color="black", fillcolor="white", style="filled" fontcolor="black"];\n' % (node, node)
+        s = '%s [label="%s" height=0.2,width=0.4,color="black",fillcolor="white",style="filled",fontcolor="black",href="table-%s.html"];\n' % (node, node, node)
         return s
 
     def graphList(self, mainName, children=[]):
         """ Make relations between the nodes """
         s = ''
         for i in children:
-            s += '''%s -> %s [color="midnightblue",fontsize=10,style="solid",fontname="Helvetica"];\n''' % (mainName, i)
+            s += '''%s -> %s [color="black",fontsize=10,style="solid",arrowhead="crow"];\n''' % (i, mainName)
         return s
 
+    def callDot(self, fname):
+        os.spawnlp(os.P_WAIT,'dot','dot', '-Tcmap', '-o', fname + '.map', fname + '.dot')
+        return os.spawnlp(os.P_WAIT,'dot','dot', '-Tpng', '-o', fname + '.png', fname + '.dot')
 
     def fileGraphList(self, mainName, children=[]):
         """ Make a graph of the mainName's children """
@@ -79,7 +82,7 @@ class Dot:
         f = file(fname+'.dot', 'w')
         f.write(s)
         f.close()
-        if os.spawnlp(os.P_WAIT,'dot','dot', '-Tpng', '-o', fname+'.png', fname+'.dot') == 0:
+        if self.callDot(fname) == 0:
             return mainName+'.png'
         return None
 
@@ -99,12 +102,12 @@ class Dot:
         for i in all.keys():
             s += self.graphList(i, all[i])
         s = self.graphTemplate % s
-        fname = os.path.join(self.outPath, 'index')
+        fname = os.path.join(self.outPath, 'main')
         f = file(fname + '.dot', 'w')
         f.write(s)
         f.close()
-        if os.spawnlp(os.P_WAIT,'dot','dot', '-Tpng', '-o', fname + '.png', fname + '.dot') == 0:
-            return 'index.png'
+        if self.callDot(fname) == 0:
+            return 'main.png'
         return None
 
 

@@ -47,8 +47,11 @@ class HtmlWidgets:
         else:
             return '''<a href="%s" target="%s">%s</a>''' % (url, target_frame, text)
 
-    def img(self, url):
-        return '<img src="%s"/>' % str(url)
+    def imgMap(self, name, content):
+        return '<map name="%s">%s</map>' % (name, content)
+
+    def img(self, url, htmlMap='mainmap', cssClass='erd'):
+        return '<img class="%s" usemap="#%s" src="%s"/>' % (cssClass, htmlMap, str(url))
 
     def page_header(self, title):
         return '''<?xml version="1.0" encoding="%s" ?>
@@ -199,7 +202,7 @@ class HtmlWidgets:
         if name:
             text = self.heading(name,3)
         if not rows:
-            return text + "<p>None"
+            return text + "<p>None</p>"
         if width:
             text = text + '<table width='+width+'%>'
         else:
@@ -275,7 +278,7 @@ class HtmlWidgets:
         text = string.replace(text, ">", "&gt;")
         return text
 
-    def _main_frame(self, name, description, highlight):
+    def _main_frame(self, name, description, highlight, imgname=None):
         text = text = self.page_header("name")
         text = text + self.context_bar( None)
         text = text + self.heading(name,1)
@@ -286,6 +289,8 @@ class HtmlWidgets:
             h = 'No'
         text = text + self.p('<b>Using syntax highlighting:</b> ' + h)
         text = text + self.p('<b>Character set:</b> ' + self.webEncoding)
+        if imgname != None:
+            text += imgname
         text = text + self.page_footer()
         return text
 

@@ -45,6 +45,10 @@ div {
     color: #888;
 }
 
+img.erd {
+    border: 1px solid black;
+}
+
 /*
  * Headings
  */
