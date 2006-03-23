@@ -37,9 +37,12 @@ class Dot:
 
     def __init__(self, outPath):
         self.outPath = outPath
+        self.haveDot = self.haveDot()
         self.graphTemplate = """
             digraph G
             {
+            label="%s";fontname="Helvetica";labelfontsize="12";
+            labelloc="t";labeljust="l";labeldistance="5.0";
             edge [fontname="Helvetica",fontsize=10,labelfontname="Helvetica",labelfontsize=10];
             node [fontname="Helvetica",fontsize=10,shape=record];
             rankdir=LR;
@@ -56,7 +59,7 @@ class Dot:
 
     def makeKeyNode(self, node):
         """ Make base node """
-        s = '%s [label="%s" height=0.2,width=0.4,color="black",fillcolor="white",style="filled",fontcolor="black",href="table-%s.html"];\n' % (node, node, node)
+        s = '%s [label="%s" height=0.2,width=0.4,color="black",fillcolor="white",style="filled",fontcolor="black",href="table-%s.html#t-fk"];\n' % (node, node, node)
         return s
 
     def graphList(self, mainName, children=[]):
@@ -66,9 +69,28 @@ class Dot:
             s += '''%s -> %s [color="black",fontsize=10,style="solid",arrowhead="crow"];\n''' % (i, mainName)
         return s
 
+    def haveDot(self):
+        """ Check if there is a dot installed in PATH """
+        try:
+            if os.spawnlp(os.P_WAIT, 'dot', 'dot', '-V') == 0:
+                return True
+        except:
+            print 'Unknown error in Dot.haveDot() method. ERD disabled'
+        return False
+
     def callDot(self, fname):
-        os.spawnlp(os.P_WAIT,'dot','dot', '-Tcmap', '-o', fname + '.map', fname + '.dot')
-        return os.spawnlp(os.P_WAIT,'dot','dot', '-Tpng', '-o', fname + '.png', fname + '.dot')
+        """ Create the PNGs and image maps from DOT files """
+        f = fname + '.dot'
+        retval = 1
+        os.spawnlp(os.P_WAIT,'dot','dot', '-Tcmap', '-o', fname + '.map', f)
+        retval = os.spawnlp(os.P_WAIT,'dot','dot', '-Tpng', '-o', fname + '.png', f)
+        if retval == 0:
+             try:
+                 os.remove(f)
+             except IOError:
+                 print 'cannot delete %s' % f
+        return retval
+
 
     def fileGraphList(self, mainName, children=[]):
         """ Make a graph of the mainName's children """
@@ -77,7 +99,7 @@ class Dot:
         for i in allNodes:
             s += self.makeKeyNode(i)
         s += self.graphList(mainName, children)
-        s = self.graphTemplate % s
+        s = self.graphTemplate % ('ERD related to the table', s)
         fname = os.path.join(self.outPath, mainName)
         f = file(fname+'.dot', 'w')
         f.write(s)
@@ -101,7 +123,7 @@ class Dot:
             s += self.makeKeyNode(i)
         for i in all.keys():
             s += self.graphList(i, all[i])
-        s = self.graphTemplate % s
+        s = self.graphTemplate % ('ERD of the schema', s)
         fname = os.path.join(self.outPath, 'main')
         f = file(fname + '.dot', 'w')
         f.write(s)

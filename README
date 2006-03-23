@@ -45,15 +45,18 @@ is set of static html files.
 --------------
 
 Requirements:
-a) Python, version 2.0 or later. 
+a) Python, version 2.0 or later.
    http://www.python.org
-b) available connection to Oracle Server, version 8.1.6 or later. 
-   http://otn.oracle.com 
+b) available connection to Oracle Server, version 8.1.6 or later.
+   http://otn.oracle.com
 c) Oracle Server Client (see supported versions by cx_Oracle)
-   http://otn.oracle.com  
-d) cx_Oracle - a Python extension module that allows access to Oracle 
+   http://otn.oracle.com
+d) cx_Oracle - a Python extension module that allows access to Oracle
    http://www.computronix.com/utilities
-   Warning: you need Oracle client which is cs_Oracle compiled for.
+   Warning: you need Oracle client which is cs_Oracle compiled for
+e) Optional GraphViz if you want to have ER diagrams in HTML output.
+   GraphViz is detected automatically.
+   http://www.graphviz.org
 
 Installation
 a) check version of python. type in shell "python -V" to get python version number
@@ -80,20 +83,20 @@ oraschemadoc [-v|--verbose] [-d|--dia [--dia-table-list=file]] [--no-html]'
 where:
 
     --verbose        - prints data helpfull for debugging. Use that option if you 
-	                   encounter problems with oraschemadoc and include output if 
-        		       you post a bug. Sending me emails is ok, but i would prefer 
-		               if u post a bug or support request on oraschemadoc.sourceforge.net
+                       encounter problems with oraschemadoc and include output if
+                       you post a bug. Sending me emails is ok, but i would prefer
+                       if u post a bug or support request on oraschemadoc.sourceforge.net
 
     --no-html        - turn off generation of html files
-       
+
     -d --dia=fname   - export datamodel to dia uml diagram, fname file will be created under output_dir
-    
+
     --dia-table-list - path to file which contains table names for export to dia diagram. Useful if you 
                        want to create diagram for some subset of tables. Separate table names with line breaks.
                        example of file content:
 CLIENTS
 ORDERS
-....
+etc.
 
     --xml-file=fname - dump DM into xml file. File will be created under output_dir
 
@@ -113,5 +116,4 @@ ORDERS
     output_directory - directory where html files will be placed
 
     name             - short name which will be shown as title in html files.
-                	   for example "My Project Data Model"
-   
+                       for example "My Project Data Model"

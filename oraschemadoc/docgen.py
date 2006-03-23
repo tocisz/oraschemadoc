@@ -38,6 +38,7 @@ class OraSchemaDoclet:
 
         self.syntaxHighlighter = sqlhighlighter.SqlHighlighter(highlight=syntaxHiglighting)
         self.dotEngine = dot.Dot(doc_dir)
+
         self.connection = connection
 
         self.schema = schema
@@ -393,15 +394,16 @@ class OraSchemaDoclet:
                 rows.append((name, columns, r_table, r_constraint_name, constraint.delete_rule))
             headers = "Constraint Name", "Columns", "Referenced table", "Referenced Constraint", "On Delete Rule"
             text = text + self.html.table(title,headers, rows)
-            imgname = self.dotEngine.fileGraphList(table.name, aList)
-            if imgname != None:
-                try:
-                    f = file(os.path.join(self.doc_dir, table.name+'.map'), 'r')
-                    text += self.html.imgMap('erdmap', f.read())
-                    f.close()
-                except IOerror:
-                    text = ''
-                text += self.html.img(imgname, htmlMap='erdmap', cssClass='erd')
+            if self.dotEngine.haveDot:
+                imgname = self.dotEngine.fileGraphList(table.name, aList)
+                if imgname != None:
+                    try:
+                        f = file(os.path.join(self.doc_dir, table.name+'.map'), 'r')
+                        text += self.html.imgMap('erdmap', f.read())
+                        f.close()
+                    except IOError:
+                        text = ''
+                    text += self.html.img(imgname, htmlMap='erdmap', cssClass='erd')
         # print unique keys
         if table.unique_keys:
             title = "Unique Keys:" + self.html.anchor("t-uc")
@@ -895,23 +897,27 @@ class OraSchemaDoclet:
         file_name = os.path.join(self.doc_dir, "nav.html")
         self._write(text, file_name)
         # er diagram
-        erdDict = {}
-        for table in self.schema.tables:
-            refs = []
-            if table.referential_constraints:
-                for ref in table.referential_constraints:
-                   refs.append(ref.r_table)
-            erdDict[table.name] = refs
-        imgname = self.dotEngine.fileGraphDict(erdDict)
-        if imgname != None:
-            try:
-                f = file(os.path.join(self.doc_dir, 'main.map'), 'r')
-                text = self.html.imgMap('mainmap', f.read())
-                f.close()
-            except IOerror:
-                text = ''
-                print 'error reading main.map GraphViz file'
-            imgname = text + self.html.img(imgname, htmlMap='mainmap', cssClass='erd')
+        imgname = None
+        if self.dotEngine.haveDot:
+            erdDict = {}
+            for table in self.schema.tables:
+                refs = []
+                if table.referential_constraints:
+                    for ref in table.referential_constraints:
+                        refs.append(ref.r_table)
+                erdDict[table.name] = refs
+            imgname = self.dotEngine.fileGraphDict(erdDict)
+            if imgname != None:
+                try:
+                    f = file(os.path.join(self.doc_dir, 'main.map'), 'r')
+                    text = self.html.imgMap('mainmap', f.read())
+                    f.close()
+                    os.remove(os.path.join(self.doc_dir, 'main.map'))
+                except IOError:
+                    text = ''
+                    print 'error reading main.map GraphViz file'
+                imgname = text + self.html.img(imgname, htmlMap='mainmap', cssClass='erd')
+
         text = self.html._main_frame(self.name, self.description, self.syntaxHighlighter.highlight, imgname)
         file_name = os.path.join(self.doc_dir, "main.html")
         self._write(text, file_name)
