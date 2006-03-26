@@ -15,6 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+Exceptation: file oraschemadoc/subprocess24.py is licensed to PSF
+under a Contributor Agreement.
+
+http://www.python.org/download/releases/2.4/license/
+
 
 --------
 CONTENTS
@@ -36,9 +41,9 @@ http://www.yarpen.cz/oraschemadoc/
 -----------
 1. OVERVIEW
 -----------
-   Goal of oraschemadoc is "JavaDoc" style detailed documentation for all objects 
-in schema covering Oracle specific features. Result of execution of oraschemadoc 
-is set of static html files. 
+   Goal of oraschemadoc is "JavaDoc" style detailed documentation for all objects
+in schema covering Oracle specific features. Result of execution of oraschemadoc
+is set of static html files.
 
 --------------
 2. INSTALLATION
@@ -60,7 +65,7 @@ e) Optional GraphViz if you want to have ER diagrams in HTML output.
 
 Installation
 a) check version of python. type in shell "python -V" to get python version number
-a) install cx_Oracle if neccessary 
+a) install cx_Oracle if neccessary
 b) untar oraschemadoc file into destination directory
 
 Or use precompiled binary distribution. Actually I don't provide any support for
@@ -82,7 +87,7 @@ oraschemadoc [-v|--verbose] [-d|--dia [--dia-table-list=file]] [--no-html]'
 
 where:
 
-    --verbose        - prints data helpfull for debugging. Use that option if you 
+    --verbose        - prints data helpfull for debugging. Use that option if you
                        encounter problems with oraschemadoc and include output if
                        you post a bug. Sending me emails is ok, but i would prefer
                        if u post a bug or support request on oraschemadoc.sourceforge.net
@@ -91,7 +96,7 @@ where:
 
     -d --dia=fname   - export datamodel to dia uml diagram, fname file will be created under output_dir
 
-    --dia-table-list - path to file which contains table names for export to dia diagram. Useful if you 
+    --dia-table-list - path to file which contains table names for export to dia diagram. Useful if you
                        want to create diagram for some subset of tables. Separate table names with line breaks.
                        example of file content:
 CLIENTS

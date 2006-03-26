@@ -21,6 +21,12 @@ __author__ = 'Petr Vanek <petr@yarpen.cz>'
 
 import types
 import os
+import sys
+# local file subprocess24 is imported only for <2.4
+if sys.version_info[:3] < (2, 4, 2):
+    import subprocess24 as subprocess
+else:
+    import subprocess
 
 class Dot:
     """ This class requires GraphViz installed because it calls 'dot'
@@ -62,6 +68,7 @@ class Dot:
         s = '%s [label="%s" height=0.2,width=0.4,color="black",fillcolor="white",style="filled",fontcolor="black",href="table-%s.html#t-fk"];\n' % (node, node, node)
         return s
 
+
     def graphList(self, mainName, children=[]):
         """ Make relations between the nodes """
         s = ''
@@ -69,21 +76,32 @@ class Dot:
             s += '''%s -> %s [color="black",fontsize=10,style="solid",arrowhead="crow"];\n''' % (i, mainName)
         return s
 
+
     def haveDot(self):
         """ Check if there is a dot installed in PATH """
         try:
+            """
             if os.spawnlp(os.P_WAIT, 'dot', 'dot', '-V') == 0:
                 return True
-        except:
-            print 'Unknown error in Dot.haveDot() method. ERD disabled'
+            """
+            if self.runDot(['-V']) == 0:
+                return True
+        except OSError, e:
+            print 'Unknown error in Dot.haveDot() method. ERD disabled.'
+            print e
         return False
+
+    def runDot(self, params=[]):
+        """ Call the 'dot' binary. Searchnig in PATH variable"""
+        return subprocess.call(["dot"] + params, env={"PATH": os.environ['PATH']}, stdout=None)
+
 
     def callDot(self, fname):
         """ Create the PNGs and image maps from DOT files """
         f = fname + '.dot'
         retval = 1
-        os.spawnlp(os.P_WAIT,'dot','dot', '-Tcmap', '-o', fname + '.map', f)
-        retval = os.spawnlp(os.P_WAIT,'dot','dot', '-Tpng', '-o', fname + '.png', f)
+        self.runDot(params=['-Tcmap', '-o', fname + '.map', f])
+        retval = self.runDot(params=['-Tpng', '-o', fname + '.png', f])
         if retval == 0:
              try:
                  os.remove(f)
