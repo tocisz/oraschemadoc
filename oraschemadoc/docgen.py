@@ -874,7 +874,7 @@ class OraSchemaDoclet:
 
     def _write(self, text, file_name):
         # write file to fs
-        debug_message("debug: writing file " + file_name)
+        debug_message("debug: writing file %s" % file_name)
         f = open(file_name, 'w')
         f.write(text)
         f.close()
@@ -929,7 +929,7 @@ class OraSchemaDoclet:
         #          header    - title string, i.e "Tables"
         #          item_list - list of names with html links
         #          file_name - relative file name 
-        print "index frame for " + header
+        print "index frame for %s" % header
         text = self.html.frame_header(header)
         text = text + self.html.href('nav.html', 'Categories')
         for row in item_list:

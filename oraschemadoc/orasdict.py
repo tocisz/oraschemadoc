@@ -37,7 +37,7 @@ class OraSchemaDataDictionary:
         self.__conn = conn  # db_connection handler
         set_verbose_mode(debug_mode)
         print 'Oracle server %s (TNS: %s)' % (conn.version, conn.tnsentry)
-        
+
         self.name = name
 
         # tables
@@ -232,7 +232,7 @@ class OraSchemaDataDictionary:
         tables = {}
         print "get tables"
         for table, partitioned, secondary, cluster, iot_type, temporary, nested, tablespace_name in self.__query(stmt):
-            debug_message('debug: table - ' + table)
+            debug_message('debug: table - %s' % table)
             _partitioned = 'No'
             _secondary = 'No'
             _index_organized = 'No'
@@ -288,7 +288,7 @@ class OraSchemaDataDictionary:
         comments = {}
         print "get comments on tables and views"
         for table, comment in self.__query(stmt):
-            debug_message('debug: comments on table - ' + table)
+            debug_message('debug: comments on table - %s' % table)
             comments[table] = comment
         return comments 
 
@@ -301,7 +301,7 @@ class OraSchemaDataDictionary:
         col_comments = {}
         print "get all tables/views column comments"
         for table, column, comment in self.__query(stmt):
-            debug_message('debug: comments on table.column - ' + table + '.' + column)
+            debug_message('debug: comments on table.column - %s.%s' % (table, column))
             col_comments[table,column] = comment
         return col_comments;
 
@@ -316,7 +316,7 @@ class OraSchemaDataDictionary:
         print "get all columns for tables, views and clusters"
         for table, column, data_type, data_length, data_precision, data_scale, nullable, column_id, \
                 data_default in self.__query(stmt):
-            debug_message('debug:  table.column - ' + table + '.' + column)
+            debug_message('debug:  table.column - %s.%s' % (table, column))
             _data_type = data_type
             t = all_columns.get(table, None)
             if not t:
@@ -344,7 +344,7 @@ class OraSchemaDataDictionary:
         cons ={}
         print  "get all_table/view constraints"
         for   table_name,name, type, check_cond, r_owner, r_constraint_name, delete_rule in self.__query(stmt):
-            debug_message('debug: table.constraint - ' + table_name + '.' + name)
+            debug_message('debug: table.constraint - %s.%s' % (table_name, name))
             cons[name]=(table_name, type, check_cond, r_owner, r_constraint_name, delete_rule)
 
         return cons        
@@ -357,7 +357,7 @@ class OraSchemaDataDictionary:
         cs_cols = {}
         print  "get all constrainted columns"
         for name , table_name, column_name, position in self.__query(stmt):
-            debug_message('debug: constrainted  table.column - ' + table_name + '.' + column_name)
+            debug_message('debug: constrainted  table.column - %s.%s' % (table_name, column_name))
             t = cs_cols.get(name, None)
             if not t:
                 t = []
@@ -372,7 +372,7 @@ class OraSchemaDataDictionary:
         views = {}
         print "get all views"
         for name, text in self.__query(stmt):
-            debug_message('debug: view - ' + name)
+            debug_message('debug: view - %s' % name)
             views[name]= text
         return views
 
@@ -394,7 +394,7 @@ class OraSchemaDataDictionary:
         indexes = {}
         print "get all indexes"
         for name, table_name, type, uniqueness, include_column, generated, secondary in self.__query(stmt):
-            debug_message('debug: index ' + name + ' on table - ' + table_name  )
+            debug_message('debug: index %s on table %s' % (name, table_name))
             indexes[name] = (table_name, type, uniqueness, include_column, generated, secondary)
         return indexes
 
@@ -405,7 +405,7 @@ class OraSchemaDataDictionary:
         ind_columns = {}
         print "get all index columns"
         for name, table_name, column_name, column_position in self.__query(stmt):
-            debug_message('debug: column '+ column_name + ' on index ' + name)
+            debug_message('debug: column %s on index %s' % (column_name, name))
             t = ind_columns.get(name)
             if not t:
                 t = []
@@ -421,7 +421,7 @@ class OraSchemaDataDictionary:
         ind_expressions = {}
         print "get all index_expressions"
         for name, table_name, expression, position in self.__query(stmt):
-            debug_message('debug: index expession on index ' + name )
+            debug_message('debug: index expession on index %s' % name )
             t = ind_expressions.get(name)
             if not t:
                 t = []
@@ -439,7 +439,7 @@ class OraSchemaDataDictionary:
         view_updatable_columns = {}
         print "get updatable columns"
         for table_name, column_name, insertable, updatable, deletable in self.__query(stmt):
-            debug_message('debug: updatable column ' + column_name + ' on view ' + table_name)
+            debug_message('debug: updatable column %s on view %s' % (column_name, table_name))
             view_updatable_columns[table_name, column_name] = (insertable, updatable, deletable)
         return view_updatable_columns
 
@@ -453,7 +453,7 @@ class OraSchemaDataDictionary:
         print "get all triggers"
         for name, type, event, base_object_type, table_name, column_name, referencing_names, when_clause, status,\
             description, action_type, body in self.__query(stmt):
-            debug_message('debug: trigger - ' + name)
+            debug_message('debug: trigger - %s', name)
             triggers[name] = (name, type, event, base_object_type, table_name, column_name, referencing_names, \
                               when_clause, status, description, action_type, body)
         return triggers
@@ -465,7 +465,7 @@ class OraSchemaDataDictionary:
         trigger_columns = {}
         print "get all trigger columns"
         for name, table_name, column_name, column_list, column_usage in self.__query(stmt):
-            debug_message('debug: trigger ' + name + ' column ' + column_name)
+            debug_message('debug: trigger %s column %s' % (name, column_name))
             t = trigger_columns.get(name)
             if not t:
                 t = []
@@ -483,7 +483,7 @@ class OraSchemaDataDictionary:
         print "get all pl/sql arguments"
         for name, package_name, argument_name, position, data_type, default_value, in_out, pls_type, data_scale, \
             data_precision, data_length in self.__query(stmt):
-            debug_message('debug: pl/sql arguments - ' + name )
+            debug_message('debug: pl/sql arguments - %s' % name)
             _data_type = ''
             if pls_type:
                 _data_type = pls_type
@@ -510,7 +510,7 @@ class OraSchemaDataDictionary:
         user_source = []
         print "get pl/sql source for procedures, functions and packages"
         for name, type, line, text in self.__query(stmt):
-            debug_message('debug: pl/sql source - ' + name)
+            debug_message('debug: pl/sql source - %s' % name)
             user_source.append((name, type, line, text))
         return user_source
 
@@ -535,7 +535,7 @@ class OraSchemaDataDictionary:
         print "get types"
         for name, type_oid, typecode, attributes, methods, predefined, incomplete \
             in self.__query(stmt):
-            debug_message('debug: type - ' + name)
+            debug_message('debug: type - %s' % name)
             types[name] = typecode, predefined, incomplete, type_oid, attributes, \
                  methods
         return types
@@ -552,8 +552,7 @@ class OraSchemaDataDictionary:
         for type_name, attr_name, attr_type_mod, attr_type_owner, attr_type_name, \
             length, precision, scale, character_set_name, attr_no \
             in self.__query(stmt):
-            debug_message('debug: type - ' + type_name + ' attribute name ' + \
-                          attr_name)
+            debug_message('debug: type - %s attribute name %s' % (type_name, attr_name))
             t = type_attributes.get(type_name, None)
             if not t:
                 t = {}
