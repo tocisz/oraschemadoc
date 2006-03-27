@@ -36,6 +36,7 @@ NUMBER = 4
 RESERVERD = 5
 STRING = 6
 
+operators = ['>','<','(', ')', ':', '=', '%', '.', ',', '/', '*', '+', '-', '!', '|']
 
 keyWords = {
 'ALL':RESERVERD, 'ALTER':RESERVERD, 'AND':RESERVERD, 'ANY':RESERVERD, 'ARRAY':RESERVERD, 'ARROW':RESERVERD, 'AS':RESERVERD, 'ASC':RESERVERD, 'AT':RESERVERD,
@@ -192,7 +193,6 @@ class SqlHighlighter:
                 ch2 = line[i-1]
             except:
                 ch2 = ''
-               
 
             # string handling 'foo'
             if self.status == WHITESPACE and ch == '\'':
@@ -230,13 +230,13 @@ class SqlHighlighter:
                 continue
             # operators
             # ; removed due the speed-up
-            if ch in ['>','<','(', ')', ':', '=', '%', '.', ',', '/', '*', '!', '|'] and self.status == WHITESPACE:
-            	if ch == '<':
+            if ch in operators and self.status == WHITESPACE:
+                if ch == '<':
                     self.outputString += '<span class="operator">&lt;</span>'
                 elif ch == '>':
-                	self.outputString += '<span class="operator">&gt;</span>'                	
+                    self.outputString += '<span class="operator">&gt;</span>'
                 else:
-                	self.outputString += '<span class="operator">' + ch + '</span>'
+                    self.outputString += '<span class="operator">' + ch + '</span>'
                 continue
             if ch == ';' and self.status == WHITESPACE:
                 self.outputString += ch
@@ -288,6 +288,10 @@ FUNCTION numbers_only(
    END LOOP;
    RETURN 0;
  END;
+ -- simulate outer join
+ select id into idno
+ 	from t1, t2
+	where t1.col (+) = t2.col;
  """
     
     print """
