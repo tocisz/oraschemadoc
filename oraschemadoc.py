@@ -25,14 +25,18 @@
 import getopt, sys, os, shutil
 from oraschemadoc.oracleencoding import OracleNLSCharset
 
-sys.setappdefaultencoding('utf-8')
+try:
+    sys.setappdefaultencoding('utf-8')
+except AttributeError, e:
+    print '\nYour system is not able to handle UTF8 correctly.'
+    print 'Disabling internal UTF8 handling.'
+    print 'Error message: %s\n' % e
 
 
 try:
     import cx_Oracle
 except ImportError:
-    print ''
-    print 'Problem with cx_Oracle importing.'
+    print '\nProblem with cx_Oracle importing.'
     print 'You are using unsupported oracle home or module cx_Oracle not found.'
     print 'You have to install it to use oraschemadoc'
     print ''
@@ -44,8 +48,7 @@ except ImportError:
 
 
 def usage():
-    print ''
-    print 'Oracle Schema Documentation Generator v0.25'
+    print '\nOracle Schema Documentation Generator v0.25'
     print 'usage: oraschemadoc [-v|--verbose] [-d|--dia [--dia-table-list=file]] [--no-html]'
     print '                    [--xml-file=filename] [-s|--syntax] '
     print '                    [--css=style] [--desc=description] oracleuser/password[@dbalias]'
@@ -179,7 +182,7 @@ def main():
            desc = desc.encode(encoding)
         name = name.encode(encoding)
     except:
-        print 'Convert your description and given name into %s failed.' % encoding
+        print '\nConvert your description and given name into %s failed.' % encoding
         print 'You can get index documentation page screwed...'
         print '\nYou can try to set NLS_LANG variable to the value you have'
         print 'your environment configured. E.g. in windows:'

@@ -45,6 +45,12 @@ class Dot:
         self.outPath = outPath
         self.haveDot = self.haveDot()
         self.graphTemplate = """
+        /* This is a DOT file created by Oraschemadoc (OSD).
+           When you see this file in your filesystem and OSD
+           is not running, there is propably a bug in this file.
+           Visit http://www.yarpen.cz/oraschemadoc and send me
+           this file to fix the bug, please. */
+
             digraph G
             {
             label="%s";fontname="Helvetica";labelfontsize="12";
@@ -65,7 +71,7 @@ class Dot:
 
     def makeKeyNode(self, node):
         """ Make base node """
-        s = '%s [label="%s" height=0.2,width=0.4,color="black",fillcolor="white",style="filled",fontcolor="black",href="table-%s.html#t-fk"];\n' % (node, node, node)
+        s = '"%s" [label="%s" height=0.2,width=0.4,color="black",fillcolor="white",style="filled",fontcolor="black",href="table-%s.html#t-fk"];\n' % (node, node, node)
         return s
 
 
@@ -73,7 +79,7 @@ class Dot:
         """ Make relations between the nodes """
         s = ''
         for i in children:
-            s += '''%s -> %s [color="black",fontsize=10,style="solid",arrowhead="crow"];\n''' % (i, mainName)
+            s += '''"%s" -> "%s" [color="black",fontsize=10,style="solid",arrowhead="crow"];\n''' % (i, mainName)
         return s
 
 
@@ -87,8 +93,8 @@ class Dot:
             if self.runDot(['-V']) == 0:
                 return True
         except OSError, e:
-            print 'Unknown error in Dot.haveDot() method. ERD disabled.'
-            print e
+            print '\nUnknown error in Dot.haveDot() method. ERD disabled.'
+            print '%s\n' % e
         return False
 
     def runDot(self, params=[]):

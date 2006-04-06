@@ -282,7 +282,7 @@ class HtmlWidgets:
         text = text = self.page_header("name")
         text = text + self.context_bar( None)
         text = text + self.heading(name,1)
-        text = text + self.p(description)
+        text = text + self.p('<b>Description:</b> %s' % description)
         if highlight:
             h = 'Yes'
         else:

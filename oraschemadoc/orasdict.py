@@ -453,7 +453,7 @@ class OraSchemaDataDictionary:
         print "get all triggers"
         for name, type, event, base_object_type, table_name, column_name, referencing_names, when_clause, status,\
             description, action_type, body in self.__query(stmt):
-            debug_message('debug: trigger - %s', name)
+            debug_message('debug: trigger - %s' % name)
             triggers[name] = (name, type, event, base_object_type, table_name, column_name, referencing_names, \
                               when_clause, status, description, action_type, body)
         return triggers
