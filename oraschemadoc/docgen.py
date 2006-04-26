@@ -32,7 +32,8 @@ from oraverbose import *
 class OraSchemaDoclet:
 
 
-    def __init__(self, connection, schema, doc_dir, name, description, debug_mode, syntaxHiglighting, css, webEncoding):
+    def __init__(self, connection, schema, doc_dir, name, description,
+                 debug_mode, syntaxHiglighting, css, webEncoding, notNulls):
 
         set_verbose_mode(debug_mode)
 
@@ -45,7 +46,7 @@ class OraSchemaDoclet:
         self.doc_dir = doc_dir
         self.name = name
         self.description = description
-        self.html = docwidgets.HtmlWidgets(self.name, css, webEncoding)
+        self.html = docwidgets.HtmlWidgets(self.name, css, webEncoding, notNulls)
         self.index = {}
 
         # print html files

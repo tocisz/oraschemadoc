@@ -27,10 +27,11 @@ import time
 
 class HtmlWidgets:
 
-    def __init__(self, name, css, webEncoding):
+    def __init__(self, name, css, webEncoding, notNulls):
         self.name = name
         self.css = css
         self.webEncoding = webEncoding
+        self.notNulls = notNulls
 
     def i(self, text):
         return "<i>%s</i>" %text
@@ -289,6 +290,9 @@ class HtmlWidgets:
             h = 'No'
         text = text + self.p('<b>Using syntax highlighting:</b> ' + h)
         text = text + self.p('<b>Character set:</b> ' + self.webEncoding)
+        if not self.notNulls:
+            text = text + self.p('<b>Constraints:</b> NOT NULL constraints are skipped. This information is kept in colums list. You can enable its listing by <code>--nn</code> option.')
+
         if imgname != None:
             text += imgname
         text = text + self.page_footer()

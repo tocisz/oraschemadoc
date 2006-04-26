@@ -116,6 +116,9 @@ etc.
 
     --pb             - Generates source code for package bodies too.
 
+    --nn             - Index NOT NULL constraints too. It\'s skipped by default:
+                       NOT NULL constraints are reported in columns list only.
+
     connect_string   - username/password@dbalias
 
     output_directory - directory where html files will be placed

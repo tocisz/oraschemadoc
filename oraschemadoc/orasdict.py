@@ -29,12 +29,14 @@ from oraverbose import *
 
 class OraSchemaDataDictionary:
 
-    def __init__(self, conn, name, debug_mode):
+    def __init__(self, conn, name, debug_mode, notNulls):
         """Gets all needed data from oracle data dictionary 
            and initializes all attributes
         """
 
         self.__conn = conn  # db_connection handler
+        self.notNulls = notNulls
+
         set_verbose_mode(debug_mode)
         print 'Oracle server %s (TNS: %s)' % (conn.version, conn.tnsentry)
 
@@ -217,8 +219,8 @@ class OraSchemaDataDictionary:
                      default_value, in_out 
                 else:
                     self.package_return_values.setdefault(package_name, {})[name]= data_type
-            
-            
+
+
     ################################################
     # INTERNAL FUNCTIONS FOR QUERY DATA DICTIONARY #
     ################################################
@@ -342,12 +344,20 @@ class OraSchemaDataDictionary:
             r_constraint_name , delete_rule
             from user_constraints where r_owner is null or r_owner = user"""
         cons ={}
-        print  "get all_table/view constraints"
-        for   table_name,name, type, check_cond, r_owner, r_constraint_name, delete_rule in self.__query(stmt):
+        print  "get all table/view constraints"
+        for table_name, name, type, check_cond, r_owner, r_constraint_name, delete_rule in self.__query(stmt):
             debug_message('debug: table.constraint - %s.%s' % (table_name, name))
-            cons[name]=(table_name, type, check_cond, r_owner, r_constraint_name, delete_rule)
-
-        return cons        
+            # take NN constraint only when it's allowed.
+            # TODO: better way to get NN. Where clause in SQL statement above
+            # is unpleasant as it's LONG type
+            if type != 'C':
+                cons[name]=(table_name, type, check_cond, r_owner, r_constraint_name, delete_rule)
+            elif (not self.notNulls and check_cond.find(' IS NOT NULL') == -1) or self.notNulls:
+                cons[name]=(table_name, type, check_cond, r_owner, r_constraint_name, delete_rule)
+            else:
+                if type != 'C':
+                    print 'WARNING: skipped constraint %s (%s %s). Something is wrong propably.' % (name, check_cond, type)
+        return cons
 
 
     def __get_constraited_columns(self):

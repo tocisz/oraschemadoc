@@ -71,6 +71,8 @@ def usage():
     print '   --desc=description   If is description filename with path, the text from file is taken.'
     print '                        If the file doesn\'t exist the description is taken as text string.'
     print '   --pb                 Generates source code for package bodies too.'
+    print '   --nn                 Index NOT NULL constraints too. It\'s skipped by default:'
+    print '                        NOT NULL constraints are reported in columns list only.'
     print '-h --help               print this help screen'
     print ''
     print 'For more information see README\n'
@@ -97,11 +99,14 @@ def main():
     desc = None
     # package bodies
     pb = False
+    # take NOT NULL constraints. False = don't take NOT NULL constraints
+    notNulls = False
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'hdvs',
                                    ['help', 'verbose', 'dia=', 'dia-table-list=',
-                                    'syntax', 'css=', 'desc=', 'pb', 'no-html', 'xml-file='])
+                                    'syntax', 'css=', 'desc=', 'pb', 'no-html',
+                                    'xml-file=', 'nn'])
     except getopt.error, e:
         # print help information and exit:
         usage()
@@ -140,6 +145,8 @@ def main():
                 f.close()
         if opt == '--pb':
             pb = True
+        if opt == '--nn':
+            notNulls = True
 
     if len(args) == 3: 
         connect_string, output_dir, name = args
@@ -195,7 +202,7 @@ def main():
     import oraschemadoc.docgen
     import oraschemadoc.diagen
 
-    s = oraschemadoc.orasdict.OraSchemaDataDictionary(connection, name, verbose_mode)
+    s = oraschemadoc.orasdict.OraSchemaDataDictionary(connection, name, verbose_mode, notNulls)
     schema = oraschemadoc.oraschema.OracleSchema(s, verbose_mode, pb)
 
     if xml_file:
@@ -209,7 +216,7 @@ def main():
         print '\nCreating HTML docs'
         doclet = doclet = oraschemadoc.docgen.OraSchemaDoclet(connection, schema,
                                     output_dir, name, desc, verbose_mode,
-                                    syntaxHighlighting, css, webEncoding)
+                                    syntaxHighlighting, css, webEncoding, notNulls)
         # copy css
         # There is problem with sys.path[0] in cx_Freeze. These exceptionse
         # are here as I try to find css file freezy way
