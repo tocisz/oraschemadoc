@@ -318,7 +318,8 @@ class OraSchemaDoclet:
     def _print_table(self, table):
         "print table page"
         # create header and context bar
-        text = self.html.page_header("Table-" + table.name)
+        text = []
+        text.append(self.html.page_header("Table-%s" % table.name))
         local_nav_bar = []
         local_nav_bar.append(("Description", "t-descr"))
         local_nav_bar.append(("Columns", "t-cols"))
@@ -332,14 +333,14 @@ class OraSchemaDoclet:
         local_nav_bar.append(("Triggers", "t-trgs"))
         local_nav_bar.append(("Partitions", "t-parts"))
 
-        text = text + self.html.context_bar(local_nav_bar)
-        text = text + self.html.heading(table.name, 2)
+        text.append(self.html.context_bar(local_nav_bar))
+        text.append(self.html.heading(table.name, 2))
         # punt entry in doc index
         self._add_index_entry(table.name, self.html.href_to_table(table.name), "table")
         # print comments
         if table.comments:
-            text = text + self.html.heading("Description:",3) + self.html.anchor("t-descr")
-            text = text + self.html.p(self.html._quotehtml(table.comments))
+            text.append('%s %s' % (self.html.heading("Description:",3), self.html.anchor("t-descr")))
+            text.append(self.html.p(self.html._quotehtml(table.comments)))
         #print columns
         rows = []
         # fixme iot table overflow segment column problem
@@ -351,7 +352,7 @@ class OraSchemaDoclet:
                 rows.append((column.name+self.html.anchor('col-%s' % column.name), column.data_type, \
                              column.nullable, column.data_default, column.comments))
             headers = "Name", "Type", "Nullable", "Default value", "Comment"
-            text = text + self.html.table("Columns" + self.html.anchor('t-cols'), headers, rows)
+            text.append(self.html.table("Columns" + self.html.anchor('t-cols'), headers, rows))
         # print primary key
         if table.primary_key:
             title = "Primary key:" + self.html.anchor("t-pk")
@@ -365,7 +366,7 @@ class OraSchemaDoclet:
             headers = "Constraint Name" , "Columns"
             rows = []
             rows.append((pk_name, pk_columns))
-            text = text + self.html.table( title, headers, rows)
+            text.append(self.html.table( title, headers, rows))
         # print check constraints
         if table.check_constraints:
             title = "Check Constraints:" + self.html.anchor("t-cc")
@@ -373,7 +374,7 @@ class OraSchemaDoclet:
             for constraint in table.check_constraints:
                 rows.append((constraint.name + self.html.anchor("cs-%s" % constraint.name), \
                              self.html._quotehtml(constraint.check_cond)))
-            text = text + self.html.table(title, ("Constraint Name","Check Condition"), rows)
+            text.append(self.html.table(title, ("Constraint Name","Check Condition"), rows))
         #print referential constraints
         if table.referential_constraints:
             title = "Foreign Keys:" + self.html.anchor("t-fk")
@@ -394,17 +395,17 @@ class OraSchemaDoclet:
                                                   constraint.r_table, constraint.r_constraint_name)
                 rows.append((name, columns, r_table, r_constraint_name, constraint.delete_rule))
             headers = "Constraint Name", "Columns", "Referenced table", "Referenced Constraint", "On Delete Rule"
-            text = text + self.html.table(title,headers, rows)
+            text.append(self.html.table(title,headers, rows))
             if self.dotEngine.haveDot:
                 imgname = self.dotEngine.fileGraphList(table.name, aList)
                 if imgname != None:
                     try:
                         f = file(os.path.join(self.doc_dir, table.name+'.map'), 'r')
-                        text += self.html.imgMap('erdmap', f.read())
+                        text.append(self.html.imgMap('erdmap', f.read()))
                         f.close()
                     except IOError:
-                        text = ''
-                    text += self.html.img(imgname, htmlMap='erdmap', cssClass='erd')
+                        print 'error reading %s' % table.name+'.map'
+                    text.append(self.html.img(imgname, htmlMap='erdmap', cssClass='erd'))
         # print unique keys
         if table.unique_keys:
             title = "Unique Keys:" + self.html.anchor("t-uc")
@@ -418,7 +419,7 @@ class OraSchemaDoclet:
                         columns = columns + ', '
                 name = constraint.name + self.html.anchor("cs-%s" % constraint.name)
                 rows.append((name, columns))
-            text = text + self.html.table(title,("Constraint name","Columns"), rows)
+            text.append(self.html.table(title,("Constraint name","Columns"), rows))
         # print table options
         title = "Options:" + self.html.anchor("t-opt")
         rows = []
@@ -431,12 +432,12 @@ class OraSchemaDoclet:
         rows.append(("Nested", table.nested))
         rows.append(("Temporary", table.temporary))
         headers = "Option","Settings"
-        text = text + self.html.table(title, headers, rows)
+        text.append(self.html.table(title, headers, rows))
         # print indexes
         if table.indexes:
            title = "Indexes:" + self.html.anchor("t-ind")
            rows = []
-           
+
            for index in table.indexes:
                columns = ''
                for i in  range(len(index.columns)):
@@ -446,7 +447,7 @@ class OraSchemaDoclet:
                name = index.name + self.html.anchor("ind-%s" % index.name)
                rows.append((name, index.type, index.uniqueness, columns))
            headers = "Index Name", "Type", "Unuqueness","Columns"
-           text = text + self.html.table(title, headers, rows)
+           text.append(self.html.table(title, headers, rows))
 
         # print list of tables with references to this table
         if table.referenced_by:
@@ -457,13 +458,14 @@ class OraSchemaDoclet:
                table_name = self.html.href_to_table(table_name)
                rows.append((table_name, constraint_name))
            headers = "Table", "Constraint"
-           text = text + self.html.table(title, headers, rows)
+           text.append(self.html.table(title, headers, rows))
 
         # print triggers
         if table.triggers:
-            text = text +"<br>" + self.html.heading("Triggers",3) + self.html.anchor("t-trgs")
+            text.append(self.html.heading("Triggers",3))
+            text.append(self.html.anchor("t-trgs"))
             for trigger in table.triggers:
-                text = text + self.html.anchor('trg-%s' % trigger.name)
+                text.append(self.html.anchor('trg-%s' % trigger.name))
                 trigg = 'CREATE TRIGGER ' + trigger.description
                 trigg = trigg + trigger.referencing_names+"\n"
                 if trigger.when_clause:
@@ -471,22 +473,23 @@ class OraSchemaDoclet:
                 trigg = trigg + trigger.body
                 self.syntaxHighlighter.setStatement(trigg)
                 self.syntaxHighlighter.parse()
-                text = text + self.html.pre(self.syntaxHighlighter.getHeader())
-                text = text + self.html.pre(self.syntaxHighlighter.getOutput())
+                text.append(self.html.pre(self.syntaxHighlighter.getHeader()))
+                text.append(self.html.pre(self.syntaxHighlighter.getOutput()))
 
         # print partitions
         if table.tab_partitions:
-            text = text + self.html.heading("Partitions", 3) + self.html.anchor("t-parts")
+            text.append(self.html.heading("Partitions", 3))
+            text.append(self.html.anchor("t-parts"))
             headers = ["Partition name", "Position", "Tablespace name", "High value"]
             rows = []
             for partition in table.tab_partitions:
                 rows.append([partition.partition_name, str(partition.partition_position),
                             partition.tablespace_name, str(partition.high_value)])
-            text = text + self.html.table(None, headers, rows)
+            text.append(self.html.table(None, headers, rows))
 
-        text = text + self.html.page_footer()
+        text.append(self.html.page_footer())
         file_name = os.path.join(self.doc_dir, "table-%s.html" % table.name)
-        self._write(text, file_name)
+        self._write(''.join(text), file_name)
 
 
     def _print_view(self, view):
@@ -663,7 +666,7 @@ class OraSchemaDoclet:
 
         text = text + self.html.page_footer()
         file_name = os.path.join(self.doc_dir, "procedure-%s.html" % procedure.name)
-        self._write(text, file_name)        
+        self._write(text, file_name)
 
 
     def _print_function(self, function):
@@ -697,7 +700,7 @@ class OraSchemaDoclet:
             _src = _src + string.rjust(str(line.line_no),6) + ": " +  line.text
         self.syntaxHighlighter.setStatement(_src)
         self.syntaxHighlighter.parse()
-        text = text + self.html.pre(self.syntaxHighlighter.getHeader())        
+        text = text + self.html.pre(self.syntaxHighlighter.getHeader())
         text = text + self.html.pre(self.syntaxHighlighter.getOutput())
 
         text = text + self.html.page_footer()

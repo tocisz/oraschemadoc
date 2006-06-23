@@ -67,7 +67,8 @@ class HtmlWidgets:
         <body>''' % (self.webEncoding, self.name , title, self.css, self.webEncoding)
 
     def context_bar(self, local_nav_bar):
-        text = '''
+        text = []
+        text.append('''
             <div class="contextbar">
             <a href="main.html">Main</a>
             <a href="tables-list.html">Tables</a>
@@ -83,15 +84,14 @@ class HtmlWidgets:
             <a href="java-sources-list.html">Java&nbsp;Sources</a>
             <a href="sanity-check.html">Sanity&nbsp;Check</a>
             <a href="symbol-index.html">Index</a>
-            </div>'''
+            </div>''')
 
         if local_nav_bar:
-            text = text + '''
-                <div class="subcontextbar">'''
+            text.append('<div class="subcontextbar">')
             for label, link in local_nav_bar:
-                text = text + '<a href="#%s">%s</a> ' % (link, label)
-            text = text + '</div>'
-        return text
+                text.append('<a href="#%s">%s</a> ' % (link, label))
+            text.append('</div>')
+        return ''.join(text)
 
 
     def frame_header(self, title):
@@ -199,29 +199,37 @@ class HtmlWidgets:
 
 
     def table(self, name, headers, rows, width = None):
-        text = ""
+        text = []
         if name:
-            text = self.heading(name,3)
+            text.append(self.heading(name,3))
         if not rows:
-            return text + "<p>None</p>"
+            text.append('<p>None</p>')
+            return ''.join(text)
         if width:
-            text = text + '<table width='+width+'%>'
+            text.append('<table width="')
+            text.append(width)
+            text.append('">')
         else:
-            text = text + '<table>\n'
-        text = text + '<tr>'
+            text.append('<table>\n')
+        text.append('<tr>')
         for header in headers:
-            text = text + '<th>' + str(header) + '</th>'
-        text = text + '</tr>'
+            text.append('<th>')
+            text.append(header)
+            text.append('</th>')
+        text.append('</tr>')
         for row in rows:
-            text = text + '<tr>'
+            text.append('<tr>')
             for column in row:
                 if column:
-                   text = text + '<td>' + str(column) + '</td>'
+                   text.append('<td>')
+                   text.append(column)
+                   text.append('</td>')
                 else:
-                   text = text + '<td>&nbsp;</td>'
-            text = text + '</tr>\n'
-        text = text + '</table>'
-        return text
+                   text.append('<td>&nbsp;</td>')
+            text.append('</tr>\n')
+        text.append('</table>')
+        return ''.join(text)
+
 
     def _index_page(self, name):
         return '''<?xml version="1.0" encoding="'''+ self.webEncoding +'''" ?>
