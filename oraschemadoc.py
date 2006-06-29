@@ -203,7 +203,7 @@ def main():
     import oraschemadoc.diagen
 
     s = oraschemadoc.orasdict.OraSchemaDataDictionary(connection, name, verbose_mode, notNulls)
-    schema = oraschemadoc.oraschema.OracleSchema(s, verbose_mode, pb)
+    schema = oraschemadoc.oraschema.OracleSchema(s, verbose_mode, connection, output_dir, pb)
 
     if xml_file:
         file_name = os.path.join(output_dir, xml_file)

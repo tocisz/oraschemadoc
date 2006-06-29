@@ -23,13 +23,15 @@ __author__ = 'Aram Kananov <arcanan@flashmail.com>, Petr Vanek, <petr@yarpen.cz>
 __version__ = '$Version: 0.25'
 
 from oraverbose import *
-
+import oraddlsource
+import os.path
 
 class OracleSchema:
 
-    def __init__(self, data_dict , debug_mode, packageBodies=False):
+    def __init__(self, data_dict, debug_mode, connection, output_dir, packageBodies=False):
 
         set_verbose_mode(debug_mode)
+        self.ddlSource = oraddlsource.OraDDLSource(connection, os.path.join(output_dir, 'sql_source'))
 
         self.packageBodies = packageBodies
 
@@ -81,6 +83,7 @@ class OracleSchema:
         print 'generating tables'
         for table_name in data_dict.all_table_names:
             tables.append(OracleTable(table_name, data_dict))
+            self.ddlSource.getDDLScript('TABLE', table_name)
         return tables
 
     def _get_all_indexes(self, data_dict):
@@ -88,6 +91,7 @@ class OracleSchema:
         indexes = []
         for index_name in data_dict.all_index_names:
             indexes.append(OracleIndex(index_name, data_dict))
+            self.ddlSource.getDDLScript('INDEX', index_name)
         return indexes
 
     def _get_all_constraints(self, data_dict):
@@ -108,6 +112,7 @@ class OracleSchema:
         views = []
         for view_name in data_dict.all_view_names:
             views.append(OracleView(view_name, data_dict))
+            self.ddlSource.getDDLScript('VIEW', view_name)
         return views
 
 
@@ -116,6 +121,7 @@ class OracleSchema:
         mviews = []
         for mv_name in data_dict.all_mview_names:
             mviews.append(OracleMView(mv_name, data_dict))
+            self.ddlSource.getDDLScript('MATERIALIZED VIEW', mv_name)
         return mviews
 
 
@@ -124,6 +130,7 @@ class OracleSchema:
         triggers = []
         for trigger_name in data_dict.table_triggers:
             triggers.append(OracleTrigger(trigger_name, data_dict))
+            self.ddlSource.getDDLScript('TRIGGER', trigger_name)
         return triggers
 
     def _get_all_procedures(self, data_dict):
@@ -133,6 +140,7 @@ class OracleSchema:
             procedure = OracleProcedure(name, data_dict.proc_arguments.get(name, None), \
                                         data_dict.all_procedures.get(name, None))
             procedures.append(procedure)
+            self.ddlSource.getDDLScript('PROCEDURE', name)
         return procedures
 
     def _get_all_java_sources(self, data_dict):
@@ -151,6 +159,7 @@ class OracleSchema:
                                       data_dict.func_return_arguments.get(name, None),\
                                       data_dict.all_functions.get(name, None))
             functions.append(function)
+            self.ddlSource.getDDLScript('FUNCTION', name)
         return functions
 
     def _get_all_packages(self, data_dict):
@@ -166,6 +175,8 @@ class OracleSchema:
                 body_source = {0: 'Source code generator disabled'}
             package = OraclePackage(name, all_arguments, all_return_values, def_source, body_source)
             packages.append(package)
+            self.ddlSource.getDDLScript('PACKAGE', name)
+            self.ddlSource.getDDLScript('PACKAGE_BODY', name)
         return packages
 
     def _get_all_sequences(self, data_dict):
@@ -175,6 +186,7 @@ class OracleSchema:
             min_value, max_value, step, cycled, ordered, cache_size = data_dict.sequences[name]
             seq = OracleSequence(name, min_value, max_value, step, cycled, ordered, cache_size)
             sequences.append(seq)
+            self.ddlSource.getDDLScript('SEQUENCE', name)
         return sequences
 
 
@@ -1144,6 +1156,7 @@ class OracleType:
 if __name__ == '__main__':
     import cx_Oracle
     import orasdict
-    connection = cx_Oracle.connect('s0/s0@test1')
+    #connection = cx_Oracle.connect('s0/asgaard')
+    connection = cx_Oracle.connect('system/asgaard')
     s = orasdict.OraSchemaDataDictionary(connection, 'Oracle', False)
-    schema = OracleSchema(s, True)
+    schema = OracleSchema(s, 0, connection, './', True)

@@ -29,7 +29,7 @@ from oraverbose import *
 
 class OraSchemaDataDictionary:
 
-    def __init__(self, conn, name, debug_mode, notNulls):
+    def __init__(self, conn, name, debug_mode=0, notNulls=False):
         """Gets all needed data from oracle data dictionary 
            and initializes all attributes
         """
@@ -43,7 +43,7 @@ class OraSchemaDataDictionary:
         self.name = name
 
         # tables
-        self.all_tables = self.__get_tables()        
+        self.all_tables = self.__get_tables()
         self.all_table_names = self.all_tables.keys()
         self.all_table_names.sort()
         self.all_table_comments = self.__get_table_comments()
@@ -82,7 +82,7 @@ class OraSchemaDataDictionary:
         self.table_constraint_map= {}
         self.table_index_map = {}
         self.__set_table_maps()
-        # triggers        
+        # triggers
         self.all_triggers = self.__get_triggers()
         self.all_trigger_names = self.all_triggers.keys()
         self.all_trigger_names.sort()
@@ -156,8 +156,8 @@ class OraSchemaDataDictionary:
             elif type in ('V','O'):
                  self.view_constraint_map.setdefault(table_name,[]).\
                      append(constraint_name)
-                 
-        # table index map         
+
+        # table index map
         for index_name in self.all_index_names:
             table_name = self.all_indexes[index_name][0]
             self.table_index_map.setdefault(table_name,[]).append(index_name)

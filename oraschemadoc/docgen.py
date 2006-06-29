@@ -960,8 +960,8 @@ if __name__ == '__main__':
     import cx_Oracle
     import orasdict
     import oraschema
-    connection = cx_Oracle.connect('aram_v1/aram_v1')
-    s = orasdict.OraSchemaDataDictionary(connection, 'Oracle')
-    schema = oraschema.OracleSchema(s)
-    doclet = OraSchemaDoclet(schema, "/tmp/oraschemadoc/", "vtr Data Model", "Really cool project")
-
+    connection = cx_Oracle.connect('s0/asgaard')
+    s = orasdict.OraSchemaDataDictionary(connection, 'Oracle', 0, True)
+    schema = oraschema.OracleSchema(s, 0)
+    doclet = OraSchemaDoclet(connection, schema, './test', 'foo', 'bar',
+                 0, True, 'default.css', 'utf-8', True)
