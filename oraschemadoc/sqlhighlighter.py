@@ -60,7 +60,9 @@ class SqlHighlighter:
 
     def getOutput(self):
         """ Returns the result aftre parsing """
-        return ''.join(self.outputList)
+        if self.highlight:
+            return ''.join(self.outputList)
+        return '\n'.join(self.outputList)
 
 
     def getHeader(self, block=False):

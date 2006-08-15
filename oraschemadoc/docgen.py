@@ -87,6 +87,15 @@ class OraSchemaDoclet:
         self._print_symbol_index_page()
 
 
+    def triggerAnchorType(self, trigger):
+        """ Returns the string with object name trigger belongs to.
+            E.g. 'view' for INSTEAD OF triggers, table for common trg etc.
+            See docwidgets.py href_to_trigger() """
+        if trigger.type == 'INSTEAD OF':
+            return 'view'
+        return 'table'
+
+
     def _print_index_frames(self):
         #
         # print index frames 
@@ -153,7 +162,9 @@ class OraSchemaDoclet:
         #triggers
         rows = []
         for trigger in self.schema.triggers:
-            link = self.html.href_to_trigger(trigger.name, trigger.table_name, trigger.name, "Main")
+            link = self.html.href_to_trigger(trigger.name, trigger.table_name,
+                                             trigger.name, self.triggerAnchorType(trigger),
+                                             "Main")
             rows.append(link)
         self._print_index_frame("Triggers", rows, "triggers-index.html")
 
@@ -207,13 +218,18 @@ class OraSchemaDoclet:
         #triggers
         rows = []
         for trigger in self.schema.triggers:
-            name = self.html.href_to_trigger(trigger.name, trigger.table_name, trigger.name)
+            name = self.html.href_to_trigger(trigger.name, trigger.table_name,
+                                             trigger.name, self.triggerAnchorType(trigger))
             #add entry to do index
-            self._add_index_entry(trigger.name, name, "Trigger on table %s" % trigger.table_name)
+            self._add_index_entry(trigger.name, name,
+                                  "Trigger on %s %s" % (self.triggerAnchorType(trigger), trigger.table_name))
             type = trigger.type
-            table_name = self.html.href_to_table(trigger.table_name)
+            if self.triggerAnchorType(trigger) == 'table':
+                 table_name = self.html.href_to_table(trigger.table_name)
+            else:
+                 table_name = self.html.href_to_view(trigger.table_name)
             rows.append(( name, type, table_name ))
-        headers = "Trigger", "Type", "Table"
+        headers = "Trigger", "Type", "Table or View"
         ht_table = self.html.table("Triggers", headers, rows)
         self._print_list_page("Triggers", ht_table, "triggers-list.html")
 
@@ -313,6 +329,23 @@ class OraSchemaDoclet:
         headers = (["Name"])
         ht_table = self.html.table("Java Sources", headers, rows)
         self._print_list_page("Java Sources", ht_table, "java-sources-list.html")
+
+
+    def _htmlizeTrigger(self, trigger):
+        """ A common XHTML trigger writter for all tables
+            and views (materialized or normal) """
+        text = []
+        text.append(self.html.anchor('trg-%s' % trigger.name))
+        text.append(self.html.heading(trigger.name, 4))
+        trigg = 'CREATE TRIGGER \n%s\n%s\n' % (trigger.description, trigger.referencing_names)
+        if trigger.when_clause:
+            trig += "When \n%s\n" % self.html._quotehtml(trigger.when_clause)
+        trigg += self.html._quotehtml(trigger.body)
+        self.syntaxHighlighter.setStatement(trigg)
+        self.syntaxHighlighter.parse()
+        text.append(self.html.pre(self.syntaxHighlighter.getHeader()))
+        text.append(self.html.pre(self.syntaxHighlighter.getOutput()))
+        return ''.join(text)
 
 
     def _print_table(self, table):
@@ -465,7 +498,10 @@ class OraSchemaDoclet:
             text.append(self.html.heading("Triggers",3))
             text.append(self.html.anchor("t-trgs"))
             for trigger in table.triggers:
+                text.append(self._htmlizeTrigger(trigger))
+                """
                 text.append(self.html.anchor('trg-%s' % trigger.name))
+                text.append(self.html.heading(trigger.name, 4))
                 trigg = 'CREATE TRIGGER ' + trigger.description
                 trigg = trigg + trigger.referencing_names+"\n"
                 if trigger.when_clause:
@@ -475,6 +511,7 @@ class OraSchemaDoclet:
                 self.syntaxHighlighter.parse()
                 text.append(self.html.pre(self.syntaxHighlighter.getHeader()))
                 text.append(self.html.pre(self.syntaxHighlighter.getOutput()))
+				"""
 
         # print partitions
         if table.tab_partitions:
@@ -495,19 +532,20 @@ class OraSchemaDoclet:
     def _print_view(self, view):
         "print view page"
         # create header and context bar
-        text = self.html.page_header("View-" + view.name)
+        text = []
+        text.append(self.html.page_header("View-%s" % view.name))
         local_nav_bar = []
         local_nav_bar.append(("Description", "v-descr"))
         local_nav_bar.append(("Columns", "v-cols"))
         local_nav_bar.append(("Query", "v-query"))
         local_nav_bar.append(("Constraints", "v-cc"))
         local_nav_bar.append(("Triggers", "v-trgs"))
-        text = text + self.html.context_bar(local_nav_bar)
-        text = text + self.html.heading(view.name, 2)
+        text.append(self.html.context_bar(local_nav_bar))
+        text.append(self.html.heading(view.name, 2))
         # print comments
         if view.comments:
-            text = text + self.html.heading("Description:",3) + self.html.anchor("v-descr")
-            text = text + self.html.p(self.html._quotehtml(view.comments))
+            text.append(self.html.heading("Description:",3) + self.html.anchor("v-descr"))
+            text.append(self.html.p(self.html._quotehtml(view.comments)))
         #print columns
         rows = []
         for i in range(len(view.columns)):
@@ -518,67 +556,65 @@ class OraSchemaDoclet:
             rows.append((column.name+self.html.anchor('col-%s' % column.name), column.data_type, column.nullable,\
                          column.insertable, column.updatable, column.deletable, column.comments))
         headers = "Name", "Type", "Nullable","Insertable","Updatable", "Deletable", "Comment"
-        text = text + self.html.table("Columns" + self.html.anchor('v-cols'), headers, rows)
+        text.append(self.html.table("Columns" + self.html.anchor('v-cols'), headers, rows))
         # print query
-        text = text + self.html.heading("Query:",3) + self.html.anchor("v-query")
+        text.append(self.html.heading("Query:",3) + self.html.anchor("v-query"))
         self.syntaxHighlighter.setStatement(view.text)
         self.syntaxHighlighter.parse()
-        text = text + self.html.pre(self.syntaxHighlighter.getHeader())
-        text = text + self.html.pre(self.syntaxHighlighter.getOutput())
+        text.append(self.html.pre(self.syntaxHighlighter.getHeader()))
+        text.append(self.html.pre(self.syntaxHighlighter.getOutput()))
         # print constraints
         if view.constraints:
-            title = "Constraints:" + self.html.anchor("v-cc")
+            title = "Constraints: %s" % self.html.anchor("v-cc")
             rows = []
             for constraint in view.constraints:
                 rows.append((constraint.name + self.html.anchor("cs-%s" % constraint.name),constraint.type))
-            text = text + self.html.table(title, ("Constraint Name","Type"), rows)
+            text.append(self.html.table(title, ("Constraint Name","Type"), rows))
 
         # print triggers
         if view.triggers:
-            text = text + self.html.heading("Triggers",3) + self.html.anchor("v-trgs")
+            text.append(self.html.heading("Triggers",3))
+            text.append(self.html.anchor("v-trgs"))
             for trigger in view.triggers:
-                headers = []
-                rows = []
-                headers.append( "<b> Name: </b>"+trigger.name+"<br>" + self.html.anchor('trg-%s' % trigger.name))
-                row = "<pre>"
-                #if trigger.nested_column_name:
-                #    row = row + "on " + trigger.nested_column_name+"\n"
-                #row = row +  trigger.type+ " "+ trigger.event +"\n"
-                row = row + 'CREATE TRIGGER ' + trigger.description
-                row = row +   trigger.referencing_names+"\n"
+                text.append(self._htmlizeTrigger(trigger))
+                """text.append(self.html.anchor('trg-%s' % trigger.name))
+                text.append(self.html.heading(trigger.name, 4))
+                trigg = 'CREATE TRIGGER ' + trigger.description
+                trigg += trigger.referencing_names+"\n"
                 if trigger.when_clause:
-                    row = row + "When " + self.html._quotehtml(trigger.when_clause)+"\n"
-                row = row +   self.html._quotehtml(trigger.body)+"\n</pre>"
-                t = []
-                t.append(row)
-                rows.append(t)
-                text = text + self.html.table(None, headers, rows)
+                    trigg += "When " + self.html._quotehtml(trigger.when_clause)+"\n"
+                trigg += self.html._quotehtml(trigger.body)
+                self.syntaxHighlighter.setStatement(trigg)
+                self.syntaxHighlighter.parse()
+                text.append(self.html.pre(self.syntaxHighlighter.getHeader()))
+                text.append(self.html.pre(self.syntaxHighlighter.getOutput()))"""
 
-        text = text + self.html.page_footer()
+        text.append(self.html.page_footer())
         file_name = os.path.join(self.doc_dir, "view-%s.html" % view.name)
-        self._write(text, file_name)
+        self._write(''.join(text), file_name)
 
 
     def _print_mview(self, mview):
         " print materialized view"
-        text = self.html.page_header("MView-" + mview.name)
+        text = []
+        text.append(self.html.page_header("MView-%s" % mview.name))
         local_nav_bar = []
         local_nav_bar.append(("Description", "v-descr"))
         local_nav_bar.append(("Columns", "v-cols"))
         local_nav_bar.append(("Query", "v-query"))
         local_nav_bar.append(("Constraints", "v-cc"))
         local_nav_bar.append(("Triggers", "v-trgs"))
-        text = text + self.html.context_bar(local_nav_bar)
-        text = text + self.html.heading(mview.name, 2)
+        text.append(self.html.context_bar(local_nav_bar))
+        text.append(self.html.heading(mview.name, 2))
 
         th = ['Container', 'Updatable']
         container = self.html.href_to_table(mview.container)
         td = [(container, mview.mv_updatable)]
-        text = text + self.html.table(None, th, td)
+        text.append(self.html.table(None, th, td))
         # print comments
         if mview.comments:
-            text = text + self.html.heading("Description:",3) + self.html.anchor("v-descr")
-            text = text + self.html.p(self.html._quotehtml(mview.comments))
+            text.append(self.html.heading("Description:",3) + self.html.anchor("v-descr"))
+            text.append(self.html.p(self.html._quotehtml(mview.comments)))
         #print columns
         rows = []
         for i in range(len(mview.columns)):
@@ -589,45 +625,42 @@ class OraSchemaDoclet:
             rows.append((column.name+self.html.anchor('col-%s' % column.name), column.data_type, column.nullable,\
                          column.insertable, column.updatable, column.deletable, column.comments))
         headers = "Name", "Type", "Nullable","Insertable","Updatable", "Deletable", "Comment"
-        text = text + self.html.table("Columns" + self.html.anchor('v-cols'), headers, rows)
+        text.append(self.html.table("Columns" + self.html.anchor('v-cols'), headers, rows))
         # print query
-        text = text + self.html.heading("Query:",3) + self.html.anchor("v-query")
+        text.append(self.html.heading("Query:",3) + self.html.anchor("v-query"))
         self.syntaxHighlighter.setStatement(mview.query)
         self.syntaxHighlighter.parse()
-        text = text + self.html.pre(self.syntaxHighlighter.getHeader())
-        text = text + self.html.pre(self.syntaxHighlighter.getOutput())
+        text.append(self.html.pre(self.syntaxHighlighter.getHeader()))
+        text.append(self.html.pre(self.syntaxHighlighter.getOutput()))
         # print constraints
         if mview.constraints:
             title = "Constraints:" + self.html.anchor("v-cc")
             rows = []
             for constraint in mview.constraints:
                 rows.append((constraint.name + self.html.anchor("cs-%s" % constraint.name),constraint.type))
-            text = text + self.html.table(title, ("Constraint Name","Type"), rows)
+            text.append(self.html.table(title, ("Constraint Name","Type"), rows))
 
         # print triggers
         if mview.triggers:
-            text = text + self.html.heading("Triggers",3) + self.html.anchor("v-trgs")
+            text.append(self.html.heading("Triggers",3))
+            text.append(self.html.anchor("v-trgs"))
             for trigger in mview.triggers:
-                headers = []
-                rows = []
-                headers.append( "<b> Name: </b>"+trigger.name+"<br>" + self.html.anchor('trg-%s' % trigger.name))
-                row = "<pre>"
-                #if trigger.nested_column_name:
-                #    row = row + "on " + trigger.nested_column_name+"\n"
-                #row = row +  trigger.type+ " "+ trigger.event +"\n"
-                row = row + 'CREATE TRIGGER ' + trigger.description
-                row = row +   trigger.referencing_names+"\n"
+                text.append(self._htmlizeTrigger(trigger))
+                """text.append(self.html.anchor('trg-%s' % trigger.name))
+                text.append(self.html.heading(trigger.name, 4))
+                trigg = 'CREATE TRIGGER ' + trigger.description
+                trigg += trigger.referencing_names+"\n"
                 if trigger.when_clause:
-                    row = row + "When " + self.html._quotehtml(trigger.when_clause)+"\n"
-                row = row +   self.html._quotehtml(trigger.body)+"\n</pre>"
-                t = []
-                t.append(row)
-                rows.append(t)
-                text = text + self.html.table(None, headers, rows)
+                    trig += "When " + self.html._quotehtml(trigger.when_clause)+"\n"
+                trigg += self.html._quotehtml(trigger.body)+"\n"
+                self.syntaxHighlighter.setStatement(trigg)
+                self.syntaxHighlighter.parse()
+                text.append(self.html.pre(self.syntaxHighlighter.getHeader()))
+                text.append(self.html.pre(self.syntaxHighlighter.getOutput()))"""
 
-        text = text + self.html.page_footer()
+        text.append(self.html.page_footer())
         file_name = os.path.join(self.doc_dir, "mview-%s.html" % mview.name)
-        self._write(text, file_name)
+        self._write(''.join(text), file_name)
 
 
     def _print_procedure(self, procedure):
@@ -864,7 +897,7 @@ class OraSchemaDoclet:
                 if i[1] == 'TRIGGER':
                     for j in self.schema.triggers:
                         if j.name == i[0]:
-                            i[0] = self.html.href_to_trigger(i[0], j.table_name, i[0])
+                            i[0] = self.html.href_to_trigger(i[0], j.table_name, i[0], self.triggerAnchorType(j))
                             break
             text += self.html.table('Invalids', ['Object name', 'Type', 'Error', 'At line'], invalids)
 

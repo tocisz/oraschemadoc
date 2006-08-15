@@ -124,11 +124,11 @@ class HtmlWidgets:
         else:
             return '<a href="table-%s.html#cs-%s" target="%s">%s </a>\n' % (table_name, constraint_name, target_frame, label) 
 
-    def href_to_trigger(self, label, table_name, trigger_name, target_frame = None):
+    def href_to_trigger(self, label, table_name, trigger_name, triggerType, target_frame = None):
         if not target_frame:
-            return '<a href="table-%s.html#trg-%s">%s </a>\n' % (table_name, trigger_name, label)
+            return '<a href="%s-%s.html#trg-%s">%s </a>\n' % (triggerType, table_name, trigger_name, label)
         else:
-            return '<a href="table-%s.html#trg-%s" target="%s">%s </a>\n' % (table_name, trigger_name, target_frame, label)
+            return '<a href="%s-%s.html#trg-%s" target="%s">%s </a>\n' % (triggerType, table_name, trigger_name, target_frame, label)
 
     def href_to_index(self, label, table_name, index_name, target_frame = None):
         if not target_frame:
@@ -207,7 +207,7 @@ class HtmlWidgets:
             return ''.join(text)
         if width:
             text.append('<table width="')
-            text.append(width)
+            text.append(str(width))
             text.append('">')
         else:
             text.append('<table>\n')
@@ -222,7 +222,7 @@ class HtmlWidgets:
             for column in row:
                 if column:
                    text.append('<td>')
-                   text.append(column)
+                   text.append(str(column))
                    text.append('</td>')
                 else:
                    text.append('<td>&nbsp;</td>')

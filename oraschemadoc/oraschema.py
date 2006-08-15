@@ -711,7 +711,7 @@ class OracleView:
         if  data_dict.table_trigger_map.has_key(self.name):
             for trigger_name in data_dict.table_trigger_map[self.name]:
                 triggers.append(OracleTrigger(trigger_name, data_dict))
-        return triggers    
+        return triggers
 
 class OracleViewColumn(OracleColumn):
 
