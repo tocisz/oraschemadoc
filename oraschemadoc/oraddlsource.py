@@ -89,6 +89,7 @@ class OraDDLSource:
             return
         f = file(os.path.join(currentDir, self.fname), 'w')
         f.write('-- created by Oraschemadoc %s\n' % time.ctime())
+        f.write('-- visit http://www.yarpen.cz/oraschemadoc/ for more info')
         f.write(ddl.strip())
         f.write('\n/\n')
         f.close()

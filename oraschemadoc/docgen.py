@@ -499,19 +499,6 @@ class OraSchemaDoclet:
             text.append(self.html.anchor("t-trgs"))
             for trigger in table.triggers:
                 text.append(self._htmlizeTrigger(trigger))
-                """
-                text.append(self.html.anchor('trg-%s' % trigger.name))
-                text.append(self.html.heading(trigger.name, 4))
-                trigg = 'CREATE TRIGGER ' + trigger.description
-                trigg = trigg + trigger.referencing_names+"\n"
-                if trigger.when_clause:
-                    trigg = trigg + "When " + trigger.when_clause +"\n"
-                trigg = trigg + trigger.body
-                self.syntaxHighlighter.setStatement(trigg)
-                self.syntaxHighlighter.parse()
-                text.append(self.html.pre(self.syntaxHighlighter.getHeader()))
-                text.append(self.html.pre(self.syntaxHighlighter.getOutput()))
-				"""
 
         # print partitions
         if table.tab_partitions:
@@ -577,17 +564,6 @@ class OraSchemaDoclet:
             text.append(self.html.anchor("v-trgs"))
             for trigger in view.triggers:
                 text.append(self._htmlizeTrigger(trigger))
-                """text.append(self.html.anchor('trg-%s' % trigger.name))
-                text.append(self.html.heading(trigger.name, 4))
-                trigg = 'CREATE TRIGGER ' + trigger.description
-                trigg += trigger.referencing_names+"\n"
-                if trigger.when_clause:
-                    trigg += "When " + self.html._quotehtml(trigger.when_clause)+"\n"
-                trigg += self.html._quotehtml(trigger.body)
-                self.syntaxHighlighter.setStatement(trigg)
-                self.syntaxHighlighter.parse()
-                text.append(self.html.pre(self.syntaxHighlighter.getHeader()))
-                text.append(self.html.pre(self.syntaxHighlighter.getOutput()))"""
 
         text.append(self.html.page_footer())
         file_name = os.path.join(self.doc_dir, "view-%s.html" % view.name)
@@ -646,17 +622,6 @@ class OraSchemaDoclet:
             text.append(self.html.anchor("v-trgs"))
             for trigger in mview.triggers:
                 text.append(self._htmlizeTrigger(trigger))
-                """text.append(self.html.anchor('trg-%s' % trigger.name))
-                text.append(self.html.heading(trigger.name, 4))
-                trigg = 'CREATE TRIGGER ' + trigger.description
-                trigg += trigger.referencing_names+"\n"
-                if trigger.when_clause:
-                    trig += "When " + self.html._quotehtml(trigger.when_clause)+"\n"
-                trigg += self.html._quotehtml(trigger.body)+"\n"
-                self.syntaxHighlighter.setStatement(trigg)
-                self.syntaxHighlighter.parse()
-                text.append(self.html.pre(self.syntaxHighlighter.getHeader()))
-                text.append(self.html.pre(self.syntaxHighlighter.getOutput()))"""
 
         text.append(self.html.page_footer())
         file_name = os.path.join(self.doc_dir, "mview-%s.html" % mview.name)
@@ -666,12 +631,13 @@ class OraSchemaDoclet:
     def _print_procedure(self, procedure):
         "print procedure page"
         # create header and context bar
-        text = self.html.page_header("Procedure-" + procedure.name)
+        text = []
+        text.append(self.html.page_header("Procedure-%s" % procedure.name))
         local_nav_bar = []
         local_nav_bar.append(("Arguments", "p-args"))
         local_nav_bar.append(("Source", "p-src"))
-        text = text + self.html.context_bar(local_nav_bar)
-        text = text + self.html.heading(procedure.name, 2)
+        text.append(self.html.context_bar(local_nav_bar))
+        text.append(self.html.heading(procedure.name, 2))
 
         title = "Arguments:" + self.html.anchor("p-args")
         headers = "Name", "Data Type", "Default Value", "In/Out"
@@ -683,34 +649,32 @@ class OraSchemaDoclet:
                 _default_value = ""
             row = argument.name, argument.data_type, self.html._quotehtml(_default_value), argument.in_out
             rows.append(row)
-        text = text + self.html.table(title, headers, rows)
-
-        #       text = text + self.html.heading("Source:",3) + self.html.anchor("p-src")
-        #       text = text + self.html.pre(self.html._quotehtml(procedure.source))
-
-        text = text + self.html.heading("Source", 2) + self.html.anchor("p-src")
-        _src=""
+        text.append(self.html.table(title, headers, rows))
+        text.append(self.html.heading("Source", 2))
+        text.append(self.html.anchor("p-src"))
+        _src = []
         for line in procedure.source.source:
-            _src = _src + string.rjust(str(line.line_no),6) + ": " +  line.text
-        self.syntaxHighlighter.setStatement(_src)
+            _src.append('%s: %s' % (string.rjust(str(line.line_no),6), line.text))
+        self.syntaxHighlighter.setStatement(''.join(_src))
         self.syntaxHighlighter.parse()
-        text = text + self.html.pre(self.syntaxHighlighter.getHeader())
-        text = text + self.html.pre(self.syntaxHighlighter.getOutput())
+        text.append(self.html.pre(self.syntaxHighlighter.getHeader()))
+        text.append(self.html.pre(self.syntaxHighlighter.getOutput()))
 
-        text = text + self.html.page_footer()
+        text.append(self.html.page_footer())
         file_name = os.path.join(self.doc_dir, "procedure-%s.html" % procedure.name)
-        self._write(text, file_name)
+        self._write(''.join(text), file_name)
 
 
     def _print_function(self, function):
         "print function page"
         # create header and context bar
-        text = self.html.page_header("Function-" + function.name + " returns " + function.return_data_type)
+        text = []
+        text.append(self.html.page_header("Function - %s returns %s" % (function.name, function.return_data_type)))
         local_nav_bar = []
         local_nav_bar.append(("Arguments", "f-args"))
         local_nav_bar.append(("Source", "f-src"))
-        text = text + self.html.context_bar(local_nav_bar)
-        text = text + self.html.heading(function.name, 2)
+        text.append(self.html.context_bar(local_nav_bar))
+        text.append(self.html.heading(function.name, 2))
 
         title = "Arguments:" + self.html.anchor("f-args")
         headers = "Name", "Data Type", "Default Value", "In/Out"
@@ -722,54 +686,53 @@ class OraSchemaDoclet:
                 _default_value = ""
             row = argument.name, argument.data_type, self.html._quotehtml(_default_value), argument.in_out
             rows.append(row)
-        text = text + self.html.table(title, headers, rows)
-
-        text = text + self.html.heading("Returns:",3) + function.return_data_type
-
-        text = text + self.html.heading("Source", 2) + self.html.anchor("f-src")
-
-        _src=""
+        text.append(self.html.table(title, headers, rows))
+        text.append(self.html.heading("Returns:",3) + function.return_data_type)
+        text.append(self.html.heading("Source", 2) + self.html.anchor("f-src"))
+        _src = []
         for line in function.source.source:
-            _src = _src + string.rjust(str(line.line_no),6) + ": " +  line.text
-        self.syntaxHighlighter.setStatement(_src)
+            _src.append(string.rjust(str(line.line_no),6) + ": " +  line.text)
+        self.syntaxHighlighter.setStatement(''.join(_src))
         self.syntaxHighlighter.parse()
-        text = text + self.html.pre(self.syntaxHighlighter.getHeader())
-        text = text + self.html.pre(self.syntaxHighlighter.getOutput())
+        text.append(self.html.pre(self.syntaxHighlighter.getHeader()))
+        text.append(self.html.pre(self.syntaxHighlighter.getOutput()))
 
-        text = text + self.html.page_footer()
+        text.append(self.html.page_footer())
         file_name = os.path.join(self.doc_dir, "function-%s.html" % function.name)
-        self._write(text, file_name)
+        self._write(''.join(text), file_name)
 
 
     def _print_java_source(self, java_source):
         "print function page"
         # create header and context bar
-        text = self.html.page_header("Source of " + java_source.name + " class")
+        text = []
+        text.append(self.html.page_header("Source of %s Java class" % java_source.name))
         local_nav_bar = []
-        text = text + self.html.context_bar(local_nav_bar)
-        text = text + self.html.heading(java_source.name, 2)
+        text.append(self.html.context_bar(local_nav_bar))
+        text.append(self.html.heading(java_source.name, 2))
 
         title = "Source" 
         headers = (["Source"])
         rows=[]
-        _src=""
+        _src = []
         for line in java_source.source:
-            _src = _src + string.rjust(str(line.line_no),6) + ": " 
+            _src.append(string.rjust(str(line.line_no),6) + ": ")
             # in java source empty string is None, so need to check before adding text
             if line.text:
-                _src = _src +  line.text
-            _src = _src + "\n"
+                _src.append(line.text)
+            _src.append('\n')
         rows.append([self.html.pre(self.html._quotehtml(_src))])
-        text = text + self.html.table(title, headers, rows)
+        text.append(self.html.table(title, headers, rows))
 
-        text = text + self.html.page_footer()
+        text.append(self.html.page_footer())
         file_name = os.path.join(self.doc_dir, "java-source-%s.html" % java_source.name.replace("/", "-"))
-        self._write(text, file_name)
+        self._write(''.join(text), file_name)
 
 
     def _print_symbol_index_page(self):
         print "print symbols index page"
-        text = self.html.page_header("Schema Objects Index")
+        text = []
+        text.append(self.html.page_header("Schema Objects Index"))
         local_nav_bar = []
 
         keys = self.index.keys()
@@ -779,77 +742,81 @@ class OraSchemaDoclet:
             if (key[:1] != letter):
                 letter = key[:1] 
                 local_nav_bar.append((letter,letter))
-        text = text + self.html.context_bar(local_nav_bar)
+        text.append(self.html.context_bar(local_nav_bar))
 
         letter = ""
         for key in keys:
             if (key[:1] != letter):
                 letter = key[:1]
-                text = text + self.html.heading(letter, 3) + self.html.anchor(letter)
+                text.append(self.html.heading(letter, 3) + self.html.anchor(letter))
             for entry in self.index[key]:
-                text = text + '%s %s<br>' % entry
-        text = text + self.html.page_footer()
+                text.append('%s %s<br/>' % entry)
+        text.append(self.html.page_footer())
         file_name = os.path.join(self.doc_dir, "symbol-index.html")
-        self._write(text, file_name)        
+        self._write(''.join(text), file_name)
 
 
     def _print_package(self, package):
         "print procedure page"
         # create header and context bar
-        text = self.html.page_header("Package -" + package.name)
+        text = []
+        text.append(self.html.page_header("Package - %s" % package.name))
         local_nav_bar = []
         local_nav_bar.append(("Package source", "p-src"))
         local_nav_bar.append(("Package body source", "p-bsrc"))
-        text = text + self.html.context_bar(local_nav_bar)
-        text = text + self.html.heading(package.name, 2)
+        text.append(self.html.context_bar(local_nav_bar))
+        text.append(self.html.heading(package.name, 2))
 
         title = self.html.heading("Package source", 2) + self.html.anchor("p-src")
-        _src=""
+        _src = []
         for line in package.source.source:
-            _src = _src + string.rjust(str(line.line_no),6) + ": " +  line.text
+            _src.append(string.rjust(str(line.line_no),6) + ": " +  line.text)
 
-        self.syntaxHighlighter.setStatement(_src)
+        self.syntaxHighlighter.setStatement(''.join(_src))
         self.syntaxHighlighter.parse()
-        text = text + title + self.html.pre(self.syntaxHighlighter.getHeader())
-        text = text + self.html.pre(self.syntaxHighlighter.getOutput())
+        text.append(title)
+        text.append(self.html.pre(self.syntaxHighlighter.getHeader()))
+        text.append(self.html.pre(self.syntaxHighlighter.getOutput()))
 
         title = self.html.heading("Package body source", 2) + self.html.anchor("p-bsrc")
-        _src=""
+        _src = []
         if package.body_source:
             for line in package.body_source.source:
-                _src = _src + string.rjust(str(line.line_no),6) + ": " +  line.text
-            self.syntaxHighlighter.setStatement(_src)
+                _src.append(string.rjust(str(line.line_no),6) + ": " +  line.text)
+            self.syntaxHighlighter.setStatement(''.join(_src))
             self.syntaxHighlighter.parse()
-            text = text + title + self.html.pre(self.syntaxHighlighter.getHeader())
-            text = text + self.html.pre(self.syntaxHighlighter.getOutput())
+            text.append(title)
+            text.append(self.html.pre(self.syntaxHighlighter.getHeader()))
+            text.append(self.html.pre(self.syntaxHighlighter.getOutput()))
 
-        text = text + self.html.page_footer()
+        text.append(self.html.page_footer())
         file_name = os.path.join(self.doc_dir, "package-%s.html" % package.name)
-        self._write(text, file_name)        
+        self._write(''.join(text), file_name)
 
 
     def _sanity_check(self):
         print "print sanity check page"
         problems = False
-        text = self.html.page_header("Sanity Check")
+        text = []
+        text.append(self.html.page_header("Sanity Check"))
         local_nav_bar = []
         local_nav_bar.append(("FK indexes", "fk-ix"))
         local_nav_bar.append(("Invalid objects", "inv"))
-        text += self.html.context_bar(local_nav_bar)
+        text.append(self.html.context_bar(local_nav_bar))
 
-        text += self.html.heading("Sanity Check", 1)
+        text.append(self.html.heading("Sanity Check", 1))
 
         scheck = analyze.SchemaAnalyzer(self.connection, self.schema)
         if scheck.fk_no_indexes:
-            text += self.html.anchor("fk-ix")
-            text += self.html.heading("No indexes on columns involved in foreign key constraints",2)
-            text += '''<p>You should almost always index foreign keys. The only exception is when
+            text.append(self.html.anchor("fk-ix"))
+            text.append(self.html.heading("No indexes on columns involved in foreign key constraints",2))
+            text.append('''<p>You should almost always index foreign keys. The only exception is when
                         the matching unique or primary key is never updated or deleted. For
                         more information take a look on
                         <a href="http://oradoc.photo.net/ora817/DOC/server.817/a76965/c24integ.htm#2299">
                         Concurrency Control, Indexes, and Foreign Keys</a>.</p>
                         <p>The sql file which will
-                        generate these indexes is <a href="fk-indexes.sql">created for you</a></p>'''
+                        generate these indexes is <a href="fk-indexes.sql">created for you</a></p>''')
 
             title = '"Unindexed" foreign keys'
             headers = "Table Name", "Constraint name", "Columns"
@@ -871,18 +838,18 @@ class OraSchemaDoclet:
                 #write sql
                 file_name = os.path.join(self.doc_dir, "fk-indexes.sql")
                 self._write(scheck.fk_no_indexes_sql,file_name)
-            text += self.html.table(title,headers,rows)
+            text.append(self.html.table(title,headers,rows))
             problems = True
 
         if len(scheck.invalids) != 0:
             problems = True
-            text += self.html.anchor("inv")
-            text += self.html.heading('Invalid objects', 2)
-            text += '''<p>Invalid object does not mean a problem sometimes. Sometimes will 
+            text.append(self.html.anchor("inv"))
+            text.append(self.html.heading('Invalid objects', 2))
+            text.append('''<p>Invalid object does not mean a problem sometimes. Sometimes will
                     fix itself as is is executed or accessed.  But if there is an error in
                     USER_ERRORS table, you are in trouble then...</p>
                     <p>The sql file which will compile these objects is 
-                    <a href="compile-objects.sql">created for you</a>.</p>'''
+                    <a href="compile-objects.sql">created for you</a>.</p>''')
             self._write(scheck.invalids_sql, os.path.join(self.doc_dir, 'compile-objects.sql'))
             invalids = scheck.invalids
             for i in invalids:
@@ -899,14 +866,14 @@ class OraSchemaDoclet:
                         if j.name == i[0]:
                             i[0] = self.html.href_to_trigger(i[0], j.table_name, i[0], self.triggerAnchorType(j))
                             break
-            text += self.html.table('Invalids', ['Object name', 'Type', 'Error', 'At line'], invalids)
+            text.append(self.html.table('Invalids', ['Object name', 'Type', 'Error', 'At line'], invalids))
 
         if problems == False:
             # no checks
-            text += self.html.p('No known problems.')
-        text = text + self.html.page_footer()
+            text.append(self.html.p('No known problems.'))
+        text.append(self.html.page_footer())
         file_name = os.path.join(self.doc_dir, "sanity-check.html")
-        self._write(text, file_name)
+        self._write(''.join(text), file_name)
 
 
     def _write(self, text, file_name):
@@ -967,14 +934,15 @@ class OraSchemaDoclet:
         #          item_list - list of names with html links
         #          file_name - relative file name 
         print "index frame for %s" % header
-        text = self.html.frame_header(header)
-        text = text + self.html.href('nav.html', 'Categories')
+        text = []
+        text.append(self.html.frame_header(header))
+        text.append(self.html.href('nav.html', 'Categories'))
         for row in item_list:
-            text = text + row
-        text = text + self.html.frame_footer()
+            text.append(row)
+        text.append(self.html.frame_footer())
         #java sources contain simbol / inside name, in file_names should be replaced with "-"
         f_name = os.path.join(self.doc_dir, file_name.replace("/","-"))
-        self._write(text, f_name)
+        self._write(''.join(text), f_name)
 
 
     def _print_list_page(self, title, ht_table, file_name):
