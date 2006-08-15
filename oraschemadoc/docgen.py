@@ -374,6 +374,8 @@ class OraSchemaDoclet:
         if table.comments:
             text.append('%s %s' % (self.html.heading("Description:",3), self.html.anchor("t-descr")))
             text.append(self.html.p(self.html._quotehtml(table.comments)))
+        if table.ddlScript != None:
+             text.append(self.html.p(self.html.href(table.ddlScript, 'DDL script')))
         #print columns
         rows = []
         # fixme iot table overflow segment column problem
@@ -478,8 +480,8 @@ class OraSchemaDoclet:
                     if i+1 != len(index.columns):
                         columns = columns + ', '
                name = index.name + self.html.anchor("ind-%s" % index.name)
-               rows.append((name, index.type, index.uniqueness, columns))
-           headers = "Index Name", "Type", "Unuqueness","Columns"
+               rows.append((name, index.type, index.uniqueness, columns, index.ddlScript))
+           headers = "Index Name", "Type", "Unuqueness","Columns", 'DDL script'
            text.append(self.html.table(title, headers, rows))
 
         # print list of tables with references to this table

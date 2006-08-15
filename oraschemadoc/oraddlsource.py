@@ -33,14 +33,13 @@ class OraDDLSource:
         with EXECUTE privilege on this package.
         When it cannot be found there is only a message written. """
 
-    def __init__(self, conn, outputDir='sql_sources'):
+    def __init__(self, conn, outputDir='.'):
         self.connection = conn
         self.enabled = self.checkForMetadata()
         self.fname = None
-        self.directory = None
-        if self.mkdir(outputDir):
-            self.directory = outputDir
-        else:
+        self.directory = os.path.join(outputDir, 'sql_sources')
+        self.rootDir = outputDir
+        if not self.mkdir(self.directory):
             self.enabled = False
 
 
@@ -73,7 +72,7 @@ class OraDDLSource:
 
     def getDDLScript(self, objType, objName):
         if not self.enabled or self.directory == None:
-            return False
+            return None
         par = {'type': objType, 'name': objName}
         try:
             ddl = self.query(statement="select to_char(dbms_metadata.get_ddl(:type, :name)) from dual",
@@ -81,19 +80,19 @@ class OraDDLSource:
         except cx_Oracle.DatabaseError, e:
             print 'ERROR: DDL creation is inconsistent'
             print '       %s' % e.__str__()[:e.__str__().find('\n')]
-            return False
+            return None
         self.fname = '%s.sql' % objName.lower()
         currentDir = os.path.join(self.directory, objType.replace(' ', '_').lower())
         if not self.mkdir(currentDir):
             self.enabled = False
-            return
+            return None
         f = file(os.path.join(currentDir, self.fname), 'w')
         f.write('-- created by Oraschemadoc %s\n' % time.ctime())
         f.write('-- visit http://www.yarpen.cz/oraschemadoc/ for more info')
         f.write(ddl.strip())
         f.write('\n/\n')
         f.close()
-        return True
+        return os.path.join(currentDir, self.fname)[len(self.rootDir)+1:]
 
 
     def query(self, statement, params={}):
@@ -108,6 +107,6 @@ class OraDDLSource:
 if __name__ == '__main__':
     c = cx_Oracle.connect('s0/asgaard')
     o = OraDDLSource(conn=c)#, outputDir='./foo')
-    o.getDDLScript('TABLE', 'ENCODING')
-    #o.getDDLScript('TABLE', 'ENCODIN')
-    #o.getDDLScript('FOO', 'TABLE2')
+    print o.getDDLScript('TABLE', 'ENCODING')
+    print o.getDDLScript('TABLE', 'ENCODIN')
+    print o.getDDLScript('FOO', 'TABLE2')

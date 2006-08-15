@@ -31,7 +31,7 @@ class OracleSchema:
     def __init__(self, data_dict, debug_mode, connection, output_dir, packageBodies=False):
 
         set_verbose_mode(debug_mode)
-        self.ddlSource = oraddlsource.OraDDLSource(connection, os.path.join(output_dir, 'sql_source'))
+        self.ddlSource = oraddlsource.OraDDLSource(connection, output_dir)
 
         self.packageBodies = packageBodies
 
@@ -82,16 +82,18 @@ class OracleSchema:
         tables = []
         print 'generating tables'
         for table_name in data_dict.all_table_names:
-            tables.append(OracleTable(table_name, data_dict))
-            self.ddlSource.getDDLScript('TABLE', table_name)
+            t = OracleTable(table_name, data_dict)
+            t.ddlScript = self.ddlSource.getDDLScript('TABLE', table_name)
+            tables.append(t)
         return tables
 
     def _get_all_indexes(self, data_dict):
         print 'generating indexes'
         indexes = []
         for index_name in data_dict.all_index_names:
-            indexes.append(OracleIndex(index_name, data_dict))
-            self.ddlSource.getDDLScript('INDEX', index_name)
+            i = OracleIndex(index_name, data_dict)
+            i.ddlScript = self.ddlSource.getDDLScript('INDEX', index_name)
+            indexes.append(i)
         return indexes
 
     def _get_all_constraints(self, data_dict):
@@ -196,6 +198,7 @@ class OracleTable:
         debug_message('debug: creating table object %s' % name)
         # TODO delete old crap below
         self.name = name
+        self.ddlScript = None
         self.partitioned, self.secondary, self.index_organized, \
             self.clustered, self.cluster_name, self.nested, \
             self.temporary, self.tablespace_name = data_dict.all_tables[name]
@@ -611,6 +614,7 @@ class OracleIndex:
 
     def __init__(self, name, data_dict):
         self.name = name
+        self.ddlScript = None
         table_name, type, uniqueness, include_column, generated, secondary = data_dict.all_indexes[name]
         self.table_name = table_name
         self.type = type
