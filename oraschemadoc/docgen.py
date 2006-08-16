@@ -346,7 +346,7 @@ class OraSchemaDoclet:
         text.append(self.html.heading(trigger.name, 4))
         trigg = 'CREATE TRIGGER \n%s\n%s\n' % (trigger.description, trigger.referencing_names)
         if trigger.when_clause:
-            trig += "When \n%s\n" % self.html._quotehtml(trigger.when_clause)
+            trigg += "When \n%s\n" % self.html._quotehtml(trigger.when_clause)
         trigg += self.html._quotehtml(trigger.body)
         self.syntaxHighlighter.setStatement(trigg)
         self.syntaxHighlighter.parse()
