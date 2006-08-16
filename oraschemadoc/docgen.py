@@ -318,7 +318,7 @@ class OraSchemaDoclet:
             rows.append((s.getName() + self.html.anchor(s.getName()), 
                          s.getMinValue(), s.getMaxValue(), s.getStep(), 
                          s.isCycled(), s.isOrdered(), s.getCacheSize(),
-                         self.ddlSourceHref(s.getNname())))
+                         self.ddlSourceHref(s.getName())))
             self._add_index_entry(s.getName(),
                                   self.html.href_to_sequence(s.getName()), "index")
         headers = "Name", "Min Value", "Max Value", "Step", "Cycled", "Ordered", \
