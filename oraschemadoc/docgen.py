@@ -96,6 +96,12 @@ class OraSchemaDoclet:
         return 'table'
 
 
+    def ddlSourceHref(self, name):
+        if not self.schema.ddlSource.scriptCache.has_key(name):
+            return ''
+        return self.html.href(self.schema.ddlSource.scriptCache[name], 'DDL script')
+
+
     def _print_index_frames(self):
         #
         # print index frames 
@@ -197,8 +203,8 @@ class OraSchemaDoclet:
             comments = table.comments 
             if comments:
                 comments = self.html._quotehtml(comments[:50]+'...')
-            rows.append(( name, comments ))
-        headers = "Table", "Description"
+            rows.append(( name, comments, self.ddlSourceHref(table.name) ))
+        headers = "Table", "Description", 'DDL Script'
         ht_table = self.html.table("Tables", headers, rows)
         self._print_list_page("Tables", ht_table, "tables-list.html")
 
@@ -210,8 +216,8 @@ class OraSchemaDoclet:
             self._add_index_entry(index.name, name, "index on table %s" % index.table_name)
             type = index.type
             table_name = self.html.href_to_table(index.table_name)
-            rows.append(( name, type, table_name ))
-        headers = "Index", "Type", "Table"
+            rows.append(( name, type, table_name, self.ddlSourceHref(index.name) ))
+        headers = "Index", "Type", "Table", 'DDL Script'
         ht_table = self.html.table("Indexes", headers, rows)
         self._print_list_page("Indexes", ht_table, "indexes-list.html")
 
@@ -228,8 +234,8 @@ class OraSchemaDoclet:
                  table_name = self.html.href_to_table(trigger.table_name)
             else:
                  table_name = self.html.href_to_view(trigger.table_name)
-            rows.append(( name, type, table_name ))
-        headers = "Trigger", "Type", "Table or View"
+            rows.append(( name, type, table_name, self.ddlSourceHref(trigger.name) ))
+        headers = "Trigger", "Type", "Table or View", 'DDL Script'
         ht_table = self.html.table("Triggers", headers, rows)
         self._print_list_page("Triggers", ht_table, "triggers-list.html")
 
@@ -241,8 +247,8 @@ class OraSchemaDoclet:
             self._add_index_entry(constraint.name, name, "constraint on table %s" % constraint.table_name)
             type = constraint.type
             table_name = self.html.href_to_table(constraint.table_name)
-            rows.append(( name, type, table_name ))
-        headers = "Name", "Type", "Table"
+            rows.append(( name, type, table_name, self.ddlSourceHref(constraint.name) ))
+        headers = "Name", "Type", "Table", 'DDL Script'
         ht_table = self.html.table("Constraints", headers, rows)
         self._print_list_page("Constraints", ht_table, "constraints-list.html")
 
@@ -255,8 +261,8 @@ class OraSchemaDoclet:
             comments = view.comments 
             if comments:
                 comments = self.html._quotehtml(comments[:50]+'...')
-            rows.append(( name, comments ))
-        headers = "View", "Description"
+            rows.append(( name, comments, self.ddlSourceHref(view.name) ))
+        headers = "View", "Description", 'DDL Script'
         ht_table = self.html.table("Views", headers, rows)
         self._print_list_page("Views", ht_table, "views-list.html")
 
@@ -266,8 +272,8 @@ class OraSchemaDoclet:
             name = self.html.href_to_mview(mview.name)
             # add entry to doc index
             self._add_index_entry(mview.name, name, "materialized view")
-            rows.append([name])
-        headers = [("Materialized View")]
+            rows.append([name, self.ddlSourceHref(mview.name)])
+        headers = [("Materialized View", 'DDL Script')]
         ht_table = self.html.table("Materialized Views", headers, rows)
         self._print_list_page("Materialized Views", ht_table, "mviews-list.html")
 
@@ -277,8 +283,8 @@ class OraSchemaDoclet:
             name = self.html.href_to_procedure(procedure.name)
             # add entry to doc index
             self._add_index_entry(procedure.name, name, "procedure")
-            rows.append([name])
-        headers = ["Name"]
+            rows.append([name, self.ddlSourceHref(procedure.name)])
+        headers = ["Name", 'DDL Script']
         ht_table = self.html.table("Procedures", headers, rows)
         self._print_list_page("Procedures", ht_table, "procedures-list.html")
 
@@ -288,9 +294,9 @@ class OraSchemaDoclet:
             name = self.html.href_to_function(function.name)
             # add entry to doc index
             self._add_index_entry(function.name, name, "function")
-            row = ([name])
+            row = ([name, self.ddlSourceHref(function.name)])
             rows.append(row)
-        headers = (["Name"])
+        headers = (["Name", 'DDL Script'])
         ht_table = self.html.table("Functions", headers, rows)
         self._print_list_page("Functions", ht_table, "functions-list.html")
 
@@ -300,9 +306,9 @@ class OraSchemaDoclet:
             name = self.html.href_to_package(package.name)
             # add entry to doc index
             self._add_index_entry(package.name, name, "package")
-            row = ([name])
+            row = ([name, self.ddlSourceHref(package.name)])
             rows.append(row)
-        headers = (["Name"])
+        headers = (["Name", 'DDL Script'])
         ht_table = self.html.table("Packages", headers, rows)
         self._print_list_page("Packages", ht_table, "packages-list.html")
 
@@ -311,11 +317,12 @@ class OraSchemaDoclet:
         for s in self.schema.sequences:
             rows.append((s.getName() + self.html.anchor(s.getName()), 
                          s.getMinValue(), s.getMaxValue(), s.getStep(), 
-                         s.isCycled(), s.isOrdered(), s.getCacheSize()))
+                         s.isCycled(), s.isOrdered(), s.getCacheSize(),
+                         self.ddlSourceHref(s.name)))
             self._add_index_entry(s.getName(), 
                                   self.html.href_to_sequence(s.getName()), "index")
         headers = "Name", "Min Value", "Max Value", "Step", "Cycled", "Ordered", \
-                "Cache Size"
+                "Cache Size", 'DDL Script'
         ht_table = self.html.table("Sequences", headers, rows)
         self._print_list_page("Sequences", ht_table, "sequences.html")
 
@@ -374,8 +381,7 @@ class OraSchemaDoclet:
         if table.comments:
             text.append('%s %s' % (self.html.heading("Description:",3), self.html.anchor("t-descr")))
             text.append(self.html.p(self.html._quotehtml(table.comments)))
-        if table.ddlScript != None:
-             text.append(self.html.p(self.html.href(table.ddlScript, 'DDL script')))
+        text.append(self.ddlSourceHref(table.name))
         #print columns
         rows = []
         # fixme iot table overflow segment column problem
@@ -480,7 +486,7 @@ class OraSchemaDoclet:
                     if i+1 != len(index.columns):
                         columns = columns + ', '
                name = index.name + self.html.anchor("ind-%s" % index.name)
-               rows.append((name, index.type, index.uniqueness, columns, index.ddlScript))
+               rows.append((name, index.type, index.uniqueness, columns, self.ddlSourceHref(index.name)))
            headers = "Index Name", "Type", "Unuqueness","Columns", 'DDL script'
            text.append(self.html.table(title, headers, rows))
 
@@ -535,6 +541,7 @@ class OraSchemaDoclet:
         if view.comments:
             text.append(self.html.heading("Description:",3) + self.html.anchor("v-descr"))
             text.append(self.html.p(self.html._quotehtml(view.comments)))
+        text.append(self.ddlSourceHref(view.name))
         #print columns
         rows = []
         for i in range(len(view.columns)):
@@ -593,6 +600,7 @@ class OraSchemaDoclet:
         if mview.comments:
             text.append(self.html.heading("Description:",3) + self.html.anchor("v-descr"))
             text.append(self.html.p(self.html._quotehtml(mview.comments)))
+        text.append(self.ddlSourceHref(mview.name))
         #print columns
         rows = []
         for i in range(len(mview.columns)):
@@ -652,6 +660,7 @@ class OraSchemaDoclet:
             row = argument.name, argument.data_type, self.html._quotehtml(_default_value), argument.in_out
             rows.append(row)
         text.append(self.html.table(title, headers, rows))
+        text.append(self.ddlSourceHref(procedure.name))
         text.append(self.html.heading("Source", 2))
         text.append(self.html.anchor("p-src"))
         _src = []
@@ -690,6 +699,7 @@ class OraSchemaDoclet:
             rows.append(row)
         text.append(self.html.table(title, headers, rows))
         text.append(self.html.heading("Returns:",3) + function.return_data_type)
+        text.append(self.ddlSourceHref(function.name))
         text.append(self.html.heading("Source", 2) + self.html.anchor("f-src"))
         _src = []
         for line in function.source.source:
@@ -768,7 +778,7 @@ class OraSchemaDoclet:
         local_nav_bar.append(("Package body source", "p-bsrc"))
         text.append(self.html.context_bar(local_nav_bar))
         text.append(self.html.heading(package.name, 2))
-
+        text.append(self.ddlSourceHref(package.name))
         title = self.html.heading("Package source", 2) + self.html.anchor("p-src")
         _src = []
         for line in package.source.source:

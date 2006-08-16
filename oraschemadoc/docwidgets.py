@@ -84,6 +84,7 @@ class HtmlWidgets:
             <a href="java-sources-list.html">Java&nbsp;Sources</a>
             <a href="sanity-check.html">Sanity&nbsp;Check</a>
             <a href="symbol-index.html">Index</a>
+            <a href="sql_sources/" target="Main">DDL&nbsp;scrips</a>
             </div>''')
 
         if local_nav_bar:
@@ -191,11 +192,11 @@ class HtmlWidgets:
         return '<hr>\n'
 
     def pre(self, text):
-        return "<pre>\n"+text+"</pre>\n"
+        return '<pre>\n%s</pre>\n' % text
 
 
     def p(self, text):
-        return "<p>" + str(text) + "</p>"
+        return '<p>%s</p>' % text
 
 
     def table(self, name, headers, rows, width = None):
@@ -278,6 +279,7 @@ class HtmlWidgets:
                   <a href="sequences-index.html">Sequences</a>
                   <a href="java-sources-index.html">Java&nbsp;Sources</a>
                   <a href="sanity-check.html" target="Main">Sanity&nbsp;Check</a>
+                  <a href="sql_sources/" target="Main">DDL&nbsp;scrips</a>
         </body></html>''' % (self.webEncoding, name, self.css, self.webEncoding)
 
     def _quotehtml (self, text):
@@ -288,21 +290,27 @@ class HtmlWidgets:
         return text
 
     def _main_frame(self, name, description, highlight, imgname=None):
-        text = text = self.page_header("name")
-        text = text + self.context_bar( None)
-        text = text + self.heading(name,1)
-        text = text + self.p('<b>Description:</b> %s' % description)
+        text = []
+        text.append(self.page_header("name"))
+        text.append(self.context_bar( None))
+        text.append(self.heading(name,1))
+        text.append(self.p('<b>Description:</b> %s' % description))
+        if imgname != None:
+            text.append(imgname)
         if highlight:
             h = 'Yes'
         else:
             h = 'No'
-        text = text + self.p('<b>Using syntax highlighting:</b> ' + h)
-        text = text + self.p('<b>Character set:</b> ' + self.webEncoding)
+        text.append(self.p('<b>Using syntax highlighting:</b> %s' % h))
+        text.append(self.p('<b>Character set:</b> ' + self.webEncoding))
         if not self.notNulls:
-            text = text + self.p('<b>Constraints:</b> NOT NULL constraints are skipped. This information is kept in colums list. You can enable its listing by <code>--nn</code> option.')
-
-        if imgname != None:
-            text += imgname
-        text = text + self.page_footer()
-        return text
+            text.append(self.p('''<b>Constraints:</b> NOT NULL constraints are skipped.
+                                This information is kept in colums list. You can enable
+                                its listing by <code>--nn</code> option.'''))
+        text.append(self.p('''<b>DDL Scripts:</b> Obtaining the DDL script depends on
+                              the DBMS_METADATA package.
+                              So it's limited only for Oracle version 9 and greater and for users
+                              with EXECUTE privilege on this package.'''))
+        text.append(self.page_footer())
+        return ''.join(text)
 

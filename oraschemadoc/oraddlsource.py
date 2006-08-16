@@ -19,7 +19,6 @@
 
 __author__ = 'Petr Vanek <petr@scribus.info>'
 
-__version__ = '$Revision$'
 
 import cx_Oracle
 import os.path
@@ -39,6 +38,7 @@ class OraDDLSource:
         self.fname = None
         self.directory = os.path.join(outputDir, 'sql_sources')
         self.rootDir = outputDir
+        self.scriptCache = {}
         if not self.mkdir(self.directory):
             self.enabled = False
 
@@ -73,6 +73,8 @@ class OraDDLSource:
     def getDDLScript(self, objType, objName):
         if not self.enabled or self.directory == None:
             return None
+        if self.scriptCache.has_key(objName):
+            return
         par = {'type': objType, 'name': objName}
         try:
             ddl = self.query(statement="select to_char(dbms_metadata.get_ddl(:type, :name)) from dual",
@@ -88,11 +90,13 @@ class OraDDLSource:
             return None
         f = file(os.path.join(currentDir, self.fname), 'w')
         f.write('-- created by Oraschemadoc %s\n' % time.ctime())
-        f.write('-- visit http://www.yarpen.cz/oraschemadoc/ for more info')
+        f.write('-- visit http://www.yarpen.cz/oraschemadoc/ for more info\n')
         f.write(ddl.strip())
         f.write('\n/\n')
         f.close()
-        return os.path.join(currentDir, self.fname)[len(self.rootDir)+1:]
+        strippedName = os.path.join(currentDir, self.fname)[len(self.rootDir)+1:]
+        self.scriptCache[objName] = strippedName
+        return strippedName
 
 
     def query(self, statement, params={}):
