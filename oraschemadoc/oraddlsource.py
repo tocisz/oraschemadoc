@@ -66,7 +66,7 @@ class OraDDLSource:
         if res[0][0] > 0:
             print 'DBMS_METADATA found\n'
             return True
-        print 'WARNING: No EXECUTE grant on DBMS_METADATA (>9) or feature disabled (8)'
+        print 'WARNING: No EXECUTE grant on DBMS_METADATA (>8) or feature disabled (8)'
         return False
 
 
