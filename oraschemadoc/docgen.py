@@ -733,7 +733,7 @@ class OraSchemaDoclet:
             if line.text:
                 _src.append(line.text)
             _src.append('\n')
-        rows.append([self.html.pre(self.html._quotehtml(_src))])
+        rows.append([self.html.pre(self.html._quotehtml(''.join(_src)))])
         text.append(self.html.table(title, headers, rows))
 
         text.append(self.html.page_footer())
