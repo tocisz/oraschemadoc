@@ -28,26 +28,26 @@ import os.path
 
 class OracleSchema:
 
-    def __init__(self, data_dict, debug_mode, connection, output_dir, packageBodies=False):
+    def __init__(self, cfg): #data_dict, debug_mode, connection, output_dir, packageBodies=False):
 
-        set_verbose_mode(debug_mode)
-        self.ddlSource = oraddlsource.OraDDLSource(connection, output_dir)
+        set_verbose_mode(cfg.verbose_mode)
+        self.ddlSource = oraddlsource.OraDDLSource(cfg.connection, cfg.output_dir)
 
-        self.packageBodies = packageBodies
+        self.packageBodies = cfg.pb
 
-        self.tables = self._get_all_tables(data_dict)
-        self.indexes = self._get_all_indexes(data_dict)
-        self.constraints = self._get_all_constraints(data_dict)
-        self.views = self._get_all_views(data_dict)
-        self.mviews = self._get_all_mviews(data_dict)
-        self.triggers = self._get_all_table_triggers(data_dict)
-        self.procedures = self._get_all_procedures(data_dict)
-        self.functions = self._get_all_functions(data_dict)
-        self.packages = self._get_all_packages(data_dict)
-        self.sequences = self._get_all_sequences(data_dict)
-        self.java_sources = self._get_all_java_sources(data_dict)
+        self.tables = self._get_all_tables(cfg.dictionary)
+        self.indexes = self._get_all_indexes(cfg.dictionary)
+        self.constraints = self._get_all_constraints(cfg.dictionary)
+        self.views = self._get_all_views(cfg.dictionary)
+        self.mviews = self._get_all_mviews(cfg.dictionary)
+        self.triggers = self._get_all_table_triggers(cfg.dictionary)
+        self.procedures = self._get_all_procedures(cfg.dictionary)
+        self.functions = self._get_all_functions(cfg.dictionary)
+        self.packages = self._get_all_packages(cfg.dictionary)
+        self.sequences = self._get_all_sequences(cfg.dictionary)
+        self.java_sources = self._get_all_java_sources(cfg.dictionary)
         # TODO: why i need that name? 
-        self.name = "Foobarizm" 
+        self.name = "Foobarizm"
 
 
     def getXML(self):
@@ -1156,7 +1156,9 @@ class OracleType:
 if __name__ == '__main__':
     import cx_Oracle
     import orasdict
+    from osdconfig import OSDConfig
     #connection = cx_Oracle.connect('s0/asgaard')
-    connection = cx_Oracle.connect('system/asgaard')
-    s = orasdict.OraSchemaDataDictionary(connection, 'Oracle', False)
-    schema = OracleSchema(s, 0, connection, './', True)
+    cfg = OSDConfig()
+    cfg.connection = cx_Oracle.connect('s0/asgaard')
+    cfg.dictionary = orasdict.OraSchemaDataDictionary(cfg)
+    schema = OracleSchema(cfg)

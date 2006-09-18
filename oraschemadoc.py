@@ -24,6 +24,8 @@
 
 import getopt, sys, os, shutil
 from oraschemadoc.oracleencoding import OracleNLSCharset
+from oraschemadoc.osdconfig import OSDConfig
+
 
 try:
     sys.setappdefaultencoding('utf-8')
@@ -80,28 +82,6 @@ def usage():
 
 def main():
 
-    # variable used for turning on debug messages
-    verbose_mode = None
-    # Generate "javadocish" html output, by default yes
-    html_output = 1
-    # if specified dia_uml_output turns on export to dia uml diagram
-    dia_uml_output = None
-    # if specified, restrict export to dia only for table names included in file 
-    dia_conf_file = None
-    # if specified, dumps data into xml
-    xml_file = None   
-    # if true then sources will have syntax highlighting
-    syntaxHighlighting = False
-    # path to css (default here)
-    csspath = os.path.join(sys.path[0], 'css')
-    css = 'oraschemadoc.css'
-    # decription
-    desc = None
-    # package bodies
-    pb = False
-    # take NOT NULL constraints. False = don't take NOT NULL constraints
-    notNulls = False
-
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'hdvs',
                                    ['help', 'verbose', 'dia=', 'dia-table-list=',
@@ -112,6 +92,8 @@ def main():
         usage()
         sys.exit(2)
 
+    cfg = OSDConfig()
+
     for opt, value in opts:
         if opt in ('-h', '--help'):
             # print help information and exit:
@@ -119,77 +101,81 @@ def main():
             sys.exit()
         if opt in ('-v', '--verbose'):
             #print verbose messages
-            verbose_mode = 1
+            cfg.verbose_mode = True
         if opt == '--no-html':
-            html_output = None
+            cfg.html_output = None
         if opt in ('-d', '--dia'):
-            dia_uml_output = 1;
-            dia_file_name = value;
+            cfg.dia_uml_output = 1;
+            cfg.dia_file_name = value;
         if opt == '--dia-table-list':
-            dia_conf_file = value
+            cfg.dia_conf_file = value
         if opt == '--xml-file':
-            xml_file=value
+            cfg.xml_file = value
         if opt in ('-s', '--syntax'):
-            syntaxHighlighting = True
+            cfg.syntaxHighlighting = True
         if opt == '--css':
             if not os.path.exists(os.path.join(csspath, value)):
                 print '\nWARNING: %s doesn\'t exists. Using default instead.\n' % value
             else:
-                css = value
+                cfg.css = value
         if opt == '--desc':
             if not os.path.exists(value):
-                desc = value
+                cfg.desc = value
             else:
                 f = file(value, 'r')
-                desc = f.read()
+                cfg.desc = f.read()
                 f.close()
         if opt == '--pb':
-            pb = True
+            cfg.pb = True
         if opt == '--nn':
-            notNulls = True
+            cfg.notNulls = True
 
     if len(args) == 3: 
-        connect_string, output_dir, name = args
-        output_dir = os.path.abspath(output_dir)
+        connect_string, cfg.output_dir, cfg.name = args
+        cfg.output_dir = os.path.abspath(cfg.output_dir)
     else:
         usage()
         sys.exit()
 
     # see if output_dir is exsits, if not try to create one.
-    if os.access(output_dir, os.F_OK) != 1:
+    if os.access(cfg.output_dir, os.F_OK) != 1:
         # dir not exists
         try: 
-            os.makedirs(output_dir)
+            os.makedirs(cfg.output_dir)
         except os.error, e:
-            print 'ERROR: Cannot create directory ', output_dir
+            print 'ERROR: Cannot create directory ', cfg.output_dir
             sys.exit(2)
     else:
         # if directory exists see if its writable
-        if os.access(output_dir, os.W_OK) != 1:
-            print 'ERROR: Cannot write into directory ', output_dir
+        if os.access(cfg.output_dir, os.W_OK) != 1:
+            print 'ERROR: Cannot write into directory ', cfg.output_dir
             sys.exit(2)
 
-    connection = cx_Oracle.connect(connect_string)
+    try:
+        cfg.connection = cx_Oracle.connect(connect_string)
+    except cx_Oracle.DatabaseError, e:
+        print e
+        sys.exit(2)
 
     # know encoding we will use
     oraenc = OracleNLSCharset()
     encoding = oraenc.getClientNLSCharset()
     if encoding == None:
-        encoding = oraenc.getPythonEncoding(oraenc.getOracleNLSCharacterset(connection))
+        encoding = oraenc.getPythonEncoding(oraenc.getOracleNLSCharacterset(cfg.connection))
     else:
         encoding = oraenc.getPythonEncoding(encoding)
-    webEncoding = encoding[1]
-    encoding = encoding[0]
-    print 'Using codec: %s' % encoding
-    print 'HTML encoding: %s\n' % webEncoding
+    cfg.webEncoding = encoding[1]
+    cfg.encoding = encoding[0]
+    print 'Using codec: %s' % cfg.encoding
+    print 'HTML encoding: %s\n' % cfg.webEncoding
 
     # recode the inputs into final encoding
     try:
-        if desc != None:
-           desc = desc.encode(encoding)
-        name = name.encode(encoding)
+        if cfg.desc != None:
+            cfg.desc = cfg.encode(cfg.desc)
+        cfg.name = cfg.encode(cfg.name)
     except:
-        print '\nConvert your description and given name into %s failed.' % encoding
+        print '\nConvert your description and given name into %s failed.' % cfg.encoding
         print 'You can get index documentation page screwed...'
         print '\nYou can try to set NLS_LANG variable to the value you have'
         print 'your environment configured. E.g. in windows:'
@@ -202,44 +188,42 @@ def main():
     import oraschemadoc.docgen
     import oraschemadoc.diagen
 
-    s = oraschemadoc.orasdict.OraSchemaDataDictionary(connection, name, verbose_mode, notNulls)
-    schema = oraschemadoc.oraschema.OracleSchema(s, verbose_mode, connection, output_dir, pb)
+    cfg.dictionary = oraschemadoc.orasdict.OraSchemaDataDictionary(cfg)
+    cfg.schema = oraschemadoc.oraschema.OracleSchema(cfg)
 
-    if xml_file:
-        file_name = os.path.join(output_dir, xml_file)
+    if cfg.xml_file:
+        file_name = os.path.join(cfg.output_dir, cfg.xml_file)
         print '\nCreating XML file: %s', file_name
         f = open(file_name, 'w')
         f.write(schema.getXML())
         f.close()
 
-    if html_output:
+    if cfg.html_output:
         print '\nCreating HTML docs'
-        doclet = doclet = oraschemadoc.docgen.OraSchemaDoclet(connection, schema,
-                                    output_dir, name, desc, verbose_mode,
-                                    syntaxHighlighting, css, webEncoding, notNulls)
+        doclet = oraschemadoc.docgen.OraSchemaDoclet(cfg)
         # copy css
         # There is problem with sys.path[0] in cx_Freeze. These exceptionse
         # are here as I try to find css file freezy way
         try:
             print 'Copying CSS style'
-            shutil.copy(os.path.join(csspath, css), output_dir)
+            shutil.copy(os.path.join(cfg.csspath, cfg.css), cfg.output_dir)
             print 'css: done'
         except IOError, (errno, errmsg):
-            print os.path.join(csspath, css) + ' not fround. Trying to find another'
+            print os.path.join(cfg.csspath, cfg.css) + ' not fround. Trying to find another'
             print 'Error copying CSS style. You are running precompiled version propably.'
             print 'Related info: (%s) %s' % (errno, errmsg)
             try:
-                print 'Trying: ' + os.path.join(os.path.dirname(sys.executable), 'css', css)
-                shutil.copy(os.path.join(os.path.dirname(sys.executable), 'css', css), output_dir)
+                print 'Trying: ' + os.path.join(os.path.dirname(sys.executable), 'css', cfg.css)
+                shutil.copy(os.path.join(os.path.dirname(sys.executable), 'css', cfg.css), cfg.output_dir)
                 print 'css: done'
             except IOError:
                 print 'Error: (%s) %s' % (errno, errmsg)
                 print 'Please copy some css style into output directory manually.'
 
-    if dia_uml_output:
-        file_name = os.path.join(output_dir, dia_file_name)
+    if cfg.dia_uml_output:
+        file_name = os.path.join(cfg.output_dir, cfg.dia_file_name)
         print '\nCreating DIA file: %s', file_name
-        dia_diagram = oraschemadoc.diagen.DiaUmlDiagramGenerator(schema, file_name, desc, 0, dia_conf_file)
+        dia_diagram = oraschemadoc.diagen.DiaUmlDiagramGenerator(schema, cfg.file_name, cfg.desc, 0, cfg.dia_conf_file)
 
 
 if __name__ == '__main__':

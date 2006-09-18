@@ -20,7 +20,7 @@
 
 # used for printing more debuging messages if app runs in verbose mode 
 
-__verbose_mode = None
+__verbose_mode = False
 
 
 def debug_message(text):

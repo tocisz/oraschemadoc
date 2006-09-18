@@ -29,18 +29,14 @@ from oraverbose import *
 
 class OraSchemaDataDictionary:
 
-    def __init__(self, conn, name, debug_mode=0, notNulls=False):
+    def __init__(self, cfg):#conn, name, debug_mode=0, notNulls=False):
         """Gets all needed data from oracle data dictionary 
            and initializes all attributes
         """
+        self.cfg = cfg
 
-        self.__conn = conn  # db_connection handler
-        self.notNulls = notNulls
-
-        set_verbose_mode(debug_mode)
-        print 'Oracle server %s (TNS: %s)' % (conn.version, conn.tnsentry)
-
-        self.name = name
+        set_verbose_mode(cfg.verbose_mode)
+        print 'Oracle server %s (TNS: %s)' % (cfg.connection.version, cfg.connection.tnsentry)
 
         # tables
         self.all_tables = self.__get_tables()
@@ -352,7 +348,7 @@ class OraSchemaDataDictionary:
             # is unpleasant as it's LONG type
             if type != 'C':
                 cons[name]=(table_name, type, check_cond, r_owner, r_constraint_name, delete_rule)
-            elif (not self.notNulls and check_cond.find(' IS NOT NULL') == -1) or self.notNulls:
+            elif (not self.cfg.notNulls and check_cond.find(' IS NOT NULL') == -1) or self.cfg.notNulls:
                 cons[name]=(table_name, type, check_cond, r_owner, r_constraint_name, delete_rule)
             else:
                 if type != 'C':
@@ -589,7 +585,7 @@ class OraSchemaDataDictionary:
 
     def __query(self, querystr):
         """Execute query end return results in array"""
-        cur = self.__conn.cursor()
+        cur = self.cfg.connection.cursor()
         cur.execute(querystr)
         results = cur.fetchall()
         cur.close()
@@ -598,6 +594,9 @@ class OraSchemaDataDictionary:
 
 if __name__ == '__main__':
     import cx_Oracle
-    connection = cx_Oracle.connect('aram_v1/aram_v1')
-    s = OraSchemaDataDictionary(connection, 'Oracle')
+    from osdconfig import OSDConfig
+    c = OSDConfig()
+    c.connection = cx_Oracle.connect('s0/asgaard')
+    s = OraSchemaDataDictionary(c)
+    print s.all_java_sources
 

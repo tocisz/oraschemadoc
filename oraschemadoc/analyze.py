@@ -91,8 +91,7 @@ class SchemaAnalyzer:
                     self.invalids_sql += 'ALTER %s %s COMPILE%s\n\n' % (mtype, name, mcompile) 
             self.invalids.append([name, type, msg, line])
 
-    
-    
+
 if __name__ == '__main__':
     import cx_Oracle
     import orasdict

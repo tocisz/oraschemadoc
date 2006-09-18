@@ -32,21 +32,15 @@ from oraverbose import *
 class OraSchemaDoclet:
 
 
-    def __init__(self, connection, schema, doc_dir, name, description,
-                 debug_mode, syntaxHiglighting, css, webEncoding, notNulls):
+    def __init__(self, cfg): #connection, schema, doc_dir, name, description,
+                 #debug_mode, syntaxHiglighting, css, webEncoding, notNulls):
 
-        set_verbose_mode(debug_mode)
+        set_verbose_mode(cfg.verbose_mode)
 
-        self.syntaxHighlighter = sqlhighlighter.SqlHighlighter(highlight=syntaxHiglighting)
-        self.dotEngine = dot.Dot(doc_dir)
-
-        self.connection = connection
-
-        self.schema = schema
-        self.doc_dir = doc_dir
-        self.name = name
-        self.description = description
-        self.html = docwidgets.HtmlWidgets(self.name, css, webEncoding, notNulls)
+        self.syntaxHighlighter = sqlhighlighter.SqlHighlighter(highlight=cfg.syntaxHighlighting)
+        self.dotEngine = dot.Dot(cfg.output_dir)
+        self.cfg = cfg
+        self.html = docwidgets.HtmlWidgets(cfg.name, cfg.css, cfg.webEncoding, cfg.notNulls)
         self.index = {}
 
         # print html files
@@ -57,31 +51,31 @@ class OraSchemaDoclet:
 
         #print pages for objects
         print "print tables"
-        for table in self.schema.tables:
+        for table in cfg.schema.tables:
             self._print_table(table)
 
         print "print views"
-        for view in self.schema.views:
+        for view in cfg.schema.views:
             self._print_view(view)
 
         print 'print materialized views'
-        for mview in self.schema.mviews:
+        for mview in cfg.schema.mviews:
             self._print_mview(mview)
 
         print "print functions"
-        for function in self.schema.functions:
+        for function in cfg.schema.functions:
             self._print_function(function)
 
         print "print procedures"
-        for procedure in self.schema.procedures:
+        for procedure in cfg.schema.procedures:
             self._print_procedure(procedure)
 
         print "print packages"
-        for package in self.schema.packages:
+        for package in cfg.schema.packages:
             self._print_package(package)
 
         print "print java sources"
-        for jsource in self.schema.java_sources:
+        for jsource in cfg.schema.java_sources:
             self._print_java_source(jsource)
 
         self._print_symbol_index_page()
@@ -97,9 +91,9 @@ class OraSchemaDoclet:
 
 
     def ddlSourceHref(self, name):
-        if not self.schema.ddlSource.scriptCache.has_key(name):
+        if not self.cfg.schema.ddlSource.scriptCache.has_key(name):
             return ''
-        return self.html.href(self.schema.ddlSource.scriptCache[name], 'DDL script')
+        return self.html.href(self.cfg.schema.ddlSource.scriptCache[name], 'DDL script')
 
 
     def _print_index_frames(self):
@@ -109,7 +103,7 @@ class OraSchemaDoclet:
 
         # tables
         rows = []
-        for table in self.schema.tables:
+        for table in self.cfg.schema.tables:
             link = self.html.href_to_table(table.name, "Main")
             if table.secondary == 'Yes':
                 link = self.html.i(link)
@@ -118,56 +112,56 @@ class OraSchemaDoclet:
 
         # indexes
         rows = []
-        for index in self.schema.indexes:
+        for index in self.cfg.schema.indexes:
             link = self.html.href_to_index(index.name, index.table_name, index.name, "Main")
             rows.append(link)
         self._print_index_frame("Indexes", rows, "indexes-index.html")
 
         # constraints
         rows = []
-        for constraint in self.schema.constraints:
+        for constraint in self.cfg.schema.constraints:
             link = self.html.href_to_constraint(constraint.name, constraint.table_name, constraint.name, "Main")
             rows.append(link)
         self._print_index_frame("Constraints", rows, "constraints-index.html")
 
         # views
         rows = []
-        for view in self.schema.views:
+        for view in self.cfg.schema.views:
             link = self.html.href_to_view(view.name, "Main")
             rows.append(link)
         self._print_index_frame("Views", rows, "views-index.html")
 
         # materialized views
         rows = []
-        for mview in self.schema.mviews:
+        for mview in self.cfg.schema.mviews:
             link = self.html.href_to_mview(mview.name, "Main")
             rows.append(link)
         self._print_index_frame("Materialized&nbsp;Views", rows, "mviews-index.html")
 
         #procedures
         rows = []
-        for procedure in self.schema.procedures:
+        for procedure in self.cfg.schema.procedures:
             link = self.html.href_to_procedure(procedure.name, "Main")
             rows.append(link)
         self._print_index_frame("Procedures", rows, "procedures-index.html")
 
         #functions
         rows = []
-        for function in self.schema.functions:
+        for function in self.cfg.schema.functions:
             link = self.html.href_to_function(function.name, "Main")
             rows.append(link)
         self._print_index_frame("Functions", rows, "functions-index.html")
 
         #packages
         rows = []
-        for package in self.schema.packages:
+        for package in self.cfg.schema.packages:
             link = self.html.href_to_package(package.name, "Main")
             rows.append(link)
         self._print_index_frame("Packages", rows, "packages-index.html")
 
         #triggers
         rows = []
-        for trigger in self.schema.triggers:
+        for trigger in self.cfg.schema.triggers:
             link = self.html.href_to_trigger(trigger.name, trigger.table_name,
                                              trigger.name, self.triggerAnchorType(trigger),
                                              "Main")
@@ -176,14 +170,14 @@ class OraSchemaDoclet:
 
         #sequences
         rows = []
-        for sequence in self.schema.sequences:
+        for sequence in self.cfg.schema.sequences:
             link = self.html.href_to_sequence(sequence.getName(), "Main")
             rows.append(link)
         self._print_index_frame("Sequences", rows, "sequences-index.html")
 
         #java sources
         rows = []
-        for jsoursce in self.schema.java_sources:
+        for jsoursce in self.cfg.schema.java_sources:
             link = self.html.href_to_java_source(jsoursce.name, "Main")
             rows.append(link)
         self._print_index_frame("Java Sources", rows, "java-sources-index.html")
@@ -196,7 +190,7 @@ class OraSchemaDoclet:
 
         #tables
         rows = []
-        for table in self.schema.tables:
+        for table in self.cfg.schema.tables:
             name = self.html.href_to_table(table.name)
             if table.secondary == 'Yes':
                 name = self.html.i(name)
@@ -210,7 +204,7 @@ class OraSchemaDoclet:
 
         #indexes 
         rows = []
-        for index in self.schema.indexes:
+        for index in self.cfg.schema.indexes:
             name = self.html.href_to_index(index.name, index.table_name, index.name)
             #add entry to do index
             self._add_index_entry(index.name, name, "index on table %s" % index.table_name)
@@ -223,7 +217,7 @@ class OraSchemaDoclet:
 
         #triggers
         rows = []
-        for trigger in self.schema.triggers:
+        for trigger in self.cfg.schema.triggers:
             name = self.html.href_to_trigger(trigger.name, trigger.table_name,
                                              trigger.name, self.triggerAnchorType(trigger))
             #add entry to do index
@@ -241,7 +235,7 @@ class OraSchemaDoclet:
 
         #constraints
         rows = []
-        for constraint in self.schema.constraints:
+        for constraint in self.cfg.schema.constraints:
             name = self.html.href_to_constraint(constraint.name, constraint.table_name, constraint.name)
             # add entry to doc index
             self._add_index_entry(constraint.name, name, "constraint on table %s" % constraint.table_name)
@@ -254,7 +248,7 @@ class OraSchemaDoclet:
 
         #views
         rows = []
-        for view in self.schema.views:
+        for view in self.cfg.schema.views:
             name = self.html.href_to_view(view.name)
             # add entry to doc index
             self._add_index_entry(view.name, name, "view")
@@ -268,7 +262,7 @@ class OraSchemaDoclet:
 
         # mviews
         rows = []
-        for mview in self.schema.mviews:
+        for mview in self.cfg.schema.mviews:
             name = self.html.href_to_mview(mview.name)
             # add entry to doc index
             self._add_index_entry(mview.name, name, "materialized view")
@@ -279,7 +273,7 @@ class OraSchemaDoclet:
 
         #procedures
         rows = []
-        for procedure in self.schema.procedures:
+        for procedure in self.cfg.schema.procedures:
             name = self.html.href_to_procedure(procedure.name)
             # add entry to doc index
             self._add_index_entry(procedure.name, name, "procedure")
@@ -290,7 +284,7 @@ class OraSchemaDoclet:
 
         #functions
         rows = []
-        for function in self.schema.functions:
+        for function in self.cfg.schema.functions:
             name = self.html.href_to_function(function.name)
             # add entry to doc index
             self._add_index_entry(function.name, name, "function")
@@ -302,7 +296,7 @@ class OraSchemaDoclet:
 
         #packages
         rows = []
-        for package in self.schema.packages:
+        for package in self.cfg.schema.packages:
             name = self.html.href_to_package(package.name)
             # add entry to doc index
             self._add_index_entry(package.name, name, "package")
@@ -314,7 +308,7 @@ class OraSchemaDoclet:
 
         #sequences
         rows = []
-        for s in self.schema.sequences:
+        for s in self.cfg.schema.sequences:
             rows.append((s.getName() + self.html.anchor(s.getName()), 
                          s.getMinValue(), s.getMaxValue(), s.getStep(), 
                          s.isCycled(), s.isOrdered(), s.getCacheSize(),
@@ -328,7 +322,7 @@ class OraSchemaDoclet:
 
         #java sources 
         rows = []
-        for jsource in self.schema.java_sources:
+        for jsource in self.cfg.schema.java_sources:
             name = self.html.href_to_java_source(jsource.name)
             self._add_index_entry(jsource.name, name, "java source")
             row = ([name])
@@ -441,7 +435,7 @@ class OraSchemaDoclet:
                 imgname = self.dotEngine.fileGraphList(table.name, aList)
                 if imgname != None:
                     try:
-                        f = file(os.path.join(self.doc_dir, table.name+'.map'), 'r')
+                        f = file(os.path.join(self.cfg.output_dir, table.name+'.map'), 'r')
                         text.append(self.html.imgMap('erdmap', f.read()))
                         f.close()
                     except IOError:
@@ -520,7 +514,7 @@ class OraSchemaDoclet:
             text.append(self.html.table(None, headers, rows))
 
         text.append(self.html.page_footer())
-        file_name = os.path.join(self.doc_dir, "table-%s.html" % table.name)
+        file_name = os.path.join(self.cfg.output_dir, "table-%s.html" % table.name)
         self._write(''.join(text), file_name)
 
 
@@ -575,7 +569,7 @@ class OraSchemaDoclet:
                 text.append(self._htmlizeTrigger(trigger))
 
         text.append(self.html.page_footer())
-        file_name = os.path.join(self.doc_dir, "view-%s.html" % view.name)
+        file_name = os.path.join(self.cfg.output_dir, "view-%s.html" % view.name)
         self._write(''.join(text), file_name)
 
 
@@ -634,7 +628,7 @@ class OraSchemaDoclet:
                 text.append(self._htmlizeTrigger(trigger))
 
         text.append(self.html.page_footer())
-        file_name = os.path.join(self.doc_dir, "mview-%s.html" % mview.name)
+        file_name = os.path.join(self.cfg.output_dir, "mview-%s.html" % mview.name)
         self._write(''.join(text), file_name)
 
 
@@ -672,7 +666,7 @@ class OraSchemaDoclet:
         text.append(self.html.pre(self.syntaxHighlighter.getOutput()))
 
         text.append(self.html.page_footer())
-        file_name = os.path.join(self.doc_dir, "procedure-%s.html" % procedure.name)
+        file_name = os.path.join(self.cfg.output_dir, "procedure-%s.html" % procedure.name)
         self._write(''.join(text), file_name)
 
 
@@ -710,7 +704,7 @@ class OraSchemaDoclet:
         text.append(self.html.pre(self.syntaxHighlighter.getOutput()))
 
         text.append(self.html.page_footer())
-        file_name = os.path.join(self.doc_dir, "function-%s.html" % function.name)
+        file_name = os.path.join(self.cfg.output_dir, "function-%s.html" % function.name)
         self._write(''.join(text), file_name)
 
 
@@ -721,10 +715,8 @@ class OraSchemaDoclet:
         text.append(self.html.page_header("Source of %s Java class" % java_source.name))
         local_nav_bar = []
         text.append(self.html.context_bar(local_nav_bar))
-        text.append(self.html.heading(java_source.name, 2))
+        text.append(self.html.heading('Java source: %s' % java_source.name, 2))
 
-        title = "Source" 
-        headers = (["Source"])
         rows=[]
         _src = []
         for line in java_source.source:
@@ -732,12 +724,11 @@ class OraSchemaDoclet:
             # in java source empty string is None, so need to check before adding text
             if line.text:
                 _src.append(line.text)
-            _src.append('\n')
-        rows.append([self.html.pre(self.html._quotehtml(''.join(_src)))])
-        text.append(self.html.table(title, headers, rows))
+            #_src.append('\n')
+        text.append(self.html.pre(self.html._quotehtml(''.join(_src))))
 
         text.append(self.html.page_footer())
-        file_name = os.path.join(self.doc_dir, "java-source-%s.html" % java_source.name.replace("/", "-"))
+        file_name = os.path.join(self.cfg.output_dir, "java-source-%s.html" % java_source.name.replace("/", "-"))
         self._write(''.join(text), file_name)
 
 
@@ -764,7 +755,7 @@ class OraSchemaDoclet:
             for entry in self.index[key]:
                 text.append('%s %s<br/>' % entry)
         text.append(self.html.page_footer())
-        file_name = os.path.join(self.doc_dir, "symbol-index.html")
+        file_name = os.path.join(self.cfg.output_dir, "symbol-index.html")
         self._write(''.join(text), file_name)
 
 
@@ -802,7 +793,7 @@ class OraSchemaDoclet:
             text.append(self.html.pre(self.syntaxHighlighter.getOutput()))
 
         text.append(self.html.page_footer())
-        file_name = os.path.join(self.doc_dir, "package-%s.html" % package.name)
+        file_name = os.path.join(self.cfg.output_dir, "package-%s.html" % package.name)
         self._write(''.join(text), file_name)
 
 
@@ -818,7 +809,7 @@ class OraSchemaDoclet:
 
         text.append(self.html.heading("Sanity Check", 1))
 
-        scheck = analyze.SchemaAnalyzer(self.connection, self.schema)
+        scheck = analyze.SchemaAnalyzer(self.cfg.connection, self.cfg.schema)
         if scheck.fk_no_indexes:
             text.append(self.html.anchor("fk-ix"))
             text.append(self.html.heading("No indexes on columns involved in foreign key constraints",2))
@@ -848,7 +839,7 @@ class OraSchemaDoclet:
                 row.append(columns)
                 rows.append(row)
                 #write sql
-                file_name = os.path.join(self.doc_dir, "fk-indexes.sql")
+                file_name = os.path.join(self.cfg.output_dir, "fk-indexes.sql")
                 self._write(scheck.fk_no_indexes_sql,file_name)
             text.append(self.html.table(title,headers,rows))
             problems = True
@@ -862,7 +853,7 @@ class OraSchemaDoclet:
                     USER_ERRORS table, you are in trouble then...</p>
                     <p>The sql file which will compile these objects is 
                     <a href="compile-objects.sql">created for you</a>.</p>''')
-            self._write(scheck.invalids_sql, os.path.join(self.doc_dir, 'compile-objects.sql'))
+            self._write(scheck.invalids_sql, os.path.join(self.cfg.output_dir, 'compile-objects.sql'))
             invalids = scheck.invalids
             for i in invalids:
                 if i[1] == 'PACKAGE' or i[1] == 'PACKAGE BODY':
@@ -874,17 +865,18 @@ class OraSchemaDoclet:
                 if i[1] == 'VIEW':
                     i[0] = self.html.href_to_view(i[0])
                 if i[1] == 'TRIGGER':
-                    for j in self.schema.triggers:
+                    for j in self.cfg.schema.triggers:
                         if j.name == i[0]:
                             i[0] = self.html.href_to_trigger(i[0], j.table_name, i[0], self.triggerAnchorType(j))
                             break
+                i[2] = self.html._quotehtml(i[2])
             text.append(self.html.table('Invalids', ['Object name', 'Type', 'Error', 'At line'], invalids))
 
         if problems == False:
             # no checks
             text.append(self.html.p('No known problems.'))
         text.append(self.html.page_footer())
-        file_name = os.path.join(self.doc_dir, "sanity-check.html")
+        file_name = os.path.join(self.cfg.output_dir, "sanity-check.html")
         self._write(''.join(text), file_name)
 
 
@@ -906,17 +898,17 @@ class OraSchemaDoclet:
 
     def _print_common_pages(self):
         # print index.html, nav.html and main.html
-        text = self.html._index_page(self.name)
-        file_name = os.path.join(self.doc_dir, "index.html")
+        text = self.html._index_page(self.cfg.name)
+        file_name = os.path.join(self.cfg.output_dir, "index.html")
         self._write(text, file_name)
-        text = self.html._global_nav_frame(self.name)
-        file_name = os.path.join(self.doc_dir, "nav.html")
+        text = self.html._global_nav_frame(self.cfg.name)
+        file_name = os.path.join(self.cfg.output_dir, "nav.html")
         self._write(text, file_name)
         # er diagram
         imgname = None
         if self.dotEngine.haveDot:
             erdDict = {}
-            for table in self.schema.tables:
+            for table in self.cfg.schema.tables:
                 refs = []
                 if table.referential_constraints:
                     for ref in table.referential_constraints:
@@ -925,17 +917,17 @@ class OraSchemaDoclet:
             imgname = self.dotEngine.fileGraphDict(erdDict)
             if imgname != None:
                 try:
-                    f = file(os.path.join(self.doc_dir, 'main.map'), 'r')
+                    f = file(os.path.join(self.cfg.output_dir, 'main.map'), 'r')
                     text = self.html.imgMap('mainmap', f.read())
                     f.close()
-                    os.remove(os.path.join(self.doc_dir, 'main.map'))
+                    os.remove(os.path.join(self.cfg.output_dir, 'main.map'))
                 except IOError:
                     text = ''
                     print 'error reading main.map GraphViz file'
                 imgname = text + self.html.img(imgname, htmlMap='mainmap', cssClass='erd')
 
-        text = self.html._main_frame(self.name, self.description, self.syntaxHighlighter.highlight, imgname)
-        file_name = os.path.join(self.doc_dir, "main.html")
+        text = self.html._main_frame(self.cfg.name, self.cfg.desc, self.syntaxHighlighter.highlight, imgname)
+        file_name = os.path.join(self.cfg.output_dir, "main.html")
         self._write(text, file_name)
 
 
@@ -953,7 +945,7 @@ class OraSchemaDoclet:
             text.append(row)
         text.append(self.html.frame_footer())
         #java sources contain simbol / inside name, in file_names should be replaced with "-"
-        f_name = os.path.join(self.doc_dir, file_name.replace("/","-"))
+        f_name = os.path.join(self.cfg.output_dir, file_name.replace("/","-"))
         self._write(''.join(text), f_name)
 
 
@@ -965,7 +957,7 @@ class OraSchemaDoclet:
         text = text + ht_table
         text = text + self.html.page_footer()
 
-        file_name = os.path.join(self.doc_dir, file_name.replace("/", "-"))
+        file_name = os.path.join(self.cfg.output_dir, file_name.replace("/", "-"))
         self._write(text, file_name)
 
 
@@ -973,8 +965,9 @@ if __name__ == '__main__':
     import cx_Oracle
     import orasdict
     import oraschema
-    connection = cx_Oracle.connect('s0/asgaard')
-    s = orasdict.OraSchemaDataDictionary(connection, 'Oracle', 0, True)
-    schema = oraschema.OracleSchema(s, 0)
-    doclet = OraSchemaDoclet(connection, schema, './test', 'foo', 'bar',
-                 0, True, 'default.css', 'utf-8', True)
+    from osdconfig import OSDConfig
+    c = OSDConfig()
+    c.connection = cx_Oracle.connect('s0/asgaard')
+    c.dictionary = orasdict.OraSchemaDataDictionary(c)
+    c.schema = oraschema.OracleSchema(c)
+    doclet = OraSchemaDoclet(c)
