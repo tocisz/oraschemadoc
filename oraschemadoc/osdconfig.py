@@ -19,6 +19,11 @@
 
 import os.path
 import sys
+import shutil
+
+import docgen
+import diagen
+
 
 class OSDConfig:
     """Configure attributes packed together"""
@@ -60,3 +65,50 @@ class OSDConfig:
 
     def encode(self, text):
         return text.encode(self.encoding)
+
+
+    def crateXML(self):
+        if not self.xml_file:
+            return
+        file_name = os.path.join(self.output_dir, self.xml_file)
+        print '\nCreating XML file: %s', file_name
+        f = open(file_name, 'w')
+        f.write(self.schema.getXML())
+        f.close()
+
+
+    def createDia(self):
+        if not self.dia_uml_output:
+            return
+        file_name = os.path.join(self.output_dir, self.dia_file_name)
+        print '\nCreating DIA file: %s', file_name
+        dia_diagram = diagen.DiaUmlDiagramGenerator(self.schema, file_name, self.desc, 0, self.dia_conf_file)
+
+
+    def createXHTML(self):
+        if not self.html_output:
+            return
+        print '\nCreating HTML docs'
+        doclet = docgen.OraSchemaDoclet(self)
+        # copy css
+        # There is problem with sys.path[0] in cx_Freeze. These exceptionse
+        # are here as I try to find css file freezy way
+        try:
+            print 'Copying CSS style'
+            shutil.copy(os.path.join(self.csspath, self.css), self.output_dir)
+            print 'css: done'
+        except IOError, (errno, errmsg):
+            print os.path.join(self.csspath, self.css) + ' not fround. Trying to find another'
+            print 'Error copying CSS style. You are running precompiled version propably.'
+            print 'Related info: (%s) %s' % (errno, errmsg)
+            try:
+                print 'Trying: ' + os.path.join(os.path.dirname(sys.executable), 'css', self.css)
+                shutil.copy(os.path.join(os.path.dirname(sys.executable), 'css', self.css), self.output_dir)
+                print 'css: done'
+            except IOError:
+                print 'Error: (%s) %s' % (errno, errmsg)
+                print 'Please copy some css style into output directory manually.'
+
+
+if __name__ == '__main__':
+    print 'This module can be used only as a library for Oraschemadoc'

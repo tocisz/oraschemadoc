@@ -22,7 +22,7 @@
 #
 
 
-import getopt, sys, os, shutil
+import getopt, sys, os
 from oraschemadoc.oracleencoding import OracleNLSCharset
 from oraschemadoc.osdconfig import OSDConfig
 
@@ -185,45 +185,13 @@ def main():
     # start the show...
     import oraschemadoc.orasdict
     import oraschemadoc.oraschema
-    import oraschemadoc.docgen
-    import oraschemadoc.diagen
-
+    # common db meta structures
     cfg.dictionary = oraschemadoc.orasdict.OraSchemaDataDictionary(cfg)
     cfg.schema = oraschemadoc.oraschema.OracleSchema(cfg)
-
-    if cfg.xml_file:
-        file_name = os.path.join(cfg.output_dir, cfg.xml_file)
-        print '\nCreating XML file: %s', file_name
-        f = open(file_name, 'w')
-        f.write(schema.getXML())
-        f.close()
-
-    if cfg.html_output:
-        print '\nCreating HTML docs'
-        doclet = oraschemadoc.docgen.OraSchemaDoclet(cfg)
-        # copy css
-        # There is problem with sys.path[0] in cx_Freeze. These exceptionse
-        # are here as I try to find css file freezy way
-        try:
-            print 'Copying CSS style'
-            shutil.copy(os.path.join(cfg.csspath, cfg.css), cfg.output_dir)
-            print 'css: done'
-        except IOError, (errno, errmsg):
-            print os.path.join(cfg.csspath, cfg.css) + ' not fround. Trying to find another'
-            print 'Error copying CSS style. You are running precompiled version propably.'
-            print 'Related info: (%s) %s' % (errno, errmsg)
-            try:
-                print 'Trying: ' + os.path.join(os.path.dirname(sys.executable), 'css', cfg.css)
-                shutil.copy(os.path.join(os.path.dirname(sys.executable), 'css', cfg.css), cfg.output_dir)
-                print 'css: done'
-            except IOError:
-                print 'Error: (%s) %s' % (errno, errmsg)
-                print 'Please copy some css style into output directory manually.'
-
-    if cfg.dia_uml_output:
-        file_name = os.path.join(cfg.output_dir, cfg.dia_file_name)
-        print '\nCreating DIA file: %s', file_name
-        dia_diagram = oraschemadoc.diagen.DiaUmlDiagramGenerator(schema, cfg.file_name, cfg.desc, 0, cfg.dia_conf_file)
+    # crate requested outputs
+    cfg.crateXML()
+    cfg.createXHTML()
+    cfg.createDia()
 
 
 if __name__ == '__main__':
