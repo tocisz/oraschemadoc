@@ -2,7 +2,11 @@
 
 """ Generates "JavaDoc" style information about Oracle schema objects """
 
-# OraSchemaDoc v0.25
+## \mainpage Oraschemadoc
+# Oraschemadoc is an easy to use Oracle database documention
+# tool. It takes all objects in schema covering Oracle specific
+# features.
+#
 # Copyright (C) Aram Kananov <arcanan@flashmail.com>, 2002
 # Copyright (C) Petr Vanek <petr@scribus.info>, 2005
 #
@@ -50,6 +54,7 @@ except ImportError:
 
 
 def usage():
+    """! \brief Print quick help."""
     print '\nOracle Schema Documentation Generator v0.25'
     print 'usage: oraschemadoc [-v|--verbose] [-d|--dia [--dia-table-list=file]] [--no-html]'
     print '                    [--xml-file=filename] [-s|--syntax] '
@@ -81,6 +86,7 @@ def usage():
 
 
 def main():
+    """! \brief Parse CLI arguments and call tasks."""
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'hdvs',

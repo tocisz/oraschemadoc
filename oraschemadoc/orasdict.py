@@ -28,11 +28,13 @@ from oraverbose import *
 
 
 class OraSchemaDataDictionary:
+    """! \brief Get all needed data from oracle data dictionary
+       and initializes all attributes
+    """
 
-    def __init__(self, cfg):#conn, name, debug_mode=0, notNulls=False):
-        """Gets all needed data from oracle data dictionary 
-           and initializes all attributes
-        """
+    def __init__(self, cfg):
+        """! \param cfg a OSDConfig instance """
+
         self.cfg = cfg
 
         set_verbose_mode(cfg.verbose_mode)
@@ -121,7 +123,7 @@ class OraSchemaDataDictionary:
 
 
     def __set_table_maps(self):
-        """Fill table_constraint_map, table_primary_key_map, 
+        """Fill table_constraint_map, table_primary_key_map,
            table_check_constraint, table_foreign_key_map, table_index_map
         """
         # table_constraints
