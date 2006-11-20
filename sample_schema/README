@@ -1,0 +1,8 @@
+Here is a stupid sample schmea.
+Run it via sqlplus:
+sqlplus system/<passwd>@yourdb @sample
+
+1st param is new username
+2nd param is new password
+
+I use osd/osd.
