@@ -26,48 +26,53 @@ import diagen
 
 
 class OSDConfig:
-    """Configure attributes packed together"""
+    """! \brief Configure attributes packed together"""
 
     def __init__(self):
-        """ Default values """
+        """! \brief  Default values """
+        #! \brief text string to display "project"/schema name
         self.name = 'Example'
-        # variable used for turning on debug messages
+        #! \brief  variable used for turning on debug messages
         self.verbose_mode = False
+        #! \brief directory to store outputs
         self.output_dir = '.'
-        # Generate "javadocish" html output, by default yes
+        #! \brief Generate "javadocish" html output, by default yes
         self.html_output = True
-        # if specified dia_uml_output turns on export to dia uml diagram
+        #! \brief if specified dia_uml_output turns on export to dia uml diagram
         self.dia_uml_output = False
-        # if specified, restrict export to dia only for table names included in file 
+        #! \brief if specified, restrict export to dia only for table names included in file
         self.dia_conf_file = None
-        # if specified, dumps data into xml
+        #! \brief if specified, dumps data into xml
         self.xml_file = None
-        # if true then sources will have syntax highlighting
+        #! \brief if true then sources will have syntax highlighting
         self.syntaxHighlighting = False
-        # path to css (default here)
+        #! \brief path to css (default here)
         self.csspath = os.path.join(sys.path[0], 'css')
+        #! \brief file with css styles
         self.css = 'oraschemadoc.css'
-        # decription
+        #! \brief decription
         self.desc = ''
-        # package bodies
+        #! \brief package bodies
         self.pb = False
-        # take NOT NULL constraints. False = don't take NOT NULL constraints
+        #! \brief take NOT NULL constraints. False = don't take NOT NULL constraints
         self.notNulls = False
-        # DB connection
+        #! \brief DB connection
         self.connection = None
-        # DB attributes
+        #! \brief DB attributes
         self.encoding = 'utf8'
         self.webEncoding = 'utf8'
-        # internals
+        #! \brief internals
         self.dictionary = None
         self.schema = None
 
 
-    def encode(self, text):
+    def encode(self, text=''):
+        """! \brief Encode given string with 'encoding' """
         return text.encode(self.encoding)
 
 
     def crateXML(self):
+        """! \brief Base XML creattion """
         if not self.xml_file:
             return
         file_name = os.path.join(self.output_dir, self.xml_file)
@@ -78,6 +83,7 @@ class OSDConfig:
 
 
     def createDia(self):
+        """! \brief Base Dia creation""" 
         if not self.dia_uml_output:
             return
         file_name = os.path.join(self.output_dir, self.dia_file_name)
@@ -86,6 +92,7 @@ class OSDConfig:
 
 
     def createXHTML(self):
+        """! \brief Base XHTML creattion"""
         if not self.html_output:
             return
         print '\nCreating HTML docs'

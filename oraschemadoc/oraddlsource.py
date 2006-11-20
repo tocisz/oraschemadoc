@@ -77,8 +77,17 @@ class OraDDLSource:
             return
         par = {'type': objType, 'name': objName}
         try:
-            ddl = self.query(statement="select to_char(dbms_metadata.get_ddl(:type, :name)) from dual",
-                         params=par)[0][0]
+            # CLOBS cannot be fetchall()ed!
+            cur = self.connection.cursor()
+            cur.execute("select dbms_metadata.get_ddl(:type, :name) from dual", par)
+            ddl = []
+            row = cur.fetchone()
+            while row:
+                ddl.append(row[0].read())
+                try:
+                    row = cur.next()
+                except StopIteration:
+                    break
         except cx_Oracle.DatabaseError, e:
             print 'ERROR: DDL creation is inconsistent'
             print '       %s' % e.__str__()[:e.__str__().find('\n')]
@@ -91,7 +100,7 @@ class OraDDLSource:
         f = file(os.path.join(currentDir, self.fname), 'w')
         f.write('-- created by Oraschemadoc %s\n' % time.ctime())
         f.write('-- visit http://www.yarpen.cz/oraschemadoc/ for more info\n')
-        f.write(ddl.strip())
+        f.write(''.join(ddl))
         f.write('\n/\n')
         f.close()
         strippedName = os.path.join(currentDir, self.fname)[len(self.rootDir)+1:]

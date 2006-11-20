@@ -228,7 +228,7 @@ class OraSchemaDataDictionary:
         # fix me with iot_table overflow segments
         stmt = """select table_name, partitioned, secondary, cluster_name,
                      iot_type, temporary,  nested, tablespace_name
-                  from user_tables"""        
+                  from user_tables"""
         tables = {}
         print "get tables"
         for table, partitioned, secondary, cluster, iot_type, temporary, nested, tablespace_name in self.__query(stmt):

@@ -267,7 +267,7 @@ class OraSchemaDoclet:
             # add entry to doc index
             self._add_index_entry(mview.name, name, "materialized view")
             rows.append([name, self.ddlSourceHref(mview.name)])
-        headers = [("Materialized View", 'DDL Script')]
+        headers = "Materialized View", 'DDL Script'
         ht_table = self.html.table("Materialized Views", headers, rows)
         self._print_list_page("Materialized Views", ht_table, "mviews-list.html")
 
@@ -278,7 +278,7 @@ class OraSchemaDoclet:
             # add entry to doc index
             self._add_index_entry(procedure.name, name, "procedure")
             rows.append([name, self.ddlSourceHref(procedure.name)])
-        headers = ["Name", 'DDL Script']
+        headers = "Name", 'DDL Script'
         ht_table = self.html.table("Procedures", headers, rows)
         self._print_list_page("Procedures", ht_table, "procedures-list.html")
 
@@ -290,7 +290,7 @@ class OraSchemaDoclet:
             self._add_index_entry(function.name, name, "function")
             row = ([name, self.ddlSourceHref(function.name)])
             rows.append(row)
-        headers = (["Name", 'DDL Script'])
+        headers = "Name", 'DDL Script'
         ht_table = self.html.table("Functions", headers, rows)
         self._print_list_page("Functions", ht_table, "functions-list.html")
 
@@ -302,7 +302,7 @@ class OraSchemaDoclet:
             self._add_index_entry(package.name, name, "package")
             row = ([name, self.ddlSourceHref(package.name)])
             rows.append(row)
-        headers = (["Name", 'DDL Script'])
+        headers = "Name", 'DDL Script'
         ht_table = self.html.table("Packages", headers, rows)
         self._print_list_page("Packages", ht_table, "packages-list.html")
 
@@ -680,6 +680,7 @@ class OraSchemaDoclet:
         local_nav_bar.append(("Source", "f-src"))
         text.append(self.html.context_bar(local_nav_bar))
         text.append(self.html.heading(function.name, 2))
+        text.append(self.ddlSourceHref(function.name))
 
         title = "Arguments:" + self.html.anchor("f-args")
         headers = "Name", "Data Type", "Default Value", "In/Out"
@@ -693,7 +694,6 @@ class OraSchemaDoclet:
             rows.append(row)
         text.append(self.html.table(title, headers, rows))
         text.append(self.html.heading("Returns:",3) + function.return_data_type)
-        text.append(self.ddlSourceHref(function.name))
         text.append(self.html.heading("Source", 2) + self.html.anchor("f-src"))
         _src = []
         for line in function.source.source:

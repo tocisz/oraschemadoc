@@ -8,6 +8,7 @@
 # features.
 #
 # Copyright (C) Aram Kananov <arcanan@flashmail.com>, 2002
+#
 # Copyright (C) Petr Vanek <petr@scribus.info>, 2005
 #
 # This program is free software; you can redistribute it and/or
