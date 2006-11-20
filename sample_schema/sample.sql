@@ -29,6 +29,7 @@ grant create session to &username;
 grant resource to &username;
 grant unlimited tablespace to &username;
 grant CREATE MATERIALIZED VIEW to &username;
+grant CREATE VIEW to &username;
 
 exec dbms_output.put_line('Connecting and running as new use &username');
 connect &username/&password
