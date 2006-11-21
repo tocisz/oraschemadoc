@@ -38,6 +38,7 @@ from oracleobjects.oraclejavasource import OracleJavaSource
 from oracleobjects.oraclecheckconstraint import OracleCheckConstraint
 from oracleobjects.oraclesequence import OracleSequence
 from oracleobjects.oraclemview import OracleMView
+from oracleobjects.oraclereferentialconstraint import OracleReferentialConstraint
 
 
 class OracleSchema:

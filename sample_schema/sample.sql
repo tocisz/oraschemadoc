@@ -28,8 +28,9 @@ create user &username
 grant create session to &username;
 grant resource to &username;
 grant unlimited tablespace to &username;
-grant CREATE MATERIALIZED VIEW to &username;
-grant CREATE VIEW to &username;
+-- grant CREATE MATERIALIZED VIEW to &username;
+-- grant CREATE VIEW to &username;
+ALTER USER &username DEFAULT ROLE ALL;
 
 exec dbms_output.put_line('Connecting and running as new use &username');
 connect &username/&password

@@ -20,8 +20,6 @@
 
 __author__ = 'Aram Kananov <arcanan@flashmail.com>, Petr Vanek <petr@scribus.info>'
 
-__version__ = '$Version: 0.25'
-
 import string
 import time
 

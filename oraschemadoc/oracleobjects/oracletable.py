@@ -24,6 +24,8 @@ from oracleindex import OracleIndex
 from oracletrigger import OracleTrigger
 from oracleuniqueconstraint import OracleUniqueConstraint
 from oraclecheckconstraint import OracleCheckConstraint
+from oracletabpartition import OracleTabPartition
+from oraclereferentialconstraint import OracleReferentialConstraint
 
 
 class OracleTable:

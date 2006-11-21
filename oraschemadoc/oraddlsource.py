@@ -89,7 +89,7 @@ class OraDDLSource:
                 except StopIteration:
                     break
         except cx_Oracle.DatabaseError, e:
-            print 'ERROR: DDL creation is inconsistent'
+            print 'ERROR: DDL creation is inconsistent for: %s %s' % (par['type'], par['name'])
             print '       %s' % e.__str__()[:e.__str__().find('\n')]
             return None
         self.fname = '%s.sql' % objName.lower()
