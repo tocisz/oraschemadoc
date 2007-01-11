@@ -1,0 +1,7 @@
+CREATE OR REPLACE VIEW checkoption_view AS
+ SELECT *
+ FROM std_table
+ WHERE id < 1000
+ WITH CHECK OPTION;
+
+ 
