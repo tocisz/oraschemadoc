@@ -171,7 +171,7 @@ class OracleTable:
         xml_text += '<columns>'
         #xml for table columns
         for position in self.columns.keys():
-            xml_text += self.columns[position].getXML(self.__name)
+            xml_text += self.columns[position].getXML(self.name)
         xml_text += '</columns>\n'
         xml_text += '<constraints>\n'
         if self.primary_key:

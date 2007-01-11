@@ -25,7 +25,7 @@ class OracleColumn:
     def __init__(self, name, column_id, data_type, nullable, data_default, comments):
         self.column_id = column_id
         self.name = name
-        self.data_type =data_type
+        self.data_type = data_type
         self.nullable = nullable
         self.data_default = data_default
         self.comments = comments
@@ -42,6 +42,6 @@ class OracleColumn:
                     <comments><![CDATA[%s]]></comments>
                   </column>\n''' % (table_name, self.name,
                     self.name, self.column_id, self.data_type,
-                    self.default_value, self.nullable,
+                    self.data_default, self.nullable,
                     self.comments)
 

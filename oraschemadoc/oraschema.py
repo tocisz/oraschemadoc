@@ -70,7 +70,7 @@ class OracleSchema:
         xml_text = '<schema>'
         for table in self.tables:
             xml_text += table.getXML()
-            print "generating xml for %s" % table.getName()
+            print "generating xml for %s" % table.name
         for view in self.views:
             xml_text += view.getXML()
 

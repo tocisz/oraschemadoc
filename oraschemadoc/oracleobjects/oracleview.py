@@ -21,6 +21,7 @@ __author__ = 'Aram Kananov <arcanan@flashmail.com>, Petr Vanek, <petr@yarpen.cz>
 
 from oracleviewcolumn import OracleViewColumn
 from oracletrigger import OracleTrigger
+from oracleviewconstraint import OracleViewConstraint
 
 
 class OracleView:
@@ -51,7 +52,7 @@ class OracleView:
         if self.constraints:
             xml_text += '<constraints>'
             for constraint in self.constraints:
-                xml_text += constraint.getXML
+                xml_text += constraint.getXML()
             xml_text += '</constraints>'
 
         if self.triggers:
