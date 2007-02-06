@@ -75,11 +75,18 @@ class OraDDLSource:
             return None
         if self.scriptCache.has_key(objName):
             return
-        par = {'type': objType, 'name': objName}
+        ownerStrip = objName.find('.')
+        if ownerStrip != -1:
+            splitName = objName.split('.')
+            par = {'type': objType, 'name': splitName[1], 'schema': splitName[0]}
+            sql = "select dbms_metadata.get_ddl(:type, :name, :schema) from dual"
+        else:
+            par = {'type': objType, 'name': objName}
+            sql = "select dbms_metadata.get_ddl(:type, :name) from dual"
         try:
             # CLOBS cannot be fetchall()ed!
             cur = self.connection.cursor()
-            cur.execute("select dbms_metadata.get_ddl(:type, :name) from dual", par)
+            cur.execute(sql, par)
             ddl = []
             row = cur.fetchone()
             while row:

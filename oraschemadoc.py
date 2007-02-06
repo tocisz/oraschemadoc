@@ -81,6 +81,11 @@ def usage():
     print '   --pb                 Generates source code for package bodies too.'
     print '   --nn                 Index NOT NULL constraints too. It\'s skipped by default:'
     print '                        NOT NULL constraints are reported in columns list only.'
+    print '   --schema=schemalist  specify schema/usernames to select from ALL_% obejcts.'
+    print '                        If it\'s not given standard USER_% objects are used.'
+    print '                        schemalist can be e.g. "SCOTT,FOO,BAR" - coma separated list'
+    print '                        or empty - it means all granted objects will be documented.'
+    print '                        See README file for more info and examples.'
     print '-h --help               print this help screen'
     print ''
     print 'For more information see README\n'
@@ -93,7 +98,7 @@ def main():
         opts, args = getopt.getopt(sys.argv[1:], 'hdvs',
                                    ['help', 'verbose', 'dia=', 'dia-table-list=',
                                     'syntax', 'css=', 'desc=', 'pb', 'no-html',
-                                    'xml-file=', 'nn'])
+                                    'xml-file=', 'nn', 'schema='])
     except getopt.error, e:
         # print help information and exit:
         usage()
@@ -136,6 +141,11 @@ def main():
             cfg.pb = True
         if opt == '--nn':
             cfg.notNulls = True
+        if opt == '--schema':
+            cfg.useOwners = True
+            if len(value) > 0:
+                cfg.owners = value.split(',')
+
 
     if len(args) == 3: 
         connect_string, cfg.output_dir, cfg.name = args
@@ -163,6 +173,10 @@ def main():
     except cx_Oracle.DatabaseError, e:
         print e
         sys.exit(2)
+
+    if len(cfg.owners) > 0:
+        # simulate slect user from dual;
+        cfg.currentUser = "'" + connect_string[:connect_string.find('/')].upper() + "'"
 
     # know encoding we will use
     oraenc = OracleNLSCharset()

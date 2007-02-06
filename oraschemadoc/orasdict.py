@@ -25,6 +25,7 @@ __version__ = '$Revision$'
 import fpformat
 
 from oraverbose import *
+from oraschemasql import OracleCatalog
 
 
 class OraSchemaDataDictionary:
@@ -226,9 +227,10 @@ class OraSchemaDataDictionary:
     def __get_tables(self):
         """Get tables"""
         # fix me with iot_table overflow segments
-        stmt = """select table_name, partitioned, secondary, cluster_name,
-                     iot_type, temporary,  nested, tablespace_name
-                  from user_tables"""
+        #stmt = """select table_name, partitioned, secondary, cluster_name,
+        #             iot_type, temporary,  nested, tablespace_name
+        #          from user_tables"""
+        stmt = self._prepareStatement(OracleCatalog['tables'])
         tables = {}
         print "get tables"
         for table, partitioned, secondary, cluster, iot_type, temporary, nested, tablespace_name in self.__query(stmt):
@@ -265,10 +267,11 @@ class OraSchemaDataDictionary:
         Returns a dictionary {tablename: [ [partition], [partition] ... ], tablename2: ... }
         It's something like grouping by tablename.
         """
-        stmt = '''select table_name, partition_name, 
-                    tablespace_name, high_value,
-                    partition_position
-                    from user_tab_partitions order by table_name, partition_position'''
+#        stmt = '''select table_name, partition_name, 
+#                    tablespace_name, high_value,
+#                    partition_position
+#                    from user_tab_partitions order by table_name, partition_position'''
+        stmt = self._prepareStatement(OracleCatalog['tab_partitions'])
         tab_partitions = {}
         print "get partitions"
         for table_name, partition_name, tablespace_name, high_value, partition_position in self.__query(stmt):
@@ -282,9 +285,10 @@ class OraSchemaDataDictionary:
 
     def __get_table_comments(self):
         """Get comments on tables and views"""
-        stmt = """SELECT table_name, comments
-            FROM user_tab_comments
-            WHERE comments is not null"""
+#        stmt = """SELECT table_name, comments
+#            FROM user_tab_comments
+#            WHERE comments is not null"""
+        stmt = self._prepareStatement(OracleCatalog['tab_comments'])
         comments = {}
         print "get comments on tables and views"
         for table, comment in self.__query(stmt):
@@ -295,9 +299,10 @@ class OraSchemaDataDictionary:
 
     def __get_column_comments(self):
         """Get all tables/views column comments"""
-        stmt = """ SELECT table_name, column_name, comments
-            FROM user_col_comments
-            where comments is not null"""
+#        stmt = """ SELECT table_name, column_name, comments
+#            FROM user_col_comments
+#            where comments is not null"""
+        stmt = self._prepareStatement(OracleCatalog['col_comments'])
         col_comments = {}
         print "get all tables/views column comments"
         for table, column, comment in self.__query(stmt):
@@ -308,10 +313,11 @@ class OraSchemaDataDictionary:
 
     def __get_columns(self):
         """Get all columns for tables, views and clusters"""
-        stmt = """select table_name, column_name, data_type , data_length, data_precision,
-                         data_scale, nullable, column_id, data_default
-                    from user_tab_columns
-                    order by table_name, column_id"""
+#        stmt = """select table_name, column_name, data_type , data_length, data_precision,
+#                         data_scale, nullable, column_id, data_default
+#                    from user_tab_columns
+#                    order by table_name, column_id"""
+        stmt = self._prepareStatement(OracleCatalog['columns'])
         all_columns = {}
         print "get all columns for tables, views and clusters"
         for table, column, data_type, data_length, data_precision, data_scale, nullable, column_id, \
@@ -338,9 +344,10 @@ class OraSchemaDataDictionary:
 
     def __get_constraints(self):
         """get all_table/view constraints"""
-        stmt = """select  table_name, constraint_name, constraint_type, search_condition, r_owner,
-            r_constraint_name , delete_rule
-            from user_constraints where r_owner is null or r_owner = user"""
+#        stmt = """select  table_name, constraint_name, constraint_type, search_condition, r_owner,
+#            r_constraint_name , delete_rule
+#            from user_constraints where r_owner is null or r_owner = user"""
+        stmt = self._prepareStatement(OracleCatalog['constraints'])
         cons ={}
         print  "get all table/view constraints"
         for table_name, name, type, check_cond, r_owner, r_constraint_name, delete_rule in self.__query(stmt):
@@ -360,8 +367,9 @@ class OraSchemaDataDictionary:
 
     def __get_constraited_columns(self):
         """Get all constrainted columns"""
-        stmt  = """select constraint_name, table_name, column_name, position from
-            user_cons_columns"""
+#        stmt  = """select constraint_name, table_name, column_name, position from
+#            user_cons_columns"""
+        stmt = self._prepareStatement(OracleCatalog['cons_columns'])
         cs_cols = {}
         print  "get all constrainted columns"
         for name , table_name, column_name, position in self.__query(stmt):
@@ -376,7 +384,8 @@ class OraSchemaDataDictionary:
 
     def __get_views(self):
         """Get all views"""
-        stmt = """ select view_name , text from user_views"""
+#        stmt = """ select view_name , text from user_views"""
+        stmt = self._prepareStatement(OracleCatalog['views'])
         views = {}
         print "get all views"
         for name, text in self.__query(stmt):
@@ -387,7 +396,7 @@ class OraSchemaDataDictionary:
 
     def __get_mviews(self):
         """ Get all materialized views """
-        stmt = """select mview_name, container_name, query, updatable from user_mviews"""
+        stmt = self._prepareStatement(OracleCatalog['mviews'])
         mviews = {}
         print 'get all materialized views'
         for name, container, query, updatable in self.__query(stmt):
@@ -397,8 +406,9 @@ class OraSchemaDataDictionary:
 
     def __get_indexes(self):
         """Get all indexes"""
-        stmt = """select index_name, table_name, index_type, uniqueness, include_column, generated, secondary
-                    from user_indexes"""
+#        stmt = """select index_name, table_name, index_type, uniqueness, include_column, generated, secondary
+#                    from user_indexes"""
+        stmt = self._prepareStatement(OracleCatalog['indexes'])
         indexes = {}
         print "get all indexes"
         for name, table_name, type, uniqueness, include_column, generated, secondary in self.__query(stmt):
@@ -409,7 +419,8 @@ class OraSchemaDataDictionary:
 
     def __get_index_columns(self):
         """Get all index columns"""
-        stmt = """select index_name, table_name, column_name, column_position from user_ind_columns"""
+#        |stmt = """select index_name, table_name, column_name, column_position from user_ind_columns"""
+        stmt = self._prepareStatement(OracleCatalog['ind_columns'])
         ind_columns = {}
         print "get all index columns"
         for name, table_name, column_name, column_position in self.__query(stmt):
@@ -425,7 +436,8 @@ class OraSchemaDataDictionary:
 
     def __get_index_expressions(self):
         """Get all index expressions"""
-        stmt = """select index_name, table_name, column_expression, column_position from user_ind_expressions"""
+#        stmt = """select index_name, table_name, column_expression, column_position from user_ind_expressions"""
+        stmt = self._prepareStatement(OracleCatalog['ind_expressions'])
         ind_expressions = {}
         print "get all index_expressions"
         for name, table_name, expression, position in self.__query(stmt):
@@ -441,9 +453,10 @@ class OraSchemaDataDictionary:
 
     def __get_updatable_columns(self):
         """Get updatable columns on views"""
-        stmt = """select table_name, column_name, insertable, updatable, deletable
-            from all_updatable_columns
-            where table_name in (select view_name from user_views)"""
+#        stmt = """select table_name, column_name, insertable, updatable, deletable
+#            from all_updatable_columns
+#            where table_name in (select view_name from user_views)"""
+        stmt = self._prepareStatement(OracleCatalog['updatable_columns'])
         view_updatable_columns = {}
         print "get updatable columns"
         for table_name, column_name, insertable, updatable, deletable in self.__query(stmt):
@@ -454,9 +467,10 @@ class OraSchemaDataDictionary:
 
     def __get_triggers(self):
         """Get all triggers"""
-        stmt = """select trigger_name, trigger_type, triggering_event, base_object_type, table_name,
-            column_name, referencing_names, when_clause, status, description, action_type, trigger_body
-            from user_triggers"""
+#        stmt = """select trigger_name, trigger_type, triggering_event, base_object_type, table_name,
+#            column_name, referencing_names, when_clause, status, description, action_type, trigger_body
+#            from user_triggers"""
+        stmt = self._prepareStatement(OracleCatalog['triggers'])
         triggers = {}
         print "get all triggers"
         for name, type, event, base_object_type, table_name, column_name, referencing_names, when_clause, status,\
@@ -469,7 +483,8 @@ class OraSchemaDataDictionary:
 
     def __get_trigger_columns(self):
         """Get all trigger columns"""
-        stmt = "select trigger_name, table_name, column_name, column_list, column_usage from user_trigger_cols"
+#        stmt = "select trigger_name, table_name, column_name, column_list, column_usage from user_trigger_cols"
+        stmt = self._prepareStatement(OracleCatalog['trigger_cols'])
         trigger_columns = {}
         print "get all trigger columns"
         for name, table_name, column_name, column_list, column_usage in self.__query(stmt):
@@ -484,9 +499,10 @@ class OraSchemaDataDictionary:
 
     def __get_arguments(self):
         """Get all function/procedure argumets"""
-        stmt = """select object_name, package_name, argument_name, position, data_type, default_value, in_out, pls_type,
-            data_scale, data_precision, data_length
-                from user_arguments"""
+#        stmt = """select object_name, package_name, argument_name, position, data_type, default_value, in_out, pls_type,
+#            data_scale, data_precision, data_length
+#                from user_arguments"""
+        stmt = self._prepareStatement(OracleCatalog['arguments'])
         all_arguments = []
         print "get all pl/sql arguments"
         for name, package_name, argument_name, position, data_type, default_value, in_out, pls_type, data_scale, \
@@ -514,7 +530,8 @@ class OraSchemaDataDictionary:
 
     def __get_user_source(self):
         """Get pl/sql source for procedures, functions and packages"""
-        stmt = "select name, type, line, text from user_source where type not like 'TYPE%' order by name, line"
+#        stmt = "select name, type, line, text from user_source where type not like 'TYPE%' order by name, line"
+        stmt = self._prepareStatement(OracleCatalog['source'])
         user_source = []
         print "get pl/sql source for procedures, functions and packages"
         for name, type, line, text in self.__query(stmt):
@@ -525,8 +542,9 @@ class OraSchemaDataDictionary:
 
     def __get_sequences (self):
         """Get user sequences"""
-        stmt = """select sequence_name, min_value, max_value, increment_by, cycle_flag, order_flag, cache_size
-                      from user_sequences"""
+#        stmt = """select sequence_name, min_value, max_value, increment_by, cycle_flag, order_flag, cache_size
+#                      from user_sequences"""
+        stmt = self._prepareStatement(OracleCatalog['sequences'])
         sequences = {}
         print "get sequences"
         for name, min_value, max_value, step, cycled, ordered, cache_size in self.__query(stmt):
@@ -536,9 +554,10 @@ class OraSchemaDataDictionary:
 
     def __get_types(self):
         """Get types"""
-        stmt = """select type_name, type_oid, typecode, attributes, methods, 
-                      predefined, incomplete 
-                    from user_types"""
+#        stmt = """select type_name, type_oid, typecode, attributes, methods, 
+#                      predefined, incomplete 
+#                    from user_types"""
+        stmt = self._prepareStatement(OracleCatalog['types'])
         types = {}
         print "get types"
         for name, type_oid, typecode, attributes, methods, predefined, incomplete \
@@ -551,10 +570,11 @@ class OraSchemaDataDictionary:
 
     def __get_type_attributes(self):
         """Get type attributes from db"""
-        stmt = """select type_name, attr_name, attr_type_mod, attr_type_owner, 
-                       attr_type_name, length, precision, scale, character_set_name,
-                       attr_no 
-                    from user_type_attrs"""
+#        stmt = """select type_name, attr_name, attr_type_mod, attr_type_owner, 
+#                       attr_type_name, length, precision, scale, character_set_name,
+#                       attr_no 
+#                    from user_type_attrs"""
+        stmt = self._prepareStatement(OracleCatalog['type_attrs'])
         type_attributes = {}
         print "get type attributes from db"
         for type_name, attr_name, attr_type_mod, attr_type_owner, attr_type_name, \
@@ -572,8 +592,9 @@ class OraSchemaDataDictionary:
 
     def __get_type_methods(self):
         """get type methods from db"""
-        stmt = """select type_name, method_name, method_type, parameters, results 
-                    from user_type_methods"""
+#        stmt = """select type_name, method_name, method_type, parameters, results 
+#                    from user_type_methods"""
+        stmt = self._prepareStatement(OracleCatalog['type_methods'])
         type_methods = {}
         print "get type methods"
         for type_name, method_name, method_type, parameters, results \
@@ -592,6 +613,20 @@ class OraSchemaDataDictionary:
         results = cur.fetchall()
         cur.close()
         return results
+
+
+    def _prepareStatement(self, stmt):
+        if self.cfg.useOwners == False:
+            stmt = stmt.userSql()
+        else:
+            if len(self.cfg.owners) == 0:
+                stmt = stmt.ownerSql()
+            else:
+                inClause = []
+                for i in self.cfg.owners:
+                    inClause.append("'%s'" % i.upper())
+                stmt = stmt.ownerSql(inClause="%s, %s" % (self.cfg.currentUser, ','.join(inClause)))
+        return stmt
 
 
 if __name__ == '__main__':

@@ -56,6 +56,10 @@ class OSDConfig:
         self.pb = False
         #! \brief take NOT NULL constraints. False = don't take NOT NULL constraints
         self.notNulls = False
+        #! \brief list of the usernames.
+        self.useOwners = False
+        self.owners = []
+        self.currentUser = ''
         #! \brief DB connection
         self.connection = None
         #! \brief DB attributes
@@ -119,3 +123,4 @@ class OSDConfig:
 
 if __name__ == '__main__':
     print 'This module can be used only as a library for Oraschemadoc'
+
