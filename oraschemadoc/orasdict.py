@@ -121,6 +121,8 @@ class OraSchemaDataDictionary:
         self.sequences = self.__get_sequences()
         self.sequence_names = self.sequences.keys()
         self.sequence_names.sort()
+        # jobs
+        self.jobs = self._getJobs()
 
 
     def __set_table_maps(self):
@@ -604,6 +606,13 @@ class OraSchemaDataDictionary:
                 t = {}
             t[method_name] = method_type, parameters, results
         return type_methods
+
+
+    def _getJobs(self):
+        """ Get old good jobs (dba_jobs). """
+        print 'get database jobs'
+        jobs = self.__query(self._prepareStatement(OracleCatalog['jobs']))
+        return jobs
 
 
     def __query(self, querystr):

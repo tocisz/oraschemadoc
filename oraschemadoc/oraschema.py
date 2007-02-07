@@ -39,6 +39,7 @@ from oracleobjects.oraclecheckconstraint import OracleCheckConstraint
 from oracleobjects.oraclesequence import OracleSequence
 from oracleobjects.oraclemview import OracleMView
 from oracleobjects.oraclereferentialconstraint import OracleReferentialConstraint
+from oracleobjects.oraclejob import OracleJob
 
 
 class OracleSchema:
@@ -61,36 +62,40 @@ class OracleSchema:
         self.packages = self._get_all_packages(cfg.dictionary)
         self.sequences = self._get_all_sequences(cfg.dictionary)
         self.java_sources = self._get_all_java_sources(cfg.dictionary)
+        self.jobs = self._get_all_jobs(cfg.dictionary)
         # TODO: why i need that name? 
         self.name = "Foobarizm"
 
 
     def getXML(self):
         """get xml representaion of given schema"""
-        xml_text = '<schema>'
+        xml_text = ['<schema>']
         for table in self.tables:
-            xml_text += table.getXML()
-            print "generating xml for %s" % table.name
+            xml_text.append(table.getXML())
+
         for view in self.views:
-            xml_text += view.getXML()
+            xml_text.append(view.getXML())
 
         for mview in self.mviews:
-            xml_text += mview.getXML()
+            xml_text.append(mview.getXML())
 
         for sequence in self.sequences:
-            xml_text += sequence.getXML()
+            xml_text.append(sequence.getXML())
 
         for procedure in self.procedures:
-            xml_text += procedure.getXML()
+            xml_text.append(procedure.getXML())
 
         for function in self.functions:
-            xml_text += function.getXML()
+            xml_text.append(function.getXML())
 
         for package in self.packages:
-            xml_text += package.getXML()
+            xml_text.append(package.getXML())
+
+        for job in self.jobs:
+            xml_text.append(job.getXml())
  
-        xml_text += '</schema>'
-        return xml_text
+        xml_text.append('</schema>')
+        return '\n'.join(xml_text)
 
 
     def _get_all_tables(self, data_dict):
@@ -205,6 +210,15 @@ class OracleSchema:
         return sequences
 
 
+    def _get_all_jobs(self, data):
+        print 'generating jobs'
+        jobs = []
+        for job, log_user, priv_user, schema_user, total_time, broken, interval, failures, what in data.jobs:
+            jobs.append(OracleJob(job, log_user, priv_user, schema_user, total_time, broken, interval, failures, what))
+        return jobs
+
+
+
 if __name__ == '__main__':
     import cx_Oracle
     import orasdict
@@ -214,3 +228,4 @@ if __name__ == '__main__':
     cfg.connection = cx_Oracle.connect('s0/asgaard')
     cfg.dictionary = orasdict.OraSchemaDataDictionary(cfg)
     schema = OracleSchema(cfg)
+

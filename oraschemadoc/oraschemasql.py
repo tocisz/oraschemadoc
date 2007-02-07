@@ -220,6 +220,15 @@ OracleCatalog = {
                                from all_type_methods %s"""
                 ),
 
+    'jobs' : OracleCatalogStatement(
+                userSql="""select job, log_user, priv_user, schema_user, total_time, broken,
+                              interval, failures, what
+                              from user_jobs""",
+                ownerSql="""select job, log_user, priv_user, schema_user, total_time, broken,
+                              interval, failures, what
+                              from all_jobs %s""",
+                ownerColumn='priv_user'
+                ),
 
 }
 

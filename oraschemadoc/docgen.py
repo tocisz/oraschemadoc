@@ -331,6 +331,20 @@ class OraSchemaDoclet:
         ht_table = self.html.table("Java Sources", headers, rows)
         self._print_list_page("Java Sources", ht_table, "java-sources-list.html")
 
+        # jobs
+        rows = []
+        for i in self.cfg.schema.jobs:
+            self.syntaxHighlighter.setStatement(i.what)
+            self.syntaxHighlighter.parse()
+            rows.append((i.job, i.log_user, i.priv_user,
+                         i.schema_user, i.total_time, i.broken,
+                         i.interval, i.failures, self.syntaxHighlighter.getOutput()))
+            self._add_index_entry('JOB-%s' % i.job, self.html.href_to_job('JOB-%s' % i.job), 'database job')
+        headers = (['Job', 'log_user', 'priv_user', 'schema_user', 'total_time', 'broken',
+                    'interval', 'failures', 'what'])
+        ht_table = self.html.table('Jobs', headers, rows)
+        self._print_list_page('Jobs', ht_table, 'jobs.html')
+
 
     def _htmlizeTrigger(self, trigger):
         """ A common XHTML trigger writter for all tables
@@ -971,3 +985,4 @@ if __name__ == '__main__':
     c.dictionary = orasdict.OraSchemaDataDictionary(c)
     c.schema = oraschema.OracleSchema(c)
     doclet = OraSchemaDoclet(c)
+

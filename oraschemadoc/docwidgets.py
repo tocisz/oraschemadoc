@@ -80,6 +80,7 @@ class HtmlWidgets:
             <a href="packages-list.html">Packages</a>
             <a href="sequences.html">Sequences</a>
             <a href="java-sources-list.html">Java&nbsp;Sources</a>
+            <a href="jobs.html">Jobs</a>
             <a href="sanity-check.html">Sanity&nbsp;Check</a>
             <a href="symbol-index.html">Index</a>
             <a href="sql_sources/" target="Main">DDL&nbsp;scrips</a>
@@ -185,6 +186,8 @@ class HtmlWidgets:
         else:
             return '<a href="java-source-%s.html" target="%s"> %s </a>' % (name.replace("/","-"), target_frame, name)
 
+    def href_to_job(self, name, target_frame=None):
+        return '<a href="jobs.html#%s"> %s </a>' % (name, name)
 
     def hr(self):
         return '<hr>\n'
