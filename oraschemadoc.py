@@ -58,7 +58,7 @@ def usage():
     """! \brief Print quick help."""
     print '\nOracle Schema Documentation Generator '
     print 'usage: oraschemadoc [-v|--verbose] [-d|--dia [--dia-table-list=file]] [--no-html]'
-    print '                    [--xml-file=filename] [-s|--syntax] '
+    print '                    [--xml-file=filename] [-s|--syntax] [--schema="[list]"]'
     print '                    [--css=style] [--desc=description] oracleuser/password[@dbalias]'
     print '                    output_dir  "application name"'
     print ''
@@ -81,7 +81,7 @@ def usage():
     print '   --pb                 Generates source code for package bodies too.'
     print '   --nn                 Index NOT NULL constraints too. It\'s skipped by default:'
     print '                        NOT NULL constraints are reported in columns list only.'
-    print '   --schema=schemalist  specify schema/usernames to select from ALL_% obejcts.'
+    print '   --schema=schemalist  specify schema/usernames to select from ALL_% objects.'
     print '                        If it\'s not given standard USER_% objects are used.'
     print '                        schemalist can be e.g. "SCOTT,FOO,BAR" - coma separated list'
     print '                        or empty - it means all granted objects will be documented.'
