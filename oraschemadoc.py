@@ -56,7 +56,7 @@ except ImportError:
 
 def usage():
     """! \brief Print quick help."""
-    print '\nOracle Schema Documentation Generator v0.25'
+    print '\nOracle Schema Documentation Generator '
     print 'usage: oraschemadoc [-v|--verbose] [-d|--dia [--dia-table-list=file]] [--no-html]'
     print '                    [--xml-file=filename] [-s|--syntax] '
     print '                    [--css=style] [--desc=description] oracleuser/password[@dbalias]'
