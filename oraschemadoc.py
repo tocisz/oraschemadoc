@@ -118,7 +118,12 @@ def main():
             cfg.html_output = None
         if opt in ('-d', '--dia'):
             cfg.dia_uml_output = 1;
-            cfg.dia_file_name = value;
+            if (len(value.strip()) == 0):
+                print 'WARNING: no filename given for Dia output, using default.dia'
+                print '         you can specify it with --dia=yourfilename.dia\n'
+                cfg.dia_file_name = 'default.dia'
+            else:
+                cfg.dia_file_name = value;
         if opt == '--dia-table-list':
             cfg.dia_conf_file = value
         if opt == '--xml-file':

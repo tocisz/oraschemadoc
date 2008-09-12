@@ -207,14 +207,21 @@ class DiaUmlDiagramGenerator:
             f = gzip.GzipFile(self.filename, 'w')
             f.write(header + table_text + cs_text + footer)
             f.close()
+        except IOError, e:
+            print 'Cannot write to file "%s": %s' %(self.filename, e)
         except:
             if not compress:
                 print 'GZIP passed. Running raw text writting'
             else:
                 print 'GZIP failed. Running raw text writting'
-            f = open(self.filename, 'w')
-            f.write(header + table_text + cs_text + footer)
-            f.close()
+
+            try:
+                f = open(self.filename, 'w')
+                f.write(header + table_text + cs_text + footer)
+                f.close()
+            except IOError, e:
+                print 'Cannot write to plain file "%s": %s' % (self.filename, e)
+
         print 'Done\n'
 
         
