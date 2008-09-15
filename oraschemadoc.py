@@ -32,12 +32,12 @@ from oraschemadoc.oracleencoding import OracleNLSCharset
 from oraschemadoc.osdconfig import OSDConfig
 
 
-try:
-    sys.setappdefaultencoding('utf-8')
-except AttributeError, e:
-    print '\nYour system is not able to handle UTF8 correctly.'
-    print 'Disabling internal UTF8 handling.'
-    print 'Error message: %s\n' % e
+#try:
+    #sys.setappdefaultencoding('utf-8')
+#except AttributeError, e:
+    #print '\nYour system is not able to handle UTF8 correctly.'
+    #print 'Disabling internal UTF8 handling.'
+    #print 'Error message: %s\n' % e
 
 
 try:

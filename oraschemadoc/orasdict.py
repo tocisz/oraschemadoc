@@ -123,6 +123,9 @@ class OraSchemaDataDictionary:
         self.sequence_names.sort()
         # jobs
         self.jobs = self._getJobs()
+        # dependencies
+        # format { key : [ list of deps ] }
+        self.dependencies = self.__getDependencies()
 
 
     def __set_table_maps(self):
@@ -296,7 +299,7 @@ class OraSchemaDataDictionary:
         for table, comment in self.__query(stmt):
             debug_message('debug: comments on table - %s' % table)
             comments[table] = comment
-        return comments 
+        return comments
 
 
     def __get_column_comments(self):
@@ -310,7 +313,7 @@ class OraSchemaDataDictionary:
         for table, column, comment in self.__query(stmt):
             debug_message('debug: comments on table.column - %s.%s' % (table, column))
             col_comments[table,column] = comment
-        return col_comments;
+        return col_comments
 
 
     def __get_columns(self):
@@ -615,6 +618,19 @@ class OraSchemaDataDictionary:
         return jobs
 
 
+    def __getDependencies(self):
+        """ Collect all dependencies in the { key : [deps], ... } format. """
+        print 'get dependencies'
+        deps = {}
+        for name, referenced_owner, referenced_name, \
+            referenced_link_name, referenced_type, dependency_type \
+            in self.__query(self._prepareStatement(OracleCatalog['dependencies'])):
+            if not deps.has_key(name):
+                deps[name] = []
+            deps[name].append([referenced_owner, referenced_name, referenced_link_name, referenced_type, dependency_type])
+        return deps
+
+
     def __query(self, querystr):
         """Execute query end return results in array"""
         cur = self.cfg.connection.cursor()
@@ -642,7 +658,7 @@ if __name__ == '__main__':
     import cx_Oracle
     from osdconfig import OSDConfig
     c = OSDConfig()
-    c.connection = cx_Oracle.connect('s0/asgaard')
+    c.connection = cx_Oracle.connect('buap/p6a6u3b0@cpd_prod')
     s = OraSchemaDataDictionary(c)
-    print s.all_java_sources
+    #print s.all_java_sources
 

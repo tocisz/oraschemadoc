@@ -380,6 +380,8 @@ class OraSchemaDoclet:
         local_nav_bar.append(("Referenced by", "t-refs"))
         local_nav_bar.append(("Triggers", "t-trgs"))
         local_nav_bar.append(("Partitions", "t-parts"))
+        if (self._haveDependencies(table.name)):
+            local_nav_bar.append(("Dependencies", "deps"))
 
         text.append(self.html.context_bar(local_nav_bar))
         text.append(self.html.heading(table.name, 2))
@@ -527,6 +529,9 @@ class OraSchemaDoclet:
                             partition.tablespace_name, str(partition.high_value)])
             text.append(self.html.table(None, headers, rows))
 
+		# dependencies
+        text.append(self._printDependencies(table.name))
+
         text.append(self.html.page_footer())
         file_name = os.path.join(self.cfg.output_dir, "table-%s.html" % table.name)
         self._write(''.join(text), file_name)
@@ -543,6 +548,8 @@ class OraSchemaDoclet:
         local_nav_bar.append(("Query", "v-query"))
         local_nav_bar.append(("Constraints", "v-cc"))
         local_nav_bar.append(("Triggers", "v-trgs"))
+        if (self._haveDependencies(view.name)):
+            local_nav_bar.append(("Dependencies", "deps"))
         text.append(self.html.context_bar(local_nav_bar))
         text.append(self.html.heading(view.name, 2))
         # print comments
@@ -582,6 +589,9 @@ class OraSchemaDoclet:
             for trigger in view.triggers:
                 text.append(self._htmlizeTrigger(trigger))
 
+        # dependencies
+        text.append(self._printDependencies(view.name))
+
         text.append(self.html.page_footer())
         file_name = os.path.join(self.cfg.output_dir, "view-%s.html" % view.name)
         self._write(''.join(text), file_name)
@@ -597,6 +607,8 @@ class OraSchemaDoclet:
         local_nav_bar.append(("Query", "v-query"))
         local_nav_bar.append(("Constraints", "v-cc"))
         local_nav_bar.append(("Triggers", "v-trgs"))
+        if (self._haveDependencies(mview.name)):
+            local_nav_bar.append(("Dependencies", "deps"))
         text.append(self.html.context_bar(local_nav_bar))
         text.append(self.html.heading(mview.name, 2))
 
@@ -641,6 +653,9 @@ class OraSchemaDoclet:
             for trigger in mview.triggers:
                 text.append(self._htmlizeTrigger(trigger))
 
+        # dependencies
+        text.append(self._printDependencies(mview.name))
+
         text.append(self.html.page_footer())
         file_name = os.path.join(self.cfg.output_dir, "mview-%s.html" % mview.name)
         self._write(''.join(text), file_name)
@@ -654,6 +669,8 @@ class OraSchemaDoclet:
         local_nav_bar = []
         local_nav_bar.append(("Arguments", "p-args"))
         local_nav_bar.append(("Source", "p-src"))
+        if (self._haveDependencies(procedure.name)):
+            local_nav_bar.append(("Dependencies", "deps"))
         text.append(self.html.context_bar(local_nav_bar))
         text.append(self.html.heading(procedure.name, 2))
 
@@ -679,6 +696,9 @@ class OraSchemaDoclet:
         text.append(self.html.pre(self.syntaxHighlighter.getHeader()))
         text.append(self.html.pre(self.syntaxHighlighter.getOutput()))
 
+        # dependencies
+        text.append(self._printDependencies(procedure.name))
+
         text.append(self.html.page_footer())
         file_name = os.path.join(self.cfg.output_dir, "procedure-%s.html" % procedure.name)
         self._write(''.join(text), file_name)
@@ -692,6 +712,8 @@ class OraSchemaDoclet:
         local_nav_bar = []
         local_nav_bar.append(("Arguments", "f-args"))
         local_nav_bar.append(("Source", "f-src"))
+        if (self._haveDependencies(function.name)):
+            local_nav_bar.append(("Dependencies", "deps"))
         text.append(self.html.context_bar(local_nav_bar))
         text.append(self.html.heading(function.name, 2))
         text.append(self.ddlSourceHref(function.name))
@@ -716,6 +738,9 @@ class OraSchemaDoclet:
         self.syntaxHighlighter.parse()
         text.append(self.html.pre(self.syntaxHighlighter.getHeader()))
         text.append(self.html.pre(self.syntaxHighlighter.getOutput()))
+
+        # dependencies
+        text.append(self._printDependencies(function.name))
 
         text.append(self.html.page_footer())
         file_name = os.path.join(self.cfg.output_dir, "function-%s.html" % function.name)
@@ -781,6 +806,8 @@ class OraSchemaDoclet:
         local_nav_bar = []
         local_nav_bar.append(("Package source", "p-src"))
         local_nav_bar.append(("Package body source", "p-bsrc"))
+        if (self._haveDependencies(package.name)):
+            local_nav_bar.append(("Dependencies", "deps"))
         text.append(self.html.context_bar(local_nav_bar))
         text.append(self.html.heading(package.name, 2))
         text.append(self.ddlSourceHref(package.name))
@@ -805,6 +832,9 @@ class OraSchemaDoclet:
             text.append(title)
             text.append(self.html.pre(self.syntaxHighlighter.getHeader()))
             text.append(self.html.pre(self.syntaxHighlighter.getOutput()))
+
+        # dependencies
+        text.append(self._printDependencies(package.name))
 
         text.append(self.html.page_footer())
         file_name = os.path.join(self.cfg.output_dir, "package-%s.html" % package.name)
@@ -973,6 +1003,21 @@ class OraSchemaDoclet:
 
         file_name = os.path.join(self.cfg.output_dir, file_name.replace("/", "-"))
         self._write(text, file_name)
+
+
+    def _haveDependencies(self, key):
+        return self.cfg.schema.dependencies.has_key(key)
+
+    def _printDependencies(self, key):
+        """ Prints the dependecy table for given key/object """
+        if (self._haveDependencies(key)):
+            return self.html.table("Dependencies" + self.html.anchor('deps'),
+                                    ['Referenced Owner', 'Referenced Name',
+                                     'Referenced Link', 'Referenced Type',
+                                     'Dependency Type'],
+                                    self.cfg.schema.dependencies[key])
+        else:
+            return ''
 
 
 if __name__ == '__main__':

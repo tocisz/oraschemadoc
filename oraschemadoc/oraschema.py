@@ -63,6 +63,7 @@ class OracleSchema:
         self.sequences = self._get_all_sequences(cfg.dictionary)
         self.java_sources = self._get_all_java_sources(cfg.dictionary)
         self.jobs = self._get_all_jobs(cfg.dictionary)
+        self.dependencies = cfg.dictionary.dependencies
         # TODO: why i need that name? 
         self.name = "Foobarizm"
 

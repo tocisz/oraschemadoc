@@ -230,6 +230,16 @@ OracleCatalog = {
                 ownerColumn='priv_user'
                 ),
 
+    'dependencies' : OracleCatalogStatement(
+                userSql = """select name, referenced_owner, referenced_name, referenced_link_name,
+                                    referenced_type, dependency_type
+                                from user_dependencies""",
+                ownerSql = """select owner||'.'||name, referenced_owner, referenced_name, referenced_link_name,
+                                     referenced_type, dependency_type
+                                from all_dependencies
+                                %s"""
+                )
+
 }
 
 
@@ -240,4 +250,6 @@ if __name__ == '__main__':
     print OracleCatalog['tab_partitions'].userSql()
     print OracleCatalog['tab_partitions'].ownerSql("'BUAP','FOO'")
     print OracleCatalog['tab_comments'].ownerSql("'BUAP','FOO'")
+    print OracleCatalog['dependencies'].userSql()
+    print OracleCatalog['dependencies'].ownerSql("'FOO', 'BAR'")
 
