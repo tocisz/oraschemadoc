@@ -76,20 +76,27 @@ class Dot:
         return set.keys()
 
 
-    def makeKeyNode(self, node):
+    def makeKeyNode(self, node, highlighNode=None):
         """! \brief Make base node.
         Base node definiton for DOT source."""
-        s = '"%s" [label="%s" height=0.2,width=0.4,color="black",fillcolor="white",style="filled",fontcolor="black",href="table-%s.html#t-fk"];\n' % (node, node, node)
+        bgcolor = 'white'
+        if highlighNode == node:
+            bgcolor = 'gray88'
+        s = '"%s" [label="%s" height=0.2,width=0.4,color="black",fillcolor="%s",style="filled",fontcolor="black",href="table-%s.html#t-fk"];\n' % (node, node, bgcolor, node)
         return s
 
 
-    def graphList(self, mainName, children=[]):
+    def graphList(self, mainName, children=[], inverseChildren=[]):
         """! \brief Make relations between the nodes.
-        Link base nodes (makeKeyNode()) together."""
-        s = ''
+        Link base nodes (makeKeyNode()) together.
+        \param children leafs pointing to mainName
+        \param inverseChildren mainName is pointing to these leafs"""
+        s = []
         for i in children:
-            s += '''"%s" -> "%s" [color="black",fontsize=10,style="solid",arrowhead="crow"];\n''' % (i, mainName)
-        return s
+            s.append('''"%s" -> "%s" [color="black",fontsize=10,style="solid",arrowhead="crow"];\n''' % (i, mainName))
+        for i in inverseChildren:
+            s.append('''"%s" -> "%s" [color="black",fontsize=10,style="solid",arrowhead="crow"];\n''' % (mainName, i))
+        return ''.join(s)
 
 
     def haveDot(self):
@@ -128,13 +135,13 @@ class Dot:
         return retval
 
 
-    def fileGraphList(self, mainName, children=[]):
+    def fileGraphList(self, mainName, children=[], inverseChildren=[]):
         """! \brief Make a graph of the mainName's children """
-        allNodes = self.uniq(children + [mainName])
+        allNodes = self.uniq(children + [mainName] + inverseChildren)
         s = ''
         for i in allNodes:
-            s += self.makeKeyNode(i)
-        s += self.graphList(mainName, children)
+            s += self.makeKeyNode(i, mainName)
+        s += self.graphList(mainName, children, inverseChildren)
         s = self.graphTemplate % ('ERD related to the table', s)
         fname = os.path.join(self.outPath, mainName)
         f = file(fname+'.dot', 'w')

@@ -450,7 +450,13 @@ class OraSchemaDoclet:
             headers = "Constraint Name", "Columns", "Referenced table", "Referenced Constraint", "On Delete Rule"
             text.append(self.html.table(title,headers, rows))
             if self.dotEngine.haveDot:
-                imgname = self.dotEngine.fileGraphList(table.name, aList)
+                # append more references - the 2nd side of FKs
+                inverseList = []
+                if table.referenced_by != None:
+                    for table_name, constraint_name in table.referenced_by:
+                        inverseList.append(table_name)
+
+                imgname = self.dotEngine.fileGraphList(table.name, aList, inverseList)
                 if imgname != None:
                     try:
                         f = file(os.path.join(self.cfg.output_dir, table.name+'.map'), 'r')
