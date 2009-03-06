@@ -99,16 +99,19 @@ class Dot:
             if os.spawnlp(os.P_WAIT, 'dot', 'dot', '-V') == 0:
                 return True
             """
+            print '\nChecking for dot binary...'
             if self.runDot(['-V']) == 0:
                 return True
         except OSError, e:
             print '\nUnknown error in Dot.haveDot() method. ERD disabled.'
             print '%s\n' % e
+        print '    Error'
         return False
 
     def runDot(self, params=[]):
         """! \brief Call the 'dot' binary. Searchnig in PATH variable"""
-        return subprocess.call(["dot"] + params, env={"PATH": os.environ['PATH']}, stdout=None)
+        #return subprocess.call(["dot"] + params, env={"PATH": os.environ['PATH']}, stdout=None)
+        return subprocess.call(['dot'] + params)
 
 
     def callDot(self, fname):
