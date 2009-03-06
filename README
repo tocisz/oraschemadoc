@@ -80,9 +80,9 @@ b) to generate documentation run:
 
 or with optional parameters:
 
-oraschemadoc [-v|--verbose] [-d|--dia [--dia-table-list=file]] [--no-html]'
-             [--xml-file=filename] [-s|--syntax] '
-             [--css=style] [--desc=description] oracleuser/password[@dbalias]'
+oraschemadoc [-v|--verbose] [-d|--dia [--dia-table-list=file]] [--no-html]
+             [--xml-file=filename] [-s|--syntax] [--no--ddl] 
+             [--css=style] [--desc=description] oracleuser/password[@dbalias]
              output_dir  "application name"'
 
 where:
@@ -107,6 +107,9 @@ etc.
 
     -s --syntax      - Enables syntax highlighting of the source code pieces.
                        Warning: it's very slow.
+
+    --no-ddl         - Disable DDL scripts creation (running DBMS_METADATA calls.
+                       It's enabled by default.
 
     --css=filename   - File name of the chosen file from css directory.
                        It'll be used as CSS in produced HTML

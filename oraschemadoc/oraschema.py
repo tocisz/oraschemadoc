@@ -47,7 +47,7 @@ class OracleSchema:
     def __init__(self, cfg): #data_dict, debug_mode, connection, output_dir, packageBodies=False):
 
         set_verbose_mode(cfg.verbose_mode)
-        self.ddlSource = oraddlsource.OraDDLSource(cfg.connection, cfg.output_dir)
+        self.ddlSource = oraddlsource.OraDDLSource(cfg.connection, cfg.allowDDL, cfg.output_dir)
 
         self.packageBodies = cfg.pb
 

@@ -32,7 +32,7 @@ class OraDDLSource:
         with EXECUTE privilege on this package.
         When it cannot be found there is only a message written. """
 
-    def __init__(self, conn, outputDir='.'):
+    def __init__(self, conn, allowDLL, outputDir='.'):
         self.connection = conn
         self.enabled = self.checkForMetadata()
         self.fname = None
@@ -41,6 +41,11 @@ class OraDDLSource:
         self.scriptCache = {}
         if not self.mkdir(self.directory):
             self.enabled = False
+        # disable DLL generators - but the previous stuff
+        # is required to be set
+        if not allowDLL:
+            self.enabled = False
+
 
 
     def mkdir(self, dirname):

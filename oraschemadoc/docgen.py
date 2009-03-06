@@ -91,6 +91,8 @@ class OraSchemaDoclet:
 
 
     def ddlSourceHref(self, name):
+        if not self.cfg.allowDDL:
+            return ''
         if not self.cfg.schema.ddlSource.scriptCache.has_key(name):
             return ''
         return self.html.href(self.cfg.schema.ddlSource.scriptCache[name], 'DDL script')
@@ -883,8 +885,8 @@ class OraSchemaDoclet:
                 row.append(columns)
                 rows.append(row)
                 #write sql
-                file_name = os.path.join(self.cfg.output_dir, "fk-indexes.sql")
-                self._write(scheck.fk_no_indexes_sql,file_name)
+            file_name = os.path.join(self.cfg.output_dir, "fk-indexes.sql")
+            self._write(scheck.fk_no_indexes_sql,file_name)
             text.append(self.html.table(title,headers,rows))
             problems = True
 

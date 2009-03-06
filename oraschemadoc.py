@@ -59,7 +59,8 @@ def usage():
     print '\nOracle Schema Documentation Generator '
     print 'usage: oraschemadoc [-v|--verbose] [-d|--dia [--dia-table-list=file]] [--no-html]'
     print '                    [--xml-file=filename] [-s|--syntax] [--schema="[list]"]'
-    print '                    [--css=style] [--desc=description] oracleuser/password[@dbalias]'
+    print '                    [--css=style] [--desc=description] [--no-ddl]'
+    print '                    oracleuser/password[@dbalias]'
     print '                    output_dir  "application name"'
     print ''
     print 'Arguments:'
@@ -78,6 +79,8 @@ def usage():
     print '   --css=stylename      filename with CSS from css directory. If not given default used.'
     print '   --desc=description   If is description filename with path, the text from file is taken.'
     print '                        If the file doesn\'t exist the description is taken as text string.'
+    print '   --no-ddl             Disable DDL scripts creation (running DBMS_METADATA calls.'
+    print '                        It\'s enabled by default.'
     print '   --pb                 Generates source code for package bodies too.'
     print '   --nn                 Index NOT NULL constraints too. It\'s skipped by default:'
     print '                        NOT NULL constraints are reported in columns list only.'
@@ -98,7 +101,7 @@ def main():
         opts, args = getopt.getopt(sys.argv[1:], 'hdvs',
                                    ['help', 'verbose', 'dia=', 'dia-table-list=',
                                     'syntax', 'css=', 'desc=', 'pb', 'no-html',
-                                    'xml-file=', 'nn', 'schema='])
+                                    'xml-file=', 'nn', 'schema=', 'no-ddl'])
     except getopt.error, e:
         # print help information and exit:
         usage()
@@ -130,6 +133,8 @@ def main():
             cfg.xml_file = value
         if opt in ('-s', '--syntax'):
             cfg.syntaxHighlighting = True
+        if opt == '--no-ddl':
+            cfg.allowDDL = False
         if opt == '--css':
             if not os.path.exists(os.path.join(csspath, value)):
                 print '\nWARNING: %s doesn\'t exists. Using default instead.\n' % value

@@ -36,6 +36,8 @@ class OSDConfig:
         self.verbose_mode = False
         #! \brief directory to store outputs
         self.output_dir = '.'
+        #! \brief Allow to generate DLL scripts
+        self.allowDDL = True
         #! \brief Generate "javadocish" html output, by default yes
         self.html_output = True
         #! \brief if specified dia_uml_output turns on export to dia uml diagram
