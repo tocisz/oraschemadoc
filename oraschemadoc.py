@@ -161,6 +161,8 @@ def main():
         connect_string, cfg.output_dir, cfg.name = args
         cfg.output_dir = os.path.abspath(cfg.output_dir)
     else:
+        print '\nError - missing parameters:'
+        print 'At least connectString, output_dir, and application_name are mandatory!\n'
         usage()
         sys.exit()
 
