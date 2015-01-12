@@ -290,12 +290,14 @@ class HtmlWidgets:
         text = string.replace(text, ">", "&gt;")
         return text
 
-    def _main_frame(self, name, description, highlight, imgname=None):
+    def _main_frame(self, name, description, highlight, imgname=None, includeText=None):
         text = []
         text.append(self.page_header("name"))
         text.append(self.context_bar( None))
         text.append(self.heading(name,1))
         text.append(self.p('<b>Description:</b> %s' % description))
+        if includeText:
+            text.append(includeText)
         if imgname != None:
             text.append(imgname)
         if highlight:

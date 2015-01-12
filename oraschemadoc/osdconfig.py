@@ -46,6 +46,8 @@ class OSDConfig:
         self.dia_conf_file = None
         #! \brief if specified, dumps data into xml
         self.xml_file = None
+        #! \brief if true, main ERD diagram will be created
+        self.createMainErd = True
         #! \brief if true then sources will have syntax highlighting
         self.syntaxHighlighting = False
         #! \brief path to css (default here)
@@ -70,6 +72,8 @@ class OSDConfig:
         #! \brief internals
         self.dictionary = None
         self.schema = None
+        #! \brief string to be included in contents of main page
+        self.mainInclude = None
 
 
     def encode(self, text=''):

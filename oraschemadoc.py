@@ -74,6 +74,7 @@ def usage():
     print '-d --dia=filename       export datamodel to dia uml diagram. File with file name will be'
     print '                        created under output_dir'
     print '   --dia-table-list=l   path to file which contains table names for export to dia diagram'
+    print '   --no-main-dia        don\'t generate dia diagram on main page.'
     print '   --xml-file=filename  dump dm into xml file. File will be created under output_dir'
     print '-s --syntax             sets syntax highlighting on (it will be very slow)'
     print '   --css=stylename      filename with CSS from css directory. If not given default used.'
@@ -89,6 +90,7 @@ def usage():
     print '                        schemalist can be e.g. "SCOTT,FOO,BAR" - coma separated list'
     print '                        or empty - it means all granted objects will be documented.'
     print '                        See README file for more info and examples.'
+    print '   --main-include=FILE  include FILE contents in main page.'
     print '-h --help               print this help screen'
     print ''
     print 'For more information see README\n'
@@ -101,7 +103,7 @@ def main():
         opts, args = getopt.getopt(sys.argv[1:], 'hdvs',
                                    ['help', 'verbose', 'dia=', 'dia-table-list=',
                                     'syntax', 'css=', 'desc=', 'pb', 'no-html',
-                                    'xml-file=', 'nn', 'schema=', 'no-ddl'])
+                                    'xml-file=', 'nn', 'schema=', 'no-ddl', 'main-include=', 'no-main-dia'])
     except getopt.error, e:
         # print help information and exit:
         usage()
@@ -155,6 +157,13 @@ def main():
             cfg.useOwners = True
             if len(value) > 0:
                 cfg.owners = value.split(',')
+        if opt == '--main-include':
+            if os.path.exists(value):
+                f = file(value, 'r')
+                cfg.mainInclude = f.read()
+                f.close()
+        if opt == '--no-main-dia':
+            cfg.createMainErd = False
 
 
     if len(args) == 3: 

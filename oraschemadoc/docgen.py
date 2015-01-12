@@ -958,7 +958,7 @@ class OraSchemaDoclet:
         self._write(text, file_name)
         # er diagram
         imgname = None
-        if self.dotEngine.haveDot:
+        if self.dotEngine.haveDot and self.cfg.createMainErd:
             erdDict = {}
             for table in self.cfg.schema.tables:
                 refs = []
@@ -978,7 +978,7 @@ class OraSchemaDoclet:
                     print 'error reading main.map GraphViz file'
                 imgname = text + self.html.img(imgname, htmlMap='mainmap', cssClass='erd')
 
-        text = self.html._main_frame(self.cfg.name, self.cfg.desc, self.syntaxHighlighter.highlight, imgname)
+        text = self.html._main_frame(self.cfg.name, self.cfg.desc, self.syntaxHighlighter.highlight, imgname, self.cfg.mainInclude)
         file_name = os.path.join(self.cfg.output_dir, "main.html")
         self._write(text, file_name)
 

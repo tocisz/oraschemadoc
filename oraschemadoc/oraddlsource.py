@@ -45,7 +45,13 @@ class OraDDLSource:
         # is required to be set
         if not allowDLL:
             self.enabled = False
-
+        cur = conn.cursor()
+        print "db transform params init"
+        cur.execute("BEGIN DBMS_METADATA.SET_TRANSFORM_PARAM(DBMS_METADATA.SESSION_TRANSFORM, :sa, false);END;", {'sa': 'SEGMENT_ATTRIBUTES'})
+        cur.execute("BEGIN DBMS_METADATA.SET_TRANSFORM_PARAM(DBMS_METADATA.SESSION_TRANSFORM, :caa, true);END;", {'caa': 'CONSTRAINTS_AS_ALTER'})
+        cur.execute("BEGIN DBMS_METADATA.SET_TRANSFORM_PARAM(DBMS_METADATA.SESSION_TRANSFORM, :ste, true);END;", {'ste': 'SQLTERMINATOR'})
+        cur.execute("BEGIN DBMS_METADATA.SET_TRANSFORM_PARAM(DBMS_METADATA.SESSION_TRANSFORM, :str, false);END;", {'str': 'STORAGE'})
+        cur.close()
 
 
     def mkdir(self, dirname):
@@ -75,6 +81,31 @@ class OraDDLSource:
         return False
 
 
+
+    def getCommentsForTables(self, ddl, tabName):
+
+        def sqlEscape(str):
+            return str.replace("'", "''");
+
+        ownerStrip = tabName.find('.')
+        if ownerStrip != -1:
+            splitName = tabName.split('.')
+            par = {'name': splitName[1], 'schema': splitName[0]}
+            sql1 = "select comments from dba_tab_comments where comments is not null and table_name = :name and owner = :schema"
+            sql2 = "select column_name, comments from dba_col_comments where comments is not null and table_name = :name and owner = :schema"
+        else:
+            par = {'name': tabName}
+            sql1 = "select comments from user_tab_comments where comments is not null and table_name = :name"
+            sql2 = "select column_name, comments from user_col_comments where comments is not null and table_name = :name"
+
+        rows = self.query(sql1, par)
+        for row in rows:
+            ddl.append("\n  COMMENT ON TABLE " + tabName + " IS '" + sqlEscape(row[0]) + "';")
+
+        rows = self.query(sql2, par)
+        for row in rows:
+            ddl.append("\n  COMMENT ON COLUMN " + tabName + "." + row[0] + " IS '" + sqlEscape(row[1]) + "';")
+
     def getDDLScript(self, objType, objName):
         if not self.enabled or self.directory == None:
             return None
@@ -100,10 +131,34 @@ class OraDDLSource:
                     row = cur.next()
                 except StopIteration:
                     break
+
+            if objType == 'TABLE':
+                self.getCommentsForTables(ddl, objName)
         except cx_Oracle.DatabaseError, e:
-            print 'ERROR: DDL creation is inconsistent for: %s %s' % (par['type'], par['name'])
+            print 'ERROR: DDL creation is inconsistent for: %s' % (par['name'])
             print '       %s' % e.__str__()[:e.__str__().find('\n')]
             return None
+
+        try:
+            if(objType in ['TABLE', 'VIEW', 'SEQUENCE', 'PROCEDURE']):
+                if ownerStrip != -1:
+                    par = {'obj': 'OBJECT_GRANT', 'name': splitName[1], 'schema': splitName[0]}
+                    sql = "select dbms_metadata.get_dependent_ddl(:obj, :name, :schema) from dual"
+                else:
+                    par = {'obj': 'OBJECT_GRANT', 'name': objName}
+                    sql = "select dbms_metadata.get_dependent_ddl(:obj, :name) from dual"
+                cur = self.connection.cursor()
+                cur.execute(sql, par)
+                row = cur.fetchone()
+                while row:
+                    ddl.append(row[0].read())
+                    try:
+                        row = cur.next()
+                    except StopIteration:
+                        break
+
+        except cx_Oracle.DatabaseError, e:
+            print 'WARNING: no grants information available for: %s' % (par['name'])
         self.fname = '%s.sql' % objName.lower()
         currentDir = os.path.join(self.directory, objType.replace(' ', '_').lower())
         if not self.mkdir(currentDir):
@@ -113,7 +168,7 @@ class OraDDLSource:
         f.write('-- created by Oraschemadoc %s\n' % time.ctime())
         f.write('-- visit http://www.yarpen.cz/oraschemadoc/ for more info\n')
         f.write(''.join(ddl))
-        f.write('\n/\n')
+        f.write('\n')
         f.close()
         strippedName = os.path.join(currentDir, self.fname)[len(self.rootDir)+1:]
         self.scriptCache[objName] = strippedName
