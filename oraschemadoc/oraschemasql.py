@@ -78,11 +78,11 @@ OracleCatalog = {
 
     'columns' : OracleCatalogStatement(
                 userSql="""select table_name, column_name, data_type , data_length, data_precision,
-                             data_scale, nullable, column_id, data_default
+                             data_scale, nullable, column_id, data_default, char_length, char_used
                             from user_tab_columns
                             order by table_name, column_id""",
                 ownerSql="""select owner||'.'||table_name, column_name, data_type , data_length, data_precision,
-                             data_scale, nullable, column_id, data_default
+                             data_scale, nullable, column_id, data_default, char_length, char_used
                             from all_tab_columns
                             %s
                             order by owner||'.'||table_name, column_id"""

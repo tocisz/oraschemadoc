@@ -319,14 +319,14 @@ class OraSchemaDataDictionary:
     def __get_columns(self):
         """Get all columns for tables, views and clusters"""
 #        stmt = """select table_name, column_name, data_type , data_length, data_precision,
-#                         data_scale, nullable, column_id, data_default
+#                         data_scale, nullable, column_id, data_default, char_length, char_used
 #                    from user_tab_columns
 #                    order by table_name, column_id"""
         stmt = self._prepareStatement(OracleCatalog['columns'])
         all_columns = {}
         print "get all columns for tables, views and clusters"
         for table, column, data_type, data_length, data_precision, data_scale, nullable, column_id, \
-                data_default in self.__query(stmt):
+                data_default, char_length, char_used in self.__query(stmt):
             debug_message('debug:  table.column - %s.%s' % (table, column))
             _data_type = data_type
             t = all_columns.get(table, None)
@@ -340,7 +340,12 @@ class OraSchemaDataDictionary:
                 if data_scale and data_scale <> 0:
                     _data_type = _data_type + ',%s' %data_scale
                 _data_type = _data_type + ')'
-            elif data_type in ('CHAR','VARCHAR2','NCHAR','NVARCHAR2','RAW','UROWID'):
+            elif data_type in ('CHAR','VARCHAR2','NCHAR','NVARCHAR2'):
+                if char_used == 'C':
+                    _data_type = _data_type + '(%s CHAR)' %char_length
+                else:
+                    _data_type = _data_type + '(%s)' %data_length
+            elif data_type in ('RAW','UROWID'):
                 _data_type = _data_type + '(%s)' %data_length
 
             t.append((column, _data_type, nullable, column_id, data_default))
