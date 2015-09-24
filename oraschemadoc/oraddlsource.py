@@ -58,13 +58,6 @@ class OraDDLSource:
         cur.execute("BEGIN DBMS_METADATA.SET_TRANSFORM_PARAM(DBMS_METADATA.SESSION_TRANSFORM, :str, false);END;", {'str': 'STORAGE'})
         cur.close()
 
-    def censor(self, objType, text):
-        if objType in self.censorshipPatterns:
-            masks = self.censorshipPatterns[objType]
-            for regex in masks:
-                text = regex.sub('', text)
-        return text
-
 
     def mkdir(self, dirname):
         if os.path.isdir(dirname):
@@ -195,6 +188,13 @@ class OraDDLSource:
         results = cur.fetchall()
         cur.close()
         return results
+
+    def censor(self, objType, text):
+        if objType in self.censorshipPatterns:
+            masks = self.censorshipPatterns[objType]
+            for regex in masks:
+                text = regex.sub('', text)
+        return text
 
 
 # unit tests are for losers...
