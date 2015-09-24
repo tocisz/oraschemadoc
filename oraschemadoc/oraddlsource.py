@@ -24,6 +24,7 @@ import cx_Oracle
 import os.path
 import os
 import time
+import re
 
 
 class OraDDLSource:
@@ -39,6 +40,10 @@ class OraDDLSource:
         self.directory = os.path.join(outputDir, 'sql_sources')
         self.rootDir = outputDir
         self.scriptCache = {}
+        self.censorshipPatterns = {
+            'SEQUENCE': [re.compile(r'START WITH [0-9]+ *')],
+            'TABLE': [re.compile(r'[(]?PARTITION ".*"( *VALUES LESS THAN \(.*\)|) *(,|\)) *\n? *')]
+        }
         if not self.mkdir(self.directory):
             self.enabled = False
         # disable DLL generators - but the previous stuff
@@ -52,6 +57,13 @@ class OraDDLSource:
         cur.execute("BEGIN DBMS_METADATA.SET_TRANSFORM_PARAM(DBMS_METADATA.SESSION_TRANSFORM, :ste, true);END;", {'ste': 'SQLTERMINATOR'})
         cur.execute("BEGIN DBMS_METADATA.SET_TRANSFORM_PARAM(DBMS_METADATA.SESSION_TRANSFORM, :str, false);END;", {'str': 'STORAGE'})
         cur.close()
+
+    def censor(self, objType, text):
+        if objType in self.censorshipPatterns:
+            masks = self.censorshipPatterns[objType]
+            for regex in masks:
+                text = regex.sub('', text)
+        return text
 
 
     def mkdir(self, dirname):
@@ -107,6 +119,16 @@ class OraDDLSource:
             ddl.append("\n  COMMENT ON COLUMN " + tabName + "." + row[0] + " IS '" + sqlEscape(row[1]) + "';")
 
     def getDDLScript(self, objType, objName):
+
+        def fetchRows(ddl, cursor):
+            row = cursor.fetchone()
+            while row:
+                ddl.append(row[0].read())
+                try:
+                    row = cursor.next()
+                except StopIteration:
+                    break
+
         if not self.enabled or self.directory == None:
             return None
         if self.scriptCache.has_key(objName):
@@ -124,13 +146,7 @@ class OraDDLSource:
             cur = self.connection.cursor()
             cur.execute(sql, par)
             ddl = []
-            row = cur.fetchone()
-            while row:
-                ddl.append(row[0].read())
-                try:
-                    row = cur.next()
-                except StopIteration:
-                    break
+            fetchRows(ddl, cur)
 
             if objType == 'TABLE':
                 self.getCommentsForTables(ddl, objName)
@@ -149,16 +165,14 @@ class OraDDLSource:
                     sql = "select dbms_metadata.get_dependent_ddl(:obj, :name) from dual"
                 cur = self.connection.cursor()
                 cur.execute(sql, par)
-                row = cur.fetchone()
-                while row:
-                    ddl.append(row[0].read())
-                    try:
-                        row = cur.next()
-                    except StopIteration:
-                        break
+                fetchRows(ddl, cur)
 
         except cx_Oracle.DatabaseError, e:
             print 'WARNING: no grants information available for: %s' % (par['name'])
+
+        # remove unwanted information
+        ddl = map(lambda txt: self.censor(objType, txt), ddl)
+
         self.fname = '%s.sql' % objName.lower()
         currentDir = os.path.join(self.directory, objType.replace(' ', '_').lower())
         if not self.mkdir(currentDir):
