@@ -42,7 +42,9 @@ class OraDDLSource:
         self.scriptCache = {}
         self.censorshipPatterns = {
             'SEQUENCE': [re.compile(r'START WITH [0-9]+ *')],
-            'TABLE': [re.compile(r'[(]?PARTITION ".*"( *VALUES LESS THAN \(.*\)|) *(,|\)) *\n? *')]
+            'TABLE': [re.compile(r' *[(]?PARTITION ".*"( *VALUES LESS THAN \(.*\)|) *(,|\)) *\n? *'),
+                      re.compile(r'\n  USING INDEX ')],
+            'INDEX': [re.compile(r' *[(]?PARTITION ".*" *(,|\)) *\n? *')]
         }
         if not self.mkdir(self.directory):
             self.enabled = False
