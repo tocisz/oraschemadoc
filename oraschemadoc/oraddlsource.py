@@ -99,11 +99,11 @@ class OraDDLSource:
             splitName = tabName.split('.')
             par = {'name': splitName[1], 'schema': splitName[0]}
             sql1 = "select comments from dba_tab_comments where comments is not null and table_name = :name and owner = :schema"
-            sql2 = "select column_name, comments from dba_col_comments where comments is not null and table_name = :name and owner = :schema"
+            sql2 = "select column_name, comments from dba_col_comments join ALL_TAB_COLUMNS using (owner, table_name, column_name) where comments is not null and table_name = :name and owner = :schema order by column_id"
         else:
             par = {'name': tabName}
             sql1 = "select comments from user_tab_comments where comments is not null and table_name = :name"
-            sql2 = "select column_name, comments from user_col_comments where comments is not null and table_name = :name"
+            sql2 = "select column_name, comments from user_col_comments join user_TAB_COLUMNS using (table_name, column_name) where comments is not null and table_name = :name order by column_id"
 
         rows = self.query(sql1, par)
         for row in rows:
